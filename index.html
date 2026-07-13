@@ -137,10 +137,15 @@
   .certframe .meta{display:flex; justify-content:center; gap:18px; font-size:12px; margin-top:8px; flex-wrap:wrap;}
 
   @media print{
+    @page{ size: A4 landscape; margin: 8mm; }
     .topbar,.tabs,.noprint{display:none !important;}
     body{background:#fff;}
     main{padding:0; max-width:none;}
     .card{box-shadow:none; border:none; padding:0;}
+    .tablewrap{overflow-x:visible !important; border-radius:0;}
+    table{font-size:8.5px !important; table-layout:auto; width:100%;}
+    th,td{padding:3px 3px !important;}
+    td.name{white-space:normal;}
   }
   @media (max-width:640px){
     .topbar h1{font-size:19px;}
