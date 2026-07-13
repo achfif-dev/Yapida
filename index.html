@@ -739,10 +739,13 @@ function studentsRootRef(path){ return db.ref('rapor/students' + (path?('/'+path
 
 function attachStudentsMasterListener(){
   studentsMasterRef = studentsRootRef();
-  studentsMasterRef.on('value', snap=>{
-    state.studentsMaster = snap.val() || {};
-    renderStudentTable(); renderStudentPicker(); renderRekap(); populatePindahRiwayatSelects();
-  });
+  state.studentsMaster = {};
+  // Sama seperti students/scores/absensi per kelas: pakai child_* (bukan 'value') supaya saat
+  // SATU siswa berubah, Firebase tidak mengirim ULANG seluruh database murid dari semua kelas.
+  const renderMaster = debounce(()=>{ renderStudentTable(); renderStudentPicker(); renderRekap(); populatePindahRiwayatSelects(); }, 80);
+  studentsMasterRef.on('child_added', snap=>{ state.studentsMaster[snap.key] = snap.val(); renderMaster(); });
+  studentsMasterRef.on('child_changed', snap=>{ state.studentsMaster[snap.key] = snap.val(); renderMaster(); });
+  studentsMasterRef.on('child_removed', snap=>{ delete state.studentsMaster[snap.key]; renderMaster(); });
 }
 
 // Migrasi otomatis: kelas lama menyimpan biodata lengkap langsung di rapor/data/{kelasId}/students/{id}.
