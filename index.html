@@ -409,6 +409,26 @@
       </div>
       <div class="empty" id="studentEmpty" style="display:none;">Belum ada siswa. Tambahkan siswa di atas.</div>
     </div>
+
+    <div class="card">
+      <h2>Kenaikan / Pindah Kelas</h2>
+      <p class="hint">Saat siswa naik kelas atau tinggal kelas, gunakan ini — bukan hapus &amp; input ulang. Biodata dan semua nilai di kelas-kelas sebelumnya tetap tersimpan dan bisa dilihat lewat "Riwayat Kelas &amp; Nilai" di bawah.</p>
+      <div class="row">
+        <div class="field"><label>Siswa (dari kelas aktif)</label><select id="pindahSiswa"></select></div>
+        <div class="field"><label>Pindah ke Kelas</label><select id="pindahKelasTujuan"></select></div>
+        <div class="field" style="flex:0 0 120px;"><label>No. Urut Baru</label><input id="pindahNoBaru" type="number" min="1"></div>
+      </div>
+      <div class="btnrow"><button id="btnPindahKelas">Pindahkan Siswa</button></div>
+    </div>
+
+    <div class="card">
+      <h2>Riwayat Kelas &amp; Nilai Siswa</h2>
+      <p class="hint">Lihat semua kelas yang pernah/sedang ditempuh seorang siswa beserta nilainya di tiap kelas.</p>
+      <div class="row">
+        <div class="field"><label>Pilih Siswa</label><select id="riwayatSiswaPick"></select></div>
+      </div>
+      <div id="riwayatKelasList" class="tablewrap" style="margin-top:10px;"></div>
+    </div>
   </section>
 
   <!-- ================= ABSENSI ================= -->
@@ -593,7 +613,8 @@ let state = {
   kelasList: {},   // kelasId -> {tingkatan, kelasNama, catur, tahun}
   meta: {},
   subjects: DEFAULT_SUBJECTS.slice(),
-  students: {},   // id -> {no, nama, nisn, nis, jk, tempatLahir, tglLahir, alamat, ayah, ibu, wali, telp}
+  students: {},   // id -> {no}  (enrollment/urutan siswa DI KELAS AKTIF SAJA)
+  studentsMaster: {}, // id -> {nama, nisn, nis, jk, ..., kelasAktifId, riwayatKelas:{kelasId:{no,tingkatan,kelasNama,catur,tahun,tanggal}}} — database murid, tidak terikat satu kelas
   scores: {},     // id -> {mapel:{...}, absen:{sakit,ijin,alpa}, potongan, sikap:{...}}
   absensi: {},     // tanggal -> { studentId -> 'H'|'S'|'I'|'A' }
   tieBreak: []     // array mapel, urutan prioritas untuk memecah peringkat yang sama
@@ -672,6 +693,9 @@ auth.onAuthStateChanged(user=>{
     chipWrap.innerHTML = '';
     currentDataRefs.forEach(ref=>ref.off());
     currentDataRefs = [];
+    if(studentsMasterRef) studentsMasterRef.off();
+    studentsMasterRef = null;
+    state.studentsMaster = {};
     db = null; activeKelasId = null;
     document.getElementById('connDot').classList.add('off');
     document.getElementById('connText').textContent = 'Belum masuk';
@@ -693,6 +717,7 @@ function initFirebase(){
     document.getElementById('connText').textContent = 'Terhubung ke Firebase';
     document.getElementById('akunStatus').textContent = 'Terhubung ke Firebase Realtime Database';
     attachKelasListListener();
+    attachStudentsMasterListener();
   }catch(e){
     console.error(e);
     document.getElementById('connText').textContent = 'Gagal konek: ' + e.message;
@@ -703,12 +728,46 @@ function initFirebase(){
 function kelasListRef(path){ return db.ref('rapor/kelasList' + (path?('/'+path):'')); }
 function dataRoot(path){ return db.ref('rapor/data/' + activeKelasId + (path?('/'+path):'')); }
 
+/* ===================== Database Murid (global, lintas kelas & kenaikan kelas) =====================
+   rapor/students/{studentId} menyimpan biodata induk siswa + riwayatKelas (semua kelas yang
+   pernah/sedang ditempuh). ID ini SAMA dipakai sebagai key di rapor/data/{kelasId}/scores/{studentId}
+   di setiap kelas yang pernah ia tempuh, jadi nilai di kelas-kelas sebelumnya tetap bisa diakses
+   walau siswa sudah naik/pindah/tinggal kelas. rapor/data/{kelasId}/students/{studentId} sendiri
+   hanya menyimpan {no} — nomor urut siswa tsb di kelas itu (data "keanggotaan kelas", bukan biodata). */
+let studentsMasterRef = null;
+function studentsRootRef(path){ return db.ref('rapor/students' + (path?('/'+path):'')); }
+
+function attachStudentsMasterListener(){
+  studentsMasterRef = studentsRootRef();
+  studentsMasterRef.on('value', snap=>{
+    state.studentsMaster = snap.val() || {};
+    renderStudentTable(); renderStudentPicker(); renderRekap(); populatePindahRiwayatSelects();
+  });
+}
+
+// Migrasi otomatis: kelas lama menyimpan biodata lengkap langsung di rapor/data/{kelasId}/students/{id}.
+// Begitu terlihat, biodata itu dipindah ke rapor/students/{id} (ID dipertahankan supaya nilai yang
+// sudah ada di rapor/data/{kelasId}/scores/{id} tetap terhubung), lalu record kelas disederhanakan jadi {no}.
+function migrateLegacyStudentIfNeeded(kelasId, studentId, v){
+  if(!v || v.nama===undefined) return; // sudah bentuk baru ({no} saja) atau kosong
+  const k = state.kelasList[kelasId] || {};
+  const master = {
+    nama:v.nama||'', jk:v.jk||'', nisn:v.nisn||'', nis:v.nis||'', tempatLahir:v.tempatLahir||'',
+    tglLahir:v.tglLahir||'', alamat:v.alamat||'', ayah:v.ayah||'', ibu:v.ibu||'', wali:v.wali||'', telp:v.telp||'',
+    kelasAktifId: kelasId,
+    riwayatKelas: { [kelasId]: { no:v.no||0, tingkatan:k.tingkatan||'', kelasNama:k.kelasNama||'', catur:k.catur||'', tahun:k.tahun||'', tanggal: todayISO() } }
+  };
+  studentsRootRef(studentId).set(master);
+  db.ref('rapor/data/'+kelasId+'/students/'+studentId).set({no: v.no||0});
+}
+
 function attachKelasListListener(){
   kelasListRef().on('value', snap=>{
     state.kelasList = snap.val() || {};
     renderKelasTable();
     populateKelasSwitcher();
     populateCopySubjectsFrom();
+    populatePindahRiwayatSelects();
 
     const keys = Object.keys(state.kelasList);
     if(kelasEditId && !state.kelasList[kelasEditId]) resetKelasForm();
@@ -920,8 +979,12 @@ function attachDataListeners(){
   // sekaligus.
   const stRef = dataRoot('students');
   state.students = {};
-  const renderStudents = debounce(()=>{ renderStudentTable(); renderStudentPicker(); renderRekap(); }, 80);
-  stRef.on('child_added', snap=>{ state.students[snap.key] = snap.val(); renderStudents(); });
+  const renderStudents = debounce(()=>{ renderStudentTable(); renderStudentPicker(); renderRekap(); populatePindahRiwayatSelects(); }, 80);
+  stRef.on('child_added', snap=>{
+    const v = snap.val();
+    migrateLegacyStudentIfNeeded(activeKelasId, snap.key, v);
+    state.students[snap.key] = v; renderStudents();
+  });
   stRef.on('child_changed', snap=>{ state.students[snap.key] = snap.val(); renderStudents(); });
   stRef.on('child_removed', snap=>{ delete state.students[snap.key]; renderStudents(); });
 
@@ -1090,26 +1153,46 @@ function renderStudentTable(){
       <td>${escapeHtml(st.jk||'-')}</td>
       <td class="noprint">
         <button class="secondary" data-act="edit" data-id="${st.id}" type="button">Ubah</button>
-        <button class="danger" data-act="del" data-id="${st.id}" type="button">Hapus</button>
+        <button class="danger" data-act="del" data-id="${st.id}" type="button">Keluarkan</button>
       </td>`;
     tbody.appendChild(tr);
   });
   tbody.querySelectorAll('button[data-act="del"]').forEach(b=>{
     b.addEventListener('click', ()=>{
-      if(!confirm('Hapus siswa ini beserta nilai & absensinya?')) return;
-      dataRoot('students/'+b.dataset.id).remove();
-      dataRoot('scores/'+b.dataset.id).remove();
-      if(studentEditId===b.dataset.id) resetStudentForm();
+      const id = b.dataset.id;
+      if(!confirm('Keluarkan siswa ini dari kelas ini? Nilai & absensi di kelas ini akan terhapus. Biodata & riwayat nilai di kelas lain (jika ada) tetap aman.')) return;
+      dataRoot('students/'+id).remove();
+      dataRoot('scores/'+id).remove();
+      const m = state.studentsMaster[id];
+      if(m){
+        const riwayat = {...(m.riwayatKelas||{})};
+        delete riwayat[activeKelasId];
+        const sisaKelas = Object.keys(riwayat);
+        studentsRootRef(id+'/riwayatKelas/'+activeKelasId).remove();
+        if(!sisaKelas.length){
+          // tidak ada riwayat kelas tersisa sama sekali -> hapus juga biodata induknya
+          studentsRootRef(id).remove();
+        } else if(m.kelasAktifId===activeKelasId){
+          studentsRootRef(id+'/kelasAktifId').set(sisaKelas[0]);
+        }
+      }
+      if(studentEditId===id) resetStudentForm();
     });
   });
   tbody.querySelectorAll('button[data-act="edit"]').forEach(b=>{
     b.addEventListener('click', ()=> fillStudentForm(b.dataset.id));
   });
+  populatePindahRiwayatSelects();
 }
 
 function orderedStudents(){
   return Object.entries(state.students)
-    .map(([id, v])=>({id, ...v}))
+    .map(([id, v])=>{
+      const m = state.studentsMaster[id];
+      // fallback ke record lama (biodata inline) selama migrasi belum selesai ditulis balik oleh Firebase
+      return m ? { id, ...m, no: (v && v.no!=null) ? v.no : m.no } : { id, ...v };
+    })
+    .filter(st=>st.nama)
     .sort((a,b)=>(a.no||0)-(b.no||0));
 }
 
@@ -1133,11 +1216,12 @@ function resetStudentForm(){
 }
 
 function fillStudentForm(id){
-  const st = state.students[id];
+  const st = state.studentsMaster[id];
+  const enr = state.students[id];
   if(!st) return;
   studentEditId = id;
   document.getElementById('studentFormTitle').textContent = 'Ubah Data Siswa';
-  document.getElementById('sfNo').value = st.no || '';
+  document.getElementById('sfNo').value = (enr && enr.no) || st.no || '';
   document.getElementById('sfNama').value = st.nama || '';
   document.getElementById('sfJk').value = st.jk || 'L';
   document.getElementById('sfNisn').value = st.nisn || '';
@@ -1161,8 +1245,8 @@ document.getElementById('btnSaveStudent').addEventListener('click', ()=>{
   if(!activeKelasId){ toast('Pilih/buat kelas dulu di tab Kelas'); return; }
   const nama = document.getElementById('sfNama').value.trim();
   if(!nama){ toast('Isi nama siswa dulu'); return; }
-  const payload = {
-    no: Number(document.getElementById('sfNo').value || (orderedStudents().length+1)),
+  const no = Number(document.getElementById('sfNo').value || (orderedStudents().length+1));
+  const biodata = {
     nama,
     jk: document.getElementById('sfJk').value,
     nisn: document.getElementById('sfNisn').value.trim(),
@@ -1175,12 +1259,133 @@ document.getElementById('btnSaveStudent').addEventListener('click', ()=>{
     wali: document.getElementById('sfWali').value.trim(),
     telp: document.getElementById('sfTelp').value.trim(),
   };
-  const ref = studentEditId ? dataRoot('students/'+studentEditId) : dataRoot('students').push();
-  ref.set(payload).then(()=>{
-    toast(studentEditId ? 'Data siswa diperbarui' : 'Siswa ditambahkan');
+
+  if(studentEditId){
+    // Ubah biodata: berlaku global (ikut siswa ke kelas manapun), no urut hanya berlaku di kelas aktif
+    Promise.all([
+      studentsRootRef(studentEditId).update(biodata),
+      dataRoot('students/'+studentEditId).update({no})
+    ]).then(()=>{
+      toast('Data siswa diperbarui');
+      resetStudentForm();
+    });
+    return;
+  }
+
+  const k = state.kelasList[activeKelasId] || {};
+  const newRef = studentsRootRef().push();
+  const id = newRef.key;
+  const master = {
+    ...biodata,
+    kelasAktifId: activeKelasId,
+    riwayatKelas: { [activeKelasId]: { no, tingkatan:k.tingkatan||'', kelasNama:k.kelasNama||'', catur:k.catur||'', tahun:k.tahun||'', tanggal: todayISO() } }
+  };
+  newRef.set(master).then(()=> dataRoot('students/'+id).set({no})).then(()=>{
+    toast('Siswa ditambahkan');
     resetStudentForm();
   });
 });
+
+/* ===================== Kenaikan / Pindah Kelas & Riwayat ===================== */
+function populatePindahRiwayatSelects(){
+  const selSiswa = document.getElementById('pindahSiswa');
+  const selRiwayat = document.getElementById('riwayatSiswaPick');
+  if(!selSiswa || !selRiwayat) return; // belum ter-render (mis. sebelum login)
+
+  const list = orderedStudents();
+  const curSiswa = selSiswa.value, curRiwayat = selRiwayat.value;
+  selSiswa.innerHTML = ''; selRiwayat.innerHTML = '';
+  if(!list.length){
+    selSiswa.innerHTML = '<option value="">— belum ada siswa di kelas ini —</option>';
+    selRiwayat.innerHTML = '<option value="">— belum ada siswa —</option>';
+  }
+  list.forEach(st=>{
+    const o1 = document.createElement('option'); o1.value = st.id; o1.textContent = `${st.no}. ${st.nama}`; selSiswa.appendChild(o1);
+    const o2 = document.createElement('option'); o2.value = st.id; o2.textContent = `${st.no}. ${st.nama}`; selRiwayat.appendChild(o2);
+  });
+  if(curSiswa && list.some(s=>s.id===curSiswa)) selSiswa.value = curSiswa;
+  if(curRiwayat && list.some(s=>s.id===curRiwayat)) selRiwayat.value = curRiwayat;
+
+  const selTujuan = document.getElementById('pindahKelasTujuan');
+  if(selTujuan){
+    const curT = selTujuan.value;
+    selTujuan.innerHTML = '<option value="">— pilih kelas tujuan —</option>';
+    Object.entries(state.kelasList).forEach(([id,k])=>{
+      if(id===activeKelasId) return;
+      const opt = document.createElement('option');
+      opt.value = id; opt.textContent = `${k.tingkatan||''} ${k.kelasNama||''}${k.catur?(' · CW '+k.catur):''}`;
+      selTujuan.appendChild(opt);
+    });
+    if(curT) selTujuan.value = curT;
+  }
+
+  renderRiwayatKelas();
+}
+
+document.getElementById('btnPindahKelas').addEventListener('click', async ()=>{
+  if(!activeKelasId){ toast('Pilih/buat kelas dulu'); return; }
+  const id = document.getElementById('pindahSiswa').value;
+  const tujuanId = document.getElementById('pindahKelasTujuan').value;
+  const noBaru = Number(document.getElementById('pindahNoBaru').value || 1);
+  if(!id){ toast('Pilih siswa dulu'); return; }
+  if(!tujuanId){ toast('Pilih kelas tujuan dulu'); return; }
+  const kt = state.kelasList[tujuanId] || {};
+  const nama = (state.studentsMaster[id]||{}).nama || '';
+  if(!confirm(`Pindahkan "${nama}" ke kelas ${kt.tingkatan||''} ${kt.kelasNama||''}? Nilai di kelas ini tetap tersimpan sebagai riwayat dan bisa dilihat lagi lewat "Riwayat Kelas & Nilai".`)) return;
+
+  try{
+    await db.ref('rapor/data/'+tujuanId+'/students/'+id).set({no: noBaru});
+    await studentsRootRef(id+'/riwayatKelas/'+tujuanId).set({
+      no: noBaru, tingkatan: kt.tingkatan||'', kelasNama: kt.kelasNama||'', catur: kt.catur||'', tahun: kt.tahun||'',
+      tanggal: todayISO()
+    });
+    await studentsRootRef(id+'/kelasAktifId').set(tujuanId);
+    await dataRoot('students/'+id).remove(); // keluar dari roster kelas lama; nilai & riwayat kelas lama tetap tersimpan
+    toast('Siswa dipindahkan ke kelas baru');
+    document.getElementById('pindahNoBaru').value = '';
+  }catch(e){
+    console.error(e);
+    toast('Gagal memindahkan siswa');
+  }
+});
+
+async function renderRiwayatKelas(){
+  const sel = document.getElementById('riwayatSiswaPick');
+  const box = document.getElementById('riwayatKelasList');
+  if(!sel || !box) return;
+  const id = sel.value;
+  if(!id){ box.innerHTML = ''; return; }
+  const m = state.studentsMaster[id];
+  const riwayat = (m && m.riwayatKelas) || {};
+  const entries = Object.entries(riwayat).sort((a,b)=> (a[1].tahun||'').localeCompare(b[1].tahun||''));
+  if(!entries.length){ box.innerHTML = '<div class="empty">Belum ada riwayat kelas untuk siswa ini.</div>'; return; }
+
+  const myRequestId = (renderRiwayatKelas._reqId = (renderRiwayatKelas._reqId||0) + 1);
+  box.innerHTML = '<div class="hint">Memuat riwayat nilai…</div>';
+  const rowsHtml = [];
+  for(const [kelasId, r] of entries){
+    const [subjSnap, scoreSnap] = await Promise.all([
+      db.ref('rapor/data/'+kelasId+'/subjects').get(),
+      db.ref('rapor/data/'+kelasId+'/scores/'+id).get()
+    ]);
+    if(myRequestId !== renderRiwayatKelas._reqId) return; // sudah ganti siswa/kelas, batalkan render lama
+    const subjects = subjSnap.val() || [];
+    const sc = scoreSnap.val() || {};
+    const nilaiTxt = subjects.length
+      ? subjects.map(s=> `${escapeHtml(s)}: ${(sc.mapel && sc.mapel[s]!=null) ? sc.mapel[s] : '-'}`).join(' · ')
+      : '';
+    const aktif = m.kelasAktifId===kelasId ? ' <span class="pill active">aktif</span>' : '';
+    rowsHtml.push(`<tr>
+      <td class="name">${escapeHtml(r.tingkatan||'')} ${escapeHtml(r.kelasNama||'')}${aktif}</td>
+      <td>${escapeHtml(r.catur||'')}</td>
+      <td>${escapeHtml(r.tahun||'')}</td>
+      <td style="text-align:left;font-size:11.5px;">${nilaiTxt || '<span class="hint">Belum ada nilai</span>'}</td>
+    </tr>`);
+  }
+  if(myRequestId !== renderRiwayatKelas._reqId) return;
+  box.innerHTML = `<table><thead><tr><th style="text-align:left;">Kelas</th><th>Catur Wulan</th><th>Tahun</th><th style="text-align:left;">Nilai per Mapel</th></tr></thead><tbody>${rowsHtml.join('')}</tbody></table>`;
+}
+document.getElementById('riwayatSiswaPick').addEventListener('change', renderRiwayatKelas);
 
 /* ===================== Absensi ===================== */
 let pendingAbsensi = {}; // studentId -> 'H'|'S'|'I'|'A' untuk tanggal yang sedang dilihat
