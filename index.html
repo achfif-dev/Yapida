@@ -60,11 +60,7 @@
   }
   .dot{width:7px;height:7px;border-radius:50%;background:#7fd99a;box-shadow:0 0 0 3px rgba(127,217,154,.25);}
   .dot.off{background:#d97757;box-shadow:0 0 0 3px rgba(217,119,87,.25);}
-  #kelasSwitcher{
-    background:rgba(255,255,255,.12); color:var(--white); border:1px solid rgba(255,255,255,.28);
-    border-radius:100px; padding:6px 12px; font-size:12.5px; font-weight:600; max-width:260px;
-  }
-  #kelasSwitcher option{color:var(--ink);}
+  #kelasSwitcher{ max-width:420px; }
 
   .tabs{
     display:flex; gap:4px; margin:-30px 12px 0; position:relative; z-index:2;
@@ -147,6 +143,57 @@
     th,td{padding:3px 3px !important;}
     td.name{white-space:normal;}
   }
+
+  /* ---------- Ijazah ---------- */
+  .ijazahBoard{display:flex; gap:18px; flex-wrap:wrap; justify-content:center;}
+  .ijazahPage{
+    width:480px; aspect-ratio:3/5; background:#fbfbf2; position:relative;
+    border:10px solid #1e6b3e; border-radius:4px; padding:16px 14px;
+    box-shadow:var(--shadow); overflow:hidden;
+  }
+  .ijazahPage.hasCustomBorder{ background-size:100% 100%; background-repeat:no-repeat; }
+  .ijazahPage::before{
+    content:""; position:absolute; inset:6px;
+    border:2px solid #1e6b3e;
+    background-image: repeating-linear-gradient(45deg, rgba(30,107,62,.07) 0 6px, transparent 6px 12px);
+    pointer-events:none;
+  }
+  .ijazahInner{position:relative; z-index:1; height:100%; display:flex; flex-direction:column;}
+  .ijazahArabTop{text-align:center; font-size:15px; line-height:1.6; color:#153627; direction:rtl;}
+  .ijazahLembaga{text-align:center; font-weight:800; font-size:12.5px; margin-top:6px; color:#153627;}
+  .ijazahTitleWord{text-align:center; font-family:'Fraunces',serif; font-weight:700; font-size:26px; margin:2px 0; color:#153627;}
+  .ijazahNos{display:flex; justify-content:space-between; font-size:10px; margin-top:-4px;}
+  .ijazahMadrasah{text-align:center; font-weight:800; font-size:12px; margin-top:6px;}
+  .ijazahAddr, .ijazahTingkat{text-align:center; font-size:10.5px;}
+  .ijazahTahun{text-align:center; font-size:10.5px; margin-top:4px;}
+  .ijazahLead{text-align:center; font-size:10.5px; margin-top:10px;}
+  .ijazahNama{text-align:center; font-weight:700; font-size:15px; margin:6px 0; text-decoration:underline; text-underline-offset:3px;}
+  .ijazahBioRow{display:flex; font-size:10.5px; gap:6px; margin-top:2px;}
+  .ijazahBioRow .lbl{width:98px; flex:0 0 auto;}
+  .ijazahBioRow .val{font-weight:600; text-decoration:underline; text-underline-offset:2px;}
+  .ijazahTelahLulus{font-size:10px; margin-top:8px; text-align:justify;}
+  .ijazahFotoBox{width:70px; height:88px; border:1px solid #444; font-size:9px; text-align:center; display:flex; align-items:center; justify-content:center; color:#666; position:absolute; left:14px; bottom:70px; background:#fff;}
+  .ijazahFotoBox img{width:100%; height:100%; object-fit:cover;}
+  .ijazahSignArea{margin-top:auto; font-size:10.5px;}
+  .ijazahSignArea .ttd{text-align:center; margin-top:2px;}
+  .ijazahSignArea .ttdNama{font-weight:700; text-decoration:underline; text-underline-offset:2px; margin-top:34px; display:block;}
+  .ijazahBackTitle{text-align:center; font-family:'Fraunces',serif; font-weight:700; font-size:15px;}
+  .ijazahBackSub{text-align:center; font-weight:800; font-size:11.5px;}
+  .ijazahBackAddr{text-align:center; font-size:9.5px;}
+  .ijazahBackMeta{text-align:center; font-size:9.5px; margin-top:2px;}
+  .ijazahBackDaftar{text-align:center; font-size:9.5px; margin-top:8px; border-bottom:1px solid #333; padding-bottom:10px;}
+  .ijazahTbl{width:100%; font-size:9px; border-collapse:collapse; margin-top:8px;}
+  .ijazahTbl th, .ijazahTbl td{border:1px solid #333; padding:2px 4px;}
+  .ijazahTbl th{background:#eef3ee;}
+  .ijazahBackSign{display:flex; justify-content:space-around; text-align:center; font-size:9.5px; margin-top:14px;}
+  .ijazahBackSign .ttdNama{font-weight:700; text-decoration:underline; text-underline-offset:2px; margin-top:30px; display:block;}
+  @media print{
+    body.printingIjazah main{padding:0;}
+    body.printingIjazah .card:not(.ijazahPrintCard){display:none !important;}
+    body.printingIjazah .ijazahPrintCard{box-shadow:none; border:none;}
+    body.printingIjazah .ijazahBoard{gap:0;}
+    body.printingIjazah .ijazahPage{box-shadow:none; page-break-after:always; margin:0 auto;}
+  }
   @media (max-width:640px){
     .topbar h1{font-size:19px;}
   }
@@ -196,25 +243,25 @@
 
 <div class="topbar">
   <div style="display:flex; align-items:center; gap:12px;">
-    <img src="" id="headerLogo" alt="Logo Yayasan" style="width:44px;height:44px;object-fit:contain;border-radius:8px;background:rgba(255,255,255,.9);padding:3px;flex:0 0 auto;">
+    <img src="" id="headerLogo" alt="Logo Yayasan" style="width:44px;height:44px;object-fit:contain;flex:0 0 auto;">
     <div>
       <h1 style="margin:0;">Database &amp; Buku Nilai Siswa</h1>
-      <div class="sub" id="schoolLine">Madrasah Tarbiyatul Islam Al-Hidayah — Yapida — realtime</div>
+      <div class="sub" id="schoolLine">Yayasan Pendidikan Islam Al-Hidayah — Yapida — realtime</div>
     </div>
   </div>
   <div class="row2">
     <div class="badge"><span class="dot off" id="connDot"></span><span id="connText">Menghubungkan…</span></div>
-    <select id="kelasSwitcher" class="noprint" style="display:none;"><option value="">— belum ada kelas —</option></select>
     <span id="userChipWrap" class="noprint"></span>
   </div>
 </div>
 
 <div class="tabs noprint" id="tabsBar" style="display:none;">
-  <div class="tab active" data-tab="kelas">Kelas</div>
   <div class="tab" data-tab="siswa">Siswa</div>
+  <div class="tab active" data-tab="kelas">Kelas</div>
   <div class="tab" data-tab="absensi">Absensi</div>
   <div class="tab" data-tab="input">Input Nilai</div>
   <div class="tab" data-tab="rekap">Rekap &amp; Cetak</div>
+  <div class="tab" data-tab="ijazah">Ijazah</div>
   <div class="tab" data-tab="akun">Akun</div>
 </div>
 
@@ -268,6 +315,15 @@
 
   <!-- ================= KELAS ================= -->
   <section id="tab-kelas" style="display:none;">
+
+    <div class="card">
+      <h2>Kelas Aktif</h2>
+      <p class="hint">Pilih kelas yang sedang dibuka. Semua tab lain (Siswa, Absensi, Input Nilai, Rekap) akan mengikuti kelas yang dipilih di sini.</p>
+      <div class="field">
+        <label>Kelas</label>
+        <select id="kelasSwitcher" class="noprint"><option value="">— belum ada kelas —</option></select>
+      </div>
+    </div>
 
     <div class="card">
       <h2 id="kelasFormTitle">Buat Kelas / Tingkatan Baru</h2>
@@ -570,6 +626,116 @@
 
   </section>
 
+  <!-- ================= IJAZAH ================= -->
+  <section id="tab-ijazah" style="display:none;">
+
+    <div class="card noprint">
+      <h2>Ijazah — Kelas Akhir</h2>
+      <p class="hint">Ijazah dibuat dari <strong>kelas yang sedang aktif</strong> (pilih/atur di tab "Kelas"). Fitur ini khusus untuk kelas akhir tingkat TPQ, Ibtidaiyah (Awwaliyah 6 Tahun), dan Tsanawiyah (Wustho 3 Tahun) — nilai diambil otomatis dari data Input Nilai kelas tersebut.</p>
+      <div id="ijazahNoKelas" class="empty" style="display:none;">Pilih atau buat kelas dulu di tab "Kelas".</div>
+      <div id="ijazahNotSupported" class="empty" style="display:none;">Tingkatan kelas aktif ini (<span id="ijazahTingkatanNow"></span>) belum punya template Ijazah. Template tersedia untuk: TPQ, Ibtidaiyah, Tsanawiyah.</div>
+    </div>
+
+    <div id="ijazahBody" style="display:none;">
+
+      <div class="card noprint">
+        <h2>Data Umum Ijazah — Kelas Aktif</h2>
+        <p class="hint">Berlaku untuk semua siswa di kelas aktif ini. Bisa diubah kapan pun.</p>
+        <div class="row">
+          <div class="field"><label>No. Ijazah dimulai dari</label><input id="ijzNoAwal" type="number" min="1" placeholder="cth. 247"></div>
+          <div class="field"><label>Tanggal Ujian — dari (H)</label><input id="ijzDariH" placeholder="cth. 22 ROJAB 1447"></div>
+          <div class="field"><label>Tanggal Ujian — dari (M)</label><input id="ijzDariM" placeholder="cth. 11 JANUARI 2026"></div>
+          <div class="field"><label>Tanggal Ujian — sampai (H)</label><input id="ijzSampaiH" placeholder="cth. 10 SYA'BAN 1447"></div>
+          <div class="field"><label>Tanggal Ujian — sampai (M)</label><input id="ijzSampaiM" placeholder="cth. 29 JANUARI 2026"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Tempat</label><input id="ijzTempat" placeholder="Bangkalan"></div>
+          <div class="field"><label>Tanggal Terbit Ijazah (H)</label><input id="ijzTerbitH" placeholder="cth. 19 SYA'BAN 1447"></div>
+          <div class="field"><label>Tanggal Terbit Ijazah (M)</label><input id="ijzTerbitM" placeholder="cth. 07 FEBRUARI 2026"></div>
+        </div>
+        <div class="btnrow"><button id="btnSaveIjazahUmum">Simpan Data Umum</button></div>
+      </div>
+
+      <div class="card noprint">
+        <h2>Template Cetak — <span id="ijazahTingkatanLabel"></span></h2>
+        <p class="hint">Format ini dipakai untuk semua kelas akhir di tingkatan yang sama, dan bisa diperbarui kapan saja tanpa mengubah data siswa/nilai.</p>
+        <div class="row">
+          <div class="field" style="flex:2;"><label>Nama Yayasan (baris atas)</label><input id="tplLembagaAtas"></div>
+        </div>
+        <div class="row">
+          <div class="field" style="flex:2;"><label>Nama Madrasah / Lembaga</label><input id="tplNamaMadrasah"></div>
+          <div class="field"><label>Alamat</label><input id="tplAlamat"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Label Tingkat</label><input id="tplTingkatLabel" placeholder="cth. TINGKAT WUSTHO ( 3 TAHUN )"></div>
+          <div class="field"><label>Judul di Halaman Belakang</label><input id="tplJudulBelakang" placeholder="EVALUASI BELAJAR TAHAP AKHIR"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Jabatan Penandatangan Utama</label><input id="tplKepalaLabel" placeholder="cth. Kepala Madrasah."></div>
+          <div class="field"><label>Nama Penandatangan Utama</label><input id="tplKepalaNama"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Jabatan Ketua Yayasan</label><input id="tplKetuaLabel" placeholder="Ketua"></div>
+          <div class="field"><label>Nama Ketua Yayasan</label><input id="tplKetuaNama" placeholder="JUHARI, S.Ag MEI"></div>
+        </div>
+        <div class="row" id="tplPanitiaRow">
+          <div class="field"><label>Nama Ketua Panitia EBTA</label><input id="tplPanitiaKetua"></div>
+          <div class="field"><label>Nama Sekretaris Panitia EBTA</label><input id="tplPanitiaSekretaris"></div>
+        </div>
+        <div class="row" id="tplMateriTambahanRow">
+          <div class="field" style="flex:2;"><label>Mapel "Materi Tambahan" (khusus TPQ, pisahkan koma)</label><input id="tplMateriTambahan" placeholder="Surat-surat Pendek, Niatnya Shalat, Do'a Sehari-hari"></div>
+        </div>
+        <div class="row">
+          <div class="field" style="flex:2;">
+            <label>Gambar Bingkai Kustom (opsional — akan menggantikan bingkai bawaan)</label>
+            <input type="file" id="tplBorderFile" accept="image/*">
+          </div>
+          <div class="field" style="flex:0 0 auto; align-self:flex-end;"><button class="secondary" id="btnClearBorder" type="button">Hapus Bingkai Kustom</button></div>
+        </div>
+        <div class="btnrow"><button id="btnSaveTemplate">Simpan Template</button></div>
+      </div>
+
+      <div class="card noprint">
+        <h2>Data per Siswa</h2>
+        <div class="studentpick">
+          <select id="ijzPickStudent"></select>
+        </div>
+        <div id="ijzStudentEmpty" class="empty">Pilih siswa untuk mengisi No. Ijazah &amp; pas foto.</div>
+        <div id="ijzStudentForm" style="display:none;">
+          <div class="row">
+            <div class="field" style="flex:0 0 140px;"><label>No. Ijazah</label><input id="ijzNoIjazah"></div>
+            <div class="field" style="flex:0 0 140px;"><label>No. Induk</label><input id="ijzNoInduk"></div>
+            <div class="field" style="flex:2;"><label>Pas Foto 3x4 (opsional)</label><input type="file" id="ijzFotoFile" accept="image/*"></div>
+          </div>
+          <div class="btnrow"><button id="btnSaveIjzSiswa">Simpan Data Siswa Ini</button></div>
+        </div>
+      </div>
+
+      <div class="card noprint">
+        <h2>Pratinjau &amp; Cetak</h2>
+        <div class="studentpick">
+          <select id="ijzPickPreview"></select>
+          <button class="secondary" id="btnBuildIjazah" type="button">Tampilkan Ijazah</button>
+        </div>
+        <div class="btnrow" id="ijazahExportBtns" style="display:none;">
+          <button class="gold" id="btnPrintIjazah" type="button">🖨️ Cetak</button>
+          <button class="secondary" id="btnPdfIjazah" type="button">⬇️ Unduh PDF (2 sisi)</button>
+          <button class="secondary" id="btnJpgIjazahDepan" type="button">⬇️ JPG Depan</button>
+          <button class="secondary" id="btnJpgIjazahBelakang" type="button">⬇️ JPG Belakang</button>
+        </div>
+        <div class="btnrow">
+          <button class="secondary" id="btnPdfIjazahSemua" type="button">⬇️ Unduh PDF Semua Siswa (Kelas Ini)</button>
+        </div>
+        <p class="hint">Butuh koneksi internet untuk memuat pustaka ekspor PDF/JPG saat pertama kali dipakai.</p>
+      </div>
+
+      <div class="card ijazahPrintCard" id="ijazahPreviewCard">
+        <div class="ijazahBoard" id="ijazahBoard"></div>
+      </div>
+
+    </div>
+  </section>
+
   </div><!-- /appContent -->
 
 </main>
@@ -580,6 +746,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 /* ===================== Firebase config (tertanam) ===================== */
 const LOGO_DATA_URI = "data:image/png;base64,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";
@@ -617,8 +785,87 @@ let state = {
   studentsMaster: {}, // id -> {nama, nisn, nis, jk, ..., kelasAktifId, riwayatKelas:{kelasId:{no,tingkatan,kelasNama,catur,tahun,tanggal}}} — database murid, tidak terikat satu kelas
   scores: {},     // id -> {mapel:{...}, absen:{sakit,ijin,alpa}, potongan, sikap:{...}}
   absensi: {},     // tanggal -> { studentId -> 'H'|'S'|'I'|'A' }
-  tieBreak: []     // array mapel, urutan prioritas untuk memecah peringkat yang sama
+  tieBreak: [],    // array mapel, urutan prioritas untuk memecah peringkat yang sama
+  ijazahUmum: {},  // data umum ijazah kelas aktif: {noAwal, dariH, dariM, sampaiH, sampaiM, tempat, terbitH, terbitM}
+  ijazah: {}       // studentId -> {noIjazah, noInduk, foto}
 };
+
+let ijazahTemplates = {}; // tingkatanKey -> template config (global, lintas kelas)
+let ijazahTemplatesRef = null;
+let ijzSelectedStudentId = null;
+let ijzPreviewStudentId = null;
+
+const IJAZAH_DEFAULT_TEMPLATES = {
+  tpq: {
+    lembagaAtas: "YAYASAN PENDIDIKAN ISLAM AL-HIDAYAH (YAPIDA)",
+    namaMadrasah: "TAMAN PENDIDIKAN AL-QUR'AN ( TPQ ) AL-HIDAYAH",
+    alamat: "UJUNG PIRING BANGKALAN",
+    tingkatLabel: "",
+    showTingkatLine: false,
+    showSesudahLine: false,
+    judulBelakang: "EVALUASI BELAJAR TAHAP AKHIR",
+    kepalaLabel: "Kepala TPQ Al-Hidayah",
+    kepalaNama: "MAHMIYATUL KIROMAH",
+    ketuaLabel: "Ketua",
+    ketuaNama: "JUHARI, S.Ag MEI",
+    showPanitia: false,
+    panitiaKetua: "", panitiaSekretaris: "",
+    materiTambahan: ["Surat-surat Pendek","Niatnya Shalat","Do'a Sehari-hari"],
+    leadIntro: "Yang bertandatangan di bawah ini,\nKepala Taman Pendidikan Al-Qur'an ( TPQ )\nMemutuskan Bahwa:",
+    closingText: "Telah lulus dalam Evaluasi Belajar tulis baca Al-qur'an Tingkat ( TPQ ) yang di laksanakan pada tanggal {DARI_M} sampai {SAMPAI_M}.\nIjazah ini di berikan sebagai bukti bahwa nama tersebut telah menyelesaikan pendidikan di Taman Pendidikan Al-Qur'an ( TPQ ) Al-Hidayah",
+    borderImg: ""
+  },
+  ibtidaiyah: {
+    lembagaAtas: "YAYASAN PENDIDIKAN ISLAM AL-HIDAYAH (YAPIDA)",
+    namaMadrasah: "MADRASAH DINIYAH TAKMILIYAH AL-HIDAYAH",
+    alamat: "UJUNG PIRING BANGKALAN",
+    tingkatLabel: "TINGKAT AWALIYAH ( 6 TAHUN )",
+    showTingkatLine: true,
+    showSesudahLine: true,
+    judulBelakang: "EVALUASI BELAJAR TAHAP AKHIR",
+    kepalaLabel: "Kepala Madrasah.",
+    kepalaNama: "MOH.TAUFIQ MUNAWIR",
+    ketuaLabel: "Ketua",
+    ketuaNama: "JUHARI, S.Ag MEI",
+    showPanitia: true,
+    panitiaKetua: "HAFSAH", panitiaSekretaris: "MARATUS SHOLIHAH",
+    materiTambahan: [],
+    leadIntro: "Kami memutuskan bahwa :",
+    closingText: "Telah lulus dalam Evaluasi Belajar Tahap Akhir tersebut diatas dan sebagai bukti surat ijazah ini kami berikan.",
+    borderImg: ""
+  },
+  tsanawiyah: {
+    lembagaAtas: "YAYASAN PENDIDIKAN ISLAM AL-HIDAYAH (YAPIDA)",
+    namaMadrasah: "MADRASAH TARBIYATUL ISLAM AL-HIDAYAH",
+    alamat: "UJUNG PIRING BANGKALAN",
+    tingkatLabel: "TINGKAT WUSTHO ( 3 TAHUN )",
+    showTingkatLine: true,
+    showSesudahLine: true,
+    judulBelakang: "EVALUASI BELAJAR TAHAP AKHIR",
+    kepalaLabel: "Kepala Madrasah.",
+    kepalaNama: "MOH. NASHIR SYAFI'I",
+    ketuaLabel: "Ketua",
+    ketuaNama: "JUHARI, S.Ag MEI",
+    showPanitia: true,
+    panitiaKetua: "ABD. ROSYID FADLI", panitiaSekretaris: "M. THOHA AHMAD",
+    materiTambahan: [],
+    leadIntro: "Kami memutuskan bahwa :",
+    closingText: "Telah lulus dalam Evaluasi Belajar Tahap Akhir tersebut diatas dan sebagai bukti surat ijazah ini kami berikan.",
+    borderImg: ""
+  }
+};
+const IJAZAH_LETTER_GRADES = [{min:85,label:'A'},{min:75,label:'B'},{min:65,label:'C'},{min:55,label:'D'},{min:45,label:'E'},{min:0,label:'F'}];
+function nilaiHuruf(v){
+  for(const g of IJAZAH_LETTER_GRADES){ if(Number(v)>=g.min) return g.label; }
+  return 'F';
+}
+function tingkatanKey(tingkatan){
+  const t = (tingkatan||'').toLowerCase();
+  if(t==='tpq') return 'tpq';
+  if(t==='ibtidaiyah') return 'ibtidaiyah';
+  if(t==='tsanawiyah') return 'tsanawiyah';
+  return null;
+}
 
 function toast(msg){
   const t = document.getElementById('toast');
@@ -632,19 +879,20 @@ document.querySelectorAll('.tab').forEach(tab=>{
   tab.addEventListener('click', ()=>{
     document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
     tab.classList.add('active');
-    ['kelas','siswa','absensi','input','rekap','akun'].forEach(name=>{
+    ['kelas','siswa','absensi','input','rekap','ijazah','akun'].forEach(name=>{
       document.getElementById('tab-'+name).style.display = (name===tab.dataset.tab) ? '' : 'none';
     });
     if(tab.dataset.tab==='rekap') renderRekap();
     if(tab.dataset.tab==='input'){ renderStudentPicker(); renderTabelMassal(); }
     if(tab.dataset.tab==='absensi') renderAbsensiTable();
+    if(tab.dataset.tab==='ijazah') renderIjazahTab();
   });
 });
 
 /* ===================== Auth (Google Sign-In) ===================== */
 function setTab(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
-  ['kelas','siswa','absensi','input','rekap','akun'].forEach(n=>{
+  ['kelas','siswa','absensi','input','rekap','ijazah','akun'].forEach(n=>{
     document.getElementById('tab-'+n).style.display = (n===name) ? '' : 'none';
   });
 }
@@ -672,14 +920,12 @@ auth.onAuthStateChanged(user=>{
   const loginGate = document.getElementById('loginGate');
   const appContent = document.getElementById('appContent');
   const tabsBar = document.getElementById('tabsBar');
-  const kelasSwitcher = document.getElementById('kelasSwitcher');
   const chipWrap = document.getElementById('userChipWrap');
 
   if(user){
     loginGate.style.display = 'none';
     appContent.style.display = '';
     tabsBar.style.display = '';
-    kelasSwitcher.style.display = '';
     chipWrap.innerHTML = userChip(user);
     document.getElementById('btnLogoutChip').addEventListener('click', doLogout);
     document.getElementById('akunEmail').textContent = user.email || user.displayName || '—';
@@ -689,7 +935,6 @@ auth.onAuthStateChanged(user=>{
     loginGate.style.display = '';
     appContent.style.display = 'none';
     tabsBar.style.display = 'none';
-    kelasSwitcher.style.display = 'none';
     chipWrap.innerHTML = '';
     currentDataRefs.forEach(ref=>ref.off());
     currentDataRefs = [];
@@ -718,6 +963,7 @@ function initFirebase(){
     document.getElementById('akunStatus').textContent = 'Terhubung ke Firebase Realtime Database';
     attachKelasListListener();
     attachStudentsMasterListener();
+    attachIjazahTemplatesListener();
   }catch(e){
     console.error(e);
     document.getElementById('connText').textContent = 'Gagal konek: ' + e.message;
@@ -736,6 +982,20 @@ function dataRoot(path){ return db.ref('rapor/data/' + activeKelasId + (path?('/
    hanya menyimpan {no} — nomor urut siswa tsb di kelas itu (data "keanggotaan kelas", bukan biodata). */
 let studentsMasterRef = null;
 function studentsRootRef(path){ return db.ref('rapor/students' + (path?('/'+path):'')); }
+
+/* ===================== Template Ijazah (global, lintas kelas per tingkatan) ===================== */
+function attachIjazahTemplatesListener(){
+  if(ijazahTemplatesRef) ijazahTemplatesRef.off();
+  ijazahTemplatesRef = db.ref('rapor/ijazahTemplates');
+  ijazahTemplatesRef.on('value', snap=>{
+    ijazahTemplates = snap.val() || {};
+    renderIjazahTab();
+  });
+}
+function getIjazahTemplate(key){
+  const base = IJAZAH_DEFAULT_TEMPLATES[key] || {};
+  return Object.assign({}, base, ijazahTemplates[key] || {});
+}
 
 function attachStudentsMasterListener(){
   studentsMasterRef = studentsRootRef();
@@ -948,8 +1208,9 @@ function setActiveKelas(id){
     subjectsCard.style.display = 'none';
     tieBreakCard.style.display = 'none';
     state.meta = {}; state.subjects = DEFAULT_SUBJECTS.slice(); state.students = {}; state.scores = {}; state.absensi = {}; state.tieBreak = [];
+    state.ijazahUmum = {}; state.ijazah = {};
     updateHeaderLine();
-    renderStudentTable(); renderStudentPicker(); renderRekap(); renderSubjectList(); renderAbsensiTable(); renderTieBreakList();
+    renderStudentTable(); renderStudentPicker(); renderRekap(); renderSubjectList(); renderAbsensiTable(); renderTieBreakList(); renderIjazahTab();
     return;
   }
   identitasCard.style.display = '';
@@ -1012,13 +1273,23 @@ function attachDataListeners(){
     renderRekap();
   });
 
-  currentDataRefs = [mRef, sRef, stRef, scRef, abRef, tbRef];
+  const ijUmumRef = dataRoot('ijazahUmum');
+  ijUmumRef.on('value', snap=>{ state.ijazahUmum = snap.val() || {}; renderIjazahTab(); });
+
+  const ijRef = dataRoot('ijazah');
+  state.ijazah = {};
+  const renderIjz = debounce(()=>{ renderIjazahTab(); }, 80);
+  ijRef.on('child_added', snap=>{ state.ijazah[snap.key] = snap.val(); renderIjz(); });
+  ijRef.on('child_changed', snap=>{ state.ijazah[snap.key] = snap.val(); renderIjz(); });
+  ijRef.on('child_removed', snap=>{ delete state.ijazah[snap.key]; renderIjz(); });
+
+  currentDataRefs = [mRef, sRef, stRef, scRef, abRef, tbRef, ijUmumRef, ijRef];
 }
 
 function updateHeaderLine(){
-  const m = state.meta;
-  document.getElementById('schoolLine').textContent =
-    (m.nama || 'Madrasah') + (m.kelas ? (' · Kelas ' + m.kelas) : '') + (m.catur ? (' · Catur Wulan ' + m.catur) : '');
+  // Header dibuat umum (tidak menampilkan kelas/catur wulan yang sedang dibuka).
+  // Kelas yang aktif ditampilkan & dipilih di tab "Kelas".
+  document.getElementById('schoolLine').textContent = 'Yayasan Pendidikan Islam Al-Hidayah — Yapida — realtime';
 }
 
 /* ===================== Identitas / Meta ===================== */
@@ -1953,6 +2224,406 @@ document.getElementById('btnBuildCard').addEventListener('click', ()=>{
     </div>
     <div class="btnrow noprint"><button class="gold" onclick="window.print()">🖨️ Cetak Kartu Ini</button></div>
   `;
+});
+
+/* ===================== IJAZAH ===================== */
+let ijzPendingFoto = null;   // dataURI menunggu disimpan untuk siswa yang sedang diedit
+let ijzPendingBorder = undefined; // undefined = tidak diubah, '' = dihapus, string = baru
+
+function currentTingkatanKey(){
+  if(!activeKelasId) return null;
+  const k = state.kelasList[activeKelasId];
+  return k ? tingkatanKey(k.tingkatan) : null;
+}
+
+function fileToDataUri(file, maxW){
+  return new Promise((resolve,reject)=>{
+    const reader = new FileReader();
+    reader.onerror = ()=>reject(reader.error);
+    reader.onload = ()=>{
+      const img = new Image();
+      img.onload = ()=>{
+        let w = img.width, h = img.height;
+        if(maxW && w>maxW){ h = Math.round(h*maxW/w); w = maxW; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderIjazahTab(){
+  const noKelas = document.getElementById('ijazahNoKelas');
+  const notSupported = document.getElementById('ijazahNotSupported');
+  const body = document.getElementById('ijazahBody');
+  if(!activeKelasId){
+    noKelas.style.display = ''; notSupported.style.display = 'none'; body.style.display = 'none';
+    return;
+  }
+  const key = currentTingkatanKey();
+  const k = state.kelasList[activeKelasId] || {};
+  if(!key){
+    noKelas.style.display = 'none';
+    notSupported.style.display = '';
+    document.getElementById('ijazahTingkatanNow').textContent = k.tingkatan || '-';
+    body.style.display = 'none';
+    return;
+  }
+  noKelas.style.display = 'none';
+  notSupported.style.display = 'none';
+  body.style.display = '';
+
+  document.getElementById('ijazahTingkatanLabel').textContent = k.tingkatan + ' — ' + (k.kelasNama||'');
+
+  // ---- form Data Umum ----
+  const u = state.ijazahUmum || {};
+  document.getElementById('ijzNoAwal').value = u.noAwal || '';
+  document.getElementById('ijzDariH').value = u.dariH || '';
+  document.getElementById('ijzDariM').value = u.dariM || '';
+  document.getElementById('ijzSampaiH').value = u.sampaiH || '';
+  document.getElementById('ijzSampaiM').value = u.sampaiM || '';
+  document.getElementById('ijzTempat').value = u.tempat || 'Bangkalan';
+  document.getElementById('ijzTerbitH').value = u.terbitH || '';
+  document.getElementById('ijzTerbitM').value = u.terbitM || '';
+
+  // ---- form Template ----
+  const tpl = getIjazahTemplate(key);
+  document.getElementById('tplLembagaAtas').value = tpl.lembagaAtas || '';
+  document.getElementById('tplNamaMadrasah').value = tpl.namaMadrasah || '';
+  document.getElementById('tplAlamat').value = tpl.alamat || '';
+  document.getElementById('tplTingkatLabel').value = tpl.tingkatLabel || '';
+  document.getElementById('tplJudulBelakang').value = tpl.judulBelakang || '';
+  document.getElementById('tplKepalaLabel').value = tpl.kepalaLabel || '';
+  document.getElementById('tplKepalaNama').value = tpl.kepalaNama || '';
+  document.getElementById('tplKetuaLabel').value = tpl.ketuaLabel || '';
+  document.getElementById('tplKetuaNama').value = tpl.ketuaNama || '';
+  document.getElementById('tplPanitiaKetua').value = tpl.panitiaKetua || '';
+  document.getElementById('tplPanitiaSekretaris').value = tpl.panitiaSekretaris || '';
+  document.getElementById('tplMateriTambahan').value = (tpl.materiTambahan||[]).join(', ');
+  document.getElementById('tplPanitiaRow').style.display = tpl.showPanitia ? '' : 'none';
+  document.getElementById('tplMateriTambahanRow').style.display = (key==='tpq') ? '' : 'none';
+
+  // ---- pickers ----
+  const students = orderedStudents();
+  ['ijzPickStudent','ijzPickPreview'].forEach(selId=>{
+    const sel = document.getElementById(selId);
+    const cur = sel.value;
+    sel.innerHTML = students.length ? students.map(s=>`<option value="${s.id}">${s.no}. ${escapeHtml(s.nama)}</option>`).join('') : '<option value="">— belum ada siswa —</option>';
+    if(cur) sel.value = cur;
+  });
+  renderIjzStudentForm();
+}
+
+function renderIjzStudentForm(){
+  const sel = document.getElementById('ijzPickStudent');
+  const id = sel.value;
+  const empty = document.getElementById('ijzStudentEmpty');
+  const form = document.getElementById('ijzStudentForm');
+  if(!id){ empty.style.display=''; form.style.display='none'; ijzSelectedStudentId=null; return; }
+  ijzSelectedStudentId = id;
+  empty.style.display = 'none'; form.style.display = '';
+  const st = orderedStudents().find(s=>s.id===id) || {};
+  const rec = state.ijazah[id] || {};
+  const u = state.ijazahUmum || {};
+  document.getElementById('ijzNoIjazah').value = rec.noIjazah || (u.noAwal ? String(Number(u.noAwal) + (st.no||1) - 1) : '');
+  document.getElementById('ijzNoInduk').value = rec.noInduk || st.nis || st.nisn || '';
+  ijzPendingFoto = null;
+  document.getElementById('ijzFotoFile').value = '';
+}
+document.getElementById('ijzPickStudent').addEventListener('change', renderIjzStudentForm);
+
+document.getElementById('ijzFotoFile').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  try{ ijzPendingFoto = await fileToDataUri(file, 300); toast('Foto siap disimpan — klik "Simpan Data Siswa Ini"'); }
+  catch(err){ console.error(err); toast('Gagal membaca foto'); }
+});
+
+document.getElementById('btnSaveIjzSiswa').addEventListener('click', ()=>{
+  if(!activeKelasId || !ijzSelectedStudentId){ toast('Pilih siswa dulu'); return; }
+  const payload = {
+    noIjazah: document.getElementById('ijzNoIjazah').value.trim(),
+    noInduk: document.getElementById('ijzNoInduk').value.trim(),
+  };
+  if(ijzPendingFoto) payload.foto = ijzPendingFoto;
+  else if(state.ijazah[ijzSelectedStudentId] && state.ijazah[ijzSelectedStudentId].foto) payload.foto = state.ijazah[ijzSelectedStudentId].foto;
+  dataRoot('ijazah/'+ijzSelectedStudentId).set(payload).then(()=>{
+    toast('Data ijazah siswa disimpan');
+    ijzPendingFoto = null;
+  });
+});
+
+document.getElementById('btnSaveIjazahUmum').addEventListener('click', ()=>{
+  if(!activeKelasId){ toast('Pilih/buat kelas dulu'); return; }
+  const payload = {
+    noAwal: document.getElementById('ijzNoAwal').value.trim(),
+    dariH: document.getElementById('ijzDariH').value.trim(),
+    dariM: document.getElementById('ijzDariM').value.trim(),
+    sampaiH: document.getElementById('ijzSampaiH').value.trim(),
+    sampaiM: document.getElementById('ijzSampaiM').value.trim(),
+    tempat: document.getElementById('ijzTempat').value.trim(),
+    terbitH: document.getElementById('ijzTerbitH').value.trim(),
+    terbitM: document.getElementById('ijzTerbitM').value.trim(),
+  };
+  dataRoot('ijazahUmum').set(payload).then(()=>toast('Data umum ijazah disimpan'));
+});
+
+document.getElementById('tplBorderFile').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  try{ ijzPendingBorder = await fileToDataUri(file, 900); toast('Bingkai siap — klik "Simpan Template"'); }
+  catch(err){ console.error(err); toast('Gagal membaca gambar bingkai'); }
+});
+document.getElementById('btnClearBorder').addEventListener('click', ()=>{
+  ijzPendingBorder = '';
+  toast('Bingkai akan dihapus — klik "Simpan Template"');
+});
+
+document.getElementById('btnSaveTemplate').addEventListener('click', ()=>{
+  const key = currentTingkatanKey();
+  if(!key){ toast('Tingkatan kelas aktif tidak didukung'); return; }
+  const existing = getIjazahTemplate(key);
+  const payload = Object.assign({}, existing, {
+    lembagaAtas: document.getElementById('tplLembagaAtas').value.trim(),
+    namaMadrasah: document.getElementById('tplNamaMadrasah').value.trim(),
+    alamat: document.getElementById('tplAlamat').value.trim(),
+    tingkatLabel: document.getElementById('tplTingkatLabel').value.trim(),
+    judulBelakang: document.getElementById('tplJudulBelakang').value.trim(),
+    kepalaLabel: document.getElementById('tplKepalaLabel').value.trim(),
+    kepalaNama: document.getElementById('tplKepalaNama').value.trim(),
+    ketuaLabel: document.getElementById('tplKetuaLabel').value.trim(),
+    ketuaNama: document.getElementById('tplKetuaNama').value.trim(),
+    panitiaKetua: document.getElementById('tplPanitiaKetua').value.trim(),
+    panitiaSekretaris: document.getElementById('tplPanitiaSekretaris').value.trim(),
+    materiTambahan: document.getElementById('tplMateriTambahan').value.split(',').map(s=>s.trim()).filter(Boolean),
+  });
+  if(ijzPendingBorder !== undefined){ payload.borderImg = ijzPendingBorder; }
+  db.ref('rapor/ijazahTemplates/'+key).set(payload).then(()=>{
+    toast('Template ijazah disimpan');
+    ijzPendingBorder = undefined;
+    document.getElementById('tplBorderFile').value = '';
+  });
+});
+
+function ijazahRowFor(studentId){
+  const rows = computeAll();
+  return rows.find(r=>r.id===studentId);
+}
+
+function buildIjazahHTML(studentId){
+  const key = currentTingkatanKey();
+  if(!key) return null;
+  const tpl = getIjazahTemplate(key);
+  const st = orderedStudents().find(s=>s.id===studentId);
+  if(!st) return null;
+  const row = ijazahRowFor(studentId) || {nilaiAsli: state.subjects.map(()=>0), jumlah:0, rata:0, peringkat:'-'};
+  const rec = state.ijazah[studentId] || {};
+  const u = state.ijazahUmum || {};
+  const m = state.meta || {};
+  const noIjazah = rec.noIjazah || '';
+  const noInduk = rec.noInduk || st.nis || st.nisn || '';
+  const fotoInner = rec.foto ? `<img src="${rec.foto}">` : 'Photo<br>3x4';
+  const tahunH = (m.tahun||'').split('/')[0] || (m.tahun||'');
+  const borderStyle = tpl.borderImg ? ` style="background-image:url('${tpl.borderImg}')"` : '';
+  const borderClass = tpl.borderImg ? ' hasCustomBorder' : '';
+
+  const closing = (tpl.closingText||'')
+    .replace('{DARI_M}', u.dariM||'').replace('{SAMPAI_M}', u.sampaiM||'')
+    .replace(/\n/g,'<br>');
+  const leadIntro = (tpl.leadIntro||'').replace(/\n/g,'<br>');
+
+  const front = `
+    <div class="ijazahPage${borderClass}"${borderStyle}>
+      <div class="ijazahInner">
+        <div class="ijazahArabTop">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ<br>يَرْفَعِ اللَّهُ الَّذِينَ آمَنُوا مِنكُمْ وَالَّذِينَ أُوتُوا الْعِلْمَ دَرَجَاتٍ</div>
+        <div class="ijazahLembaga">${escapeHtml(tpl.lembagaAtas||'')}</div>
+        <div class="ijazahNos"><span>No. Ijazah: ${escapeHtml(noIjazah)}</span><span class="ijazahTitleWord" style="font-size:22px;">Ijazah</span><span>No. Induk: ${escapeHtml(noInduk)}</span></div>
+        <div class="ijazahMadrasah">${escapeHtml(tpl.namaMadrasah||'')}</div>
+        <div class="ijazahAddr">${escapeHtml(tpl.alamat||'')}</div>
+        ${tpl.showTingkatLine ? `<div class="ijazahTingkat">${escapeHtml(tpl.tingkatLabel||'')}</div>` : ''}
+        <div class="ijazahTahun">TAHUN PELAJARAN : ${escapeHtml(m.tahun||'')}</div>
+        ${tpl.showSesudahLine ? `<div class="ijazahTahun">Sesudah diadakan Evaluasi Belajar Tahap Akhir (EBTA)</div>
+        <div class="ijazahTahun">Dari tanggal ${escapeHtml(u.dariH||'')} H sampai tanggal ${escapeHtml(u.sampaiH||'')} H<br>atau tanggal ${escapeHtml(u.dariM||'')} M sampai tanggal ${escapeHtml(u.sampaiM||'')} M</div>` : ''}
+        <div class="ijazahLead">${leadIntro}</div>
+        <div class="ijazahNama">${escapeHtml(st.nama||'')}</div>
+        <div class="ijazahBioRow"><span class="lbl">Lahir di</span><span>:</span><span class="val">${escapeHtml(st.tempatLahir||'')}</span></div>
+        <div class="ijazahBioRow"><span class="lbl">Pada Tanggal</span><span>:</span><span class="val">${escapeHtml(st.tglLahir||'')}</span></div>
+        <div class="ijazahBioRow"><span class="lbl">Putra / Putri dari</span><span>:</span><span class="val">${escapeHtml(st.ayah||st.wali||'')}</span></div>
+        <div class="ijazahBioRow"><span class="lbl">Alamat</span><span>:</span><span class="val">${escapeHtml(st.alamat||'')}</span></div>
+        <div class="ijazahTelahLulus">${closing}</div>
+        <div class="ijazahFotoBox">${fotoInner}</div>
+        <div class="ijazahSignArea">
+          <div style="text-align:right;">${escapeHtml(u.tempat||'Bangkalan')}, ${escapeHtml(u.terbitH||'')} H / ${escapeHtml(u.terbitM||'')} M</div>
+          <div class="ttd" style="text-align:right;">${escapeHtml(tpl.kepalaLabel||'')}<span class="ttdNama">( ${escapeHtml(tpl.kepalaNama||'')} )</span></div>
+          <div style="margin-top:10px;">Mengetahui,<br>Pengurus Yayasan Pendidikan Islam Al-Hidayah<br>${escapeHtml(tpl.ketuaLabel||'Ketua')}</div>
+          <div class="ttd"><span class="ttdNama">( ${escapeHtml(tpl.ketuaNama||'')} )</span></div>
+        </div>
+      </div>
+    </div>`;
+
+  const materiTambahan = (key==='tpq') ? (tpl.materiTambahan||[]) : [];
+  const mainSubjects = state.subjects.filter(s=>!materiTambahan.includes(s));
+  const tambahanSubjects = state.subjects.filter(s=>materiTambahan.includes(s));
+  function subVal(s){ const idx = state.subjects.indexOf(s); return idx>=0 ? Number(row.nilaiAsli[idx]||0) : 0; }
+  function tblRows(list){
+    return list.map((s,i)=>`<tr><td>${i+1}</td><td style="text-align:left;">${escapeHtml(s)}</td><td>${subVal(s)}</td><td>${escapeHtml(nilaiHuruf(subVal(s)))}</td></tr>`).join('');
+  }
+  const mainVals = mainSubjects.map(subVal);
+  const mainJumlah = mainVals.reduce((a,b)=>a+b,0);
+  const mainRata = mainSubjects.length ? (mainJumlah/mainSubjects.length) : 0;
+  const tambahanVals = tambahanSubjects.map(subVal);
+  const tambahanJumlah = tambahanVals.reduce((a,b)=>a+b,0);
+  const tambahanRata = tambahanSubjects.length ? (tambahanJumlah/tambahanSubjects.length) : 0;
+
+  const back = `
+    <div class="ijazahPage${borderClass}"${borderStyle}>
+      <div class="ijazahInner">
+        <div class="ijazahBackTitle">${escapeHtml(tpl.judulBelakang||'EVALUASI BELAJAR TAHAP AKHIR')}</div>
+        <div class="ijazahBackSub">${escapeHtml(tpl.namaMadrasah||'')}</div>
+        <div class="ijazahBackAddr">${escapeHtml(tpl.alamat||'')}${tpl.showTingkatLine? (' — '+escapeHtml(tpl.tingkatLabel||'')):''}</div>
+        <div class="ijazahBackMeta">TAHUN PELAJARAN : ${escapeHtml(m.tahun||'')}</div>
+        <div class="ijazahBackDaftar">DAFTAR NILAI DARI : <strong>${escapeHtml(st.nama||'')}</strong></div>
+        <table class="ijazahTbl">
+          <thead><tr><th>No</th><th>Mata Pelajaran</th><th>Angka</th><th>Huruf</th></tr></thead>
+          <tbody>${tblRows(mainSubjects)}
+            <tr><td colspan="2"><strong>Jumlah</strong></td><td colspan="2"><strong>${mainJumlah}</strong></td></tr>
+            <tr><td colspan="2"><strong>Rata-rata</strong></td><td colspan="2"><strong>${mainRata.toFixed(2)}</strong></td></tr>
+            <tr><td colspan="2"><strong>Peringkat</strong></td><td colspan="2"><strong>${row.peringkat!=null?row.peringkat:'-'}</strong></td></tr>
+          </tbody>
+        </table>
+        ${tambahanSubjects.length ? `
+        <table class="ijazahTbl">
+          <thead><tr><th>No</th><th>Materi Tambahan</th><th>Angka</th><th>Huruf</th></tr></thead>
+          <tbody>${tblRows(tambahanSubjects)}
+            <tr><td colspan="2"><strong>Jumlah</strong></td><td colspan="2"><strong>${tambahanJumlah}</strong></td></tr>
+            <tr><td colspan="2"><strong>Rata-rata</strong></td><td colspan="2"><strong>${tambahanRata.toFixed(2)}</strong></td></tr>
+          </tbody>
+        </table>` : ''}
+        <div class="ijazahBackSign">
+          <div>${escapeHtml(u.tempat||'Bangkalan')}, ${escapeHtml(u.terbitH||'')} H<br>${escapeHtml(u.terbitM||'')} M</div>
+        </div>
+        ${tpl.showPanitia ? `
+        <div class="ijazahBackSign">
+          <div style="width:44%;">Ketua<span class="ttdNama">( ${escapeHtml(tpl.panitiaKetua||'')} )</span></div>
+          <div style="width:44%;">Sekretaris<span class="ttdNama">( ${escapeHtml(tpl.panitiaSekretaris||'')} )</span></div>
+        </div>` : `
+        <div class="ijazahBackSign">
+          <div>${escapeHtml(tpl.kepalaLabel||'')}<span class="ttdNama">( ${escapeHtml(tpl.kepalaNama||'')} )</span></div>
+        </div>`}
+      </div>
+    </div>`;
+
+  return {front, back};
+}
+
+document.getElementById('btnBuildIjazah').addEventListener('click', ()=>{
+  const id = document.getElementById('ijzPickPreview').value;
+  if(!id){ toast('Pilih siswa dulu'); return; }
+  ijzPreviewStudentId = id;
+  const pages = buildIjazahHTML(id);
+  const board = document.getElementById('ijazahBoard');
+  const exportBtns = document.getElementById('ijazahExportBtns');
+  if(!pages){ board.innerHTML=''; exportBtns.style.display='none'; return; }
+  board.innerHTML = pages.front + pages.back;
+  exportBtns.style.display = '';
+});
+
+document.getElementById('btnPrintIjazah').addEventListener('click', ()=>{
+  document.body.classList.add('printingIjazah');
+  window.print();
+});
+window.addEventListener('afterprint', ()=> document.body.classList.remove('printingIjazah'));
+
+async function ensureExportLibs(){
+  if(!window.html2canvas || !window.jspdf){ toast('Memuat pustaka ekspor…'); }
+  let tries = 0;
+  while((!window.html2canvas || !window.jspdf) && tries<40){ await new Promise(r=>setTimeout(r,150)); tries++; }
+  if(!window.html2canvas || !window.jspdf) throw new Error('Pustaka ekspor gagal dimuat (cek koneksi internet)');
+}
+
+async function pageToCanvas(pageEl){
+  return await html2canvas(pageEl, {scale:2, useCORS:true, backgroundColor:'#ffffff'});
+}
+
+document.getElementById('btnPdfIjazah').addEventListener('click', async ()=>{
+  if(!ijzPreviewStudentId){ toast('Tampilkan ijazah dulu'); return; }
+  try{
+    await ensureExportLibs();
+    const pages = document.querySelectorAll('#ijazahBoard .ijazahPage');
+    if(!pages.length){ toast('Belum ada pratinjau'); return; }
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({orientation:'portrait', unit:'mm', format:'a5'});
+    for(let i=0;i<pages.length;i++){
+      const canvas = await pageToCanvas(pages[i]);
+      const img = canvas.toDataURL('image/jpeg', 0.92);
+      const w = pdf.internal.pageSize.getWidth(), h = pdf.internal.pageSize.getHeight();
+      if(i>0) pdf.addPage('a5','portrait');
+      pdf.addImage(img, 'JPEG', 0, 0, w, h);
+    }
+    const st = orderedStudents().find(s=>s.id===ijzPreviewStudentId);
+    pdf.save(`ijazah-${(st?.nama||'siswa').replace(/\s+/g,'_')}.pdf`);
+  }catch(err){ console.error(err); toast('Gagal ekspor PDF: '+err.message); }
+});
+
+async function downloadPageAsJpg(selector, filename){
+  try{
+    await ensureExportLibs();
+    const el = document.querySelector(selector);
+    if(!el){ toast('Belum ada pratinjau'); return; }
+    const canvas = await pageToCanvas(el);
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/jpeg', 0.92);
+    a.download = filename;
+    a.click();
+  }catch(err){ console.error(err); toast('Gagal ekspor JPG: '+err.message); }
+}
+document.getElementById('btnJpgIjazahDepan').addEventListener('click', ()=>{
+  const st = orderedStudents().find(s=>s.id===ijzPreviewStudentId);
+  downloadPageAsJpg('#ijazahBoard .ijazahPage:nth-child(1)', `ijazah-depan-${(st?.nama||'siswa').replace(/\s+/g,'_')}.jpg`);
+});
+document.getElementById('btnJpgIjazahBelakang').addEventListener('click', ()=>{
+  const st = orderedStudents().find(s=>s.id===ijzPreviewStudentId);
+  downloadPageAsJpg('#ijazahBoard .ijazahPage:nth-child(2)', `ijazah-belakang-${(st?.nama||'siswa').replace(/\s+/g,'_')}.jpg`);
+});
+
+document.getElementById('btnPdfIjazahSemua').addEventListener('click', async ()=>{
+  if(!activeKelasId){ toast('Pilih kelas dulu'); return; }
+  const key = currentTingkatanKey();
+  if(!key){ toast('Tingkatan kelas ini belum punya template ijazah'); return; }
+  const students = orderedStudents();
+  if(!students.length){ toast('Belum ada siswa di kelas ini'); return; }
+  try{
+    await ensureExportLibs();
+    toast('Menyiapkan PDF semua siswa… mohon tunggu');
+    const hidden = document.createElement('div');
+    hidden.style.position = 'fixed'; hidden.style.left = '-9999px'; hidden.style.top = '0';
+    document.body.appendChild(hidden);
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({orientation:'portrait', unit:'mm', format:'a5'});
+    let first = true;
+    for(const st of students){
+      const pages = buildIjazahHTML(st.id);
+      if(!pages) continue;
+      hidden.innerHTML = pages.front + pages.back;
+      const pageEls = hidden.querySelectorAll('.ijazahPage');
+      for(const pageEl of pageEls){
+        const canvas = await pageToCanvas(pageEl);
+        const img = canvas.toDataURL('image/jpeg', 0.92);
+        const w = pdf.internal.pageSize.getWidth(), h = pdf.internal.pageSize.getHeight();
+        if(!first) pdf.addPage('a5','portrait');
+        pdf.addImage(img, 'JPEG', 0, 0, w, h);
+        first = false;
+      }
+    }
+    document.body.removeChild(hidden);
+    pdf.save(`ijazah-semua-${kelasFileTag()}.pdf`);
+    toast('PDF semua siswa berhasil diunduh');
+  }catch(err){ console.error(err); toast('Gagal ekspor PDF: '+err.message); }
 });
 
 /* ===================== Init ===================== */
