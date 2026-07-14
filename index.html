@@ -128,9 +128,13 @@
     border:2px solid var(--deep); border-radius:6px; padding:14px; margin-bottom:16px;
     background:repeating-linear-gradient(135deg, rgba(184,134,58,.05) 0 10px, transparent 10px 20px);
   }
+  .certframe .certHead{display:flex; align-items:center; justify-content:center; gap:14px;}
+  .certframe .certLogo{width:52px; height:52px; object-fit:contain; flex:0 0 auto;}
+  .certframe .certHeadText{text-align:center;}
   .certframe .school{font-family:'Fraunces',serif; font-weight:700; font-size:17px; text-align:center; color:var(--deep-2);}
   .certframe .addr{text-align:center; font-size:12px; color:#6b6656;}
   .certframe .meta{display:flex; justify-content:center; gap:18px; font-size:12px; margin-top:8px; flex-wrap:wrap;}
+  .nilaiMerah{color:var(--danger); font-weight:700;}
 
   @media print{
     @page{ size: A4 landscape; margin: 8mm; }
@@ -637,8 +641,13 @@
 
     <div class="card" id="rekapPrintArea">
       <div class="certframe">
-        <div class="school" id="printSchool">—</div>
-        <div class="addr" id="printAddr">—</div>
+        <div class="certHead">
+          <img src="" id="rekapLogo" class="certLogo" alt="Logo Madrasah">
+          <div class="certHeadText">
+            <div class="school" id="printSchool">—</div>
+            <div class="addr" id="printAddr">—</div>
+          </div>
+        </div>
         <div class="meta">
           <span id="printKelas"></span><span id="printCatur"></span><span id="printTahun"></span>
         </div>
@@ -872,6 +881,7 @@ const auth = firebase.auth();
 
 document.getElementById('loginLogo').src = LOGO_DATA_URI;
 document.getElementById('headerLogo').src = LOGO_DATA_URI;
+document.getElementById('rekapLogo').src = LOGO_DATA_URI;
 
 /* ===================== State ===================== */
 const DEFAULT_SUBJECTS = ["Tauhid","Fiqih","Tafsir","Hadits","Nahwu","Shorrof","Qoidah Fiqh","Ushul Fiqh",
@@ -2464,7 +2474,7 @@ function renderRekap(){
     '<th>Jml</th><th>Absen</th><th>Bersih</th><th>Rata²</th><th>Rank</th></tr>';
   tAsli.querySelector('tbody').innerHTML = rows.length ? rows.map(r=>
     `<tr><td>${r.no}</td><td class="name">${escapeHtml(r.nama)}</td>` +
-    r.nilaiAsli.map(v=>`<td class="num">${v}</td>`).join('') +
+    r.nilaiAsli.map(v=>`<td class="num${Number(v)<=54?' nilaiMerah':''}">${v}</td>`).join('') +
     `<td class="num">${r.jumlah}</td><td class="num">${r.potongan}</td><td class="num">${r.bersih}</td><td class="num">${r.rata.toFixed(2)}</td><td class="num">${r.peringkat}${r.peringkatTie?' <span class="hint" title="Nilai bersih sama, belum ada mapel prioritas yang membedakan">*</span>':''}</td></tr>`
   ).join('') : '';
 
@@ -2474,7 +2484,7 @@ function renderRekap(){
     '<th>Kelakuan</th><th>Kerajinan</th><th>Kebersihan</th><th>Sakit</th><th>Ijin</th><th>Alpa</th></tr>';
   tRap.querySelector('tbody').innerHTML = rows.length ? rows.map(r=>
     `<tr><td>${r.no}</td><td class="name">${escapeHtml(r.nama)}</td>` +
-    r.raport.map(v=>`<td class="num">${v}</td>`).join('') +
+    r.raport.map(v=>`<td class="num${Number(v)<=5?' nilaiMerah':''}">${v}</td>`).join('') +
     `<td>${escapeHtml(r.sikap.kelakuan||'')}</td><td>${escapeHtml(r.sikap.kerajinan||'')}</td><td>${escapeHtml(r.sikap.kebersihan||'')}</td>` +
     `<td class="num">${r.absen.sakit||0}</td><td class="num">${r.absen.ijin||0}</td><td class="num">${r.absen.alpa||0}</td></tr>`
   ).join('') : '';
@@ -2542,13 +2552,18 @@ document.getElementById('btnBuildCard').addEventListener('click', ()=>{
   const subjects = state.subjects;
 
   let tableRows = subjects.map((s,i)=>
-    `<tr><td class="name" style="text-align:left;">${escapeHtml(s)}</td><td class="num">${r.nilaiAsli[i]}</td><td class="num">${r.raport[i]}</td></tr>`
+    `<tr><td class="name" style="text-align:left;">${escapeHtml(s)}</td><td class="num${Number(r.nilaiAsli[i])<=54?' nilaiMerah':''}">${r.nilaiAsli[i]}</td><td class="num${Number(r.raport[i])<=5?' nilaiMerah':''}">${r.raport[i]}</td></tr>`
   ).join('');
 
   area.innerHTML = `
     <div class="certframe" style="margin-top:14px;">
-      <div class="school">${escapeHtml(m.nama||'')}</div>
-      <div class="addr">${escapeHtml(m.alamat||'')}</div>
+      <div class="certHead">
+        <img src="${LOGO_DATA_URI}" class="certLogo" alt="Logo Madrasah">
+        <div class="certHeadText">
+          <div class="school">${escapeHtml(m.nama||'')}</div>
+          <div class="addr">${escapeHtml(m.alamat||'')}</div>
+        </div>
+      </div>
       <div class="meta">
         <span>Kelas: ${escapeHtml(m.kelas||'')}</span>
         <span>Catur Wulan: ${escapeHtml(m.catur||'')}</span>
