@@ -3105,7 +3105,7 @@ function ijzAddFittedImage(pdf, img, canvas, pageW, pageH){
   let w = pageW, h = pageW / ratio;
   if(h > pageH){ h = pageH; w = pageH * ratio; }
   const x = (pageW - w) / 2, y = (pageH - h) / 2;
-  pdf.addImage(img, 'JPEG', x, y, w, h);
+  pdf.addImage(img, 'PNG', x, y, w, h);
 }
 
 document.getElementById('btnPrintIjazah').addEventListener('click', ()=>{
@@ -3123,7 +3123,14 @@ async function ensureExportLibs(){
 }
 
 async function pageToCanvas(pageEl){
-  return await html2canvas(pageEl, {scale:2, useCORS:true, backgroundColor:'#ffffff'});
+  return await html2canvas(pageEl, {
+    scale:3,
+    useCORS:true,
+    backgroundColor:'#ffffff',
+    imageTimeout:15000,
+    logging:false,
+    letterRendering:true
+  });
 }
 
 document.getElementById('btnPdfIjazah').addEventListener('click', async ()=>{
@@ -3137,7 +3144,7 @@ document.getElementById('btnPdfIjazah').addEventListener('click', async ()=>{
     const pdf = new jsPDF({orientation:'portrait', unit:'mm', format:[sz.w, sz.h]});
     for(let i=0;i<pages.length;i++){
       const canvas = await pageToCanvas(pages[i]);
-      const img = canvas.toDataURL('image/jpeg', 0.92);
+      const img = canvas.toDataURL('image/png');
       if(i>0) pdf.addPage([sz.w, sz.h], 'portrait');
       ijzAddFittedImage(pdf, img, canvas, sz.w, sz.h);
     }
@@ -3153,7 +3160,7 @@ async function downloadPageAsJpg(selector, filename){
     if(!el){ toast('Belum ada pratinjau'); return; }
     const canvas = await pageToCanvas(el);
     const a = document.createElement('a');
-    a.href = canvas.toDataURL('image/jpeg', 0.92);
+    a.href = canvas.toDataURL('image/jpeg', 0.98);
     a.download = filename;
     a.click();
   }catch(err){ console.error(err); toast('Gagal ekspor JPG: '+err.message); }
@@ -3191,7 +3198,7 @@ document.getElementById('btnPdfIjazahSemua').addEventListener('click', async ()=
       const pageEls = hidden.querySelectorAll('.ijazahPage');
       for(const pageEl of pageEls){
         const canvas = await pageToCanvas(pageEl);
-        const img = canvas.toDataURL('image/jpeg', 0.92);
+        const img = canvas.toDataURL('image/png');
         if(!first) pdf.addPage([sz.w, sz.h], 'portrait');
         ijzAddFittedImage(pdf, img, canvas, sz.w, sz.h);
         first = false;
