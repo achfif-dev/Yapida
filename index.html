@@ -150,8 +150,10 @@
     width:480px; aspect-ratio:3/5; background:#fbfbf2; position:relative;
     border:10px solid #1e6b3e; border-radius:4px; padding:16px 14px;
     box-shadow:var(--shadow); overflow:hidden;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact; color-adjust:exact;
   }
   .ijazahPage.hasCustomBorder{ background-size:100% 100%; background-repeat:no-repeat; }
+  .ijazahInner.dragMode{ cursor:move; outline:2px dashed var(--gold); touch-action:none; }
   .ijazahPage::before{
     content:""; position:absolute; inset:6px;
     border:2px solid #1e6b3e;
@@ -197,6 +199,9 @@
     body.printingIjazah .ijazahPrintCard{box-shadow:none; border:none;}
     body.printingIjazah .ijazahBoard{gap:0;}
     body.printingIjazah .ijazahPage{box-shadow:none; page-break-after:always; margin:0 auto;}
+    body.printingIjazah .ijazahPage, body.printingIjazah .ijazahPage *{
+      -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important;
+    }
   }
   @media (max-width:640px){
     .topbar h1{font-size:19px;}
@@ -760,6 +765,19 @@
               <option value="a4">A4 (210 × 297 mm)</option>
               <option value="f4">F4 / Folio (215 × 330 mm)</option>
             </select>
+          </div>
+        </div>
+        <div class="row" style="align-items:center;">
+          <div class="field" style="flex:0 0 auto;">
+            <label style="display:flex; align-items:center; gap:6px; font-weight:600;">
+              <input type="checkbox" id="ijzDragMode" style="width:auto;"> Mode Geser Posisi (bagian depan)
+            </label>
+          </div>
+          <div class="field" style="flex:2; min-width:220px;">
+            <p class="hint" style="margin:0;">Saat aktif: klik &amp; seret bagian depan ijazah (di pratinjau bawah) untuk memposisikan teks pas dengan bingkai, layaknya di Canva/Corel. Putar scroll mouse di atasnya untuk memperbesar/mengecilkan. Klik "Simpan Posisi" setelah pas.</p>
+          </div>
+          <div class="field" style="flex:0 0 auto; align-self:flex-end;">
+            <button class="secondary" id="btnSaveDragPosition" type="button">💾 Simpan Posisi</button>
           </div>
         </div>
         <div class="btnrow" id="ijazahExportBtns" style="display:none;">
@@ -2571,9 +2589,10 @@ function buildIjazahHTML(studentId){
   const tambahanJumlah = tambahanVals.reduce((a,b)=>a+b,0);
   const tambahanRata = tambahanSubjects.length ? (tambahanJumlah/tambahanSubjects.length) : 0;
 
+  const backFontStyle = ` style="--ijzFontTitle:${fontPreset.title};--ijzFontBody:${fontPreset.body};"`;
   const back = `
-    <div class="ijazahPage${borderClass}"${borderStyle}>
-      <div class="ijazahInner"${innerStyle}>
+    <div class="ijazahPage">
+      <div class="ijazahInner"${backFontStyle}>
         <div class="ijazahBackTitle">${escapeHtml(tpl.judulBelakang||'EVALUASI BELAJAR TAHAP AKHIR')}</div>
         <div class="ijazahBackSub">${escapeHtml(tpl.namaMadrasah||'')}</div>
         <div class="ijazahBackAddr">${escapeHtml(tpl.alamat||'')}${tpl.showTingkatLine? (' — '+escapeHtml(tpl.tingkatLabel||'')):''}</div>
@@ -2622,6 +2641,85 @@ document.getElementById('btnBuildIjazah').addEventListener('click', ()=>{
   if(!pages){ board.innerHTML=''; exportBtns.style.display='none'; return; }
   board.innerHTML = pages.front + pages.back;
   exportBtns.style.display = '';
+  ijzSyncDragModeToBoard();
+});
+
+/* ---- Mode Geser Posisi (drag-to-position seperti Canva/Corel, khusus bagian depan) ---- */
+let ijzDragState = { offX:0, offY:0, scale:100 };
+let ijzDragActive = false; // apakah sedang menyeret (pointer down)
+let ijzDragStart = { clientX:0, clientY:0, offX:0, offY:0 };
+
+function ijzFrontInnerEl(){
+  return document.querySelector('#ijazahBoard .ijazahPage:first-child .ijazahInner');
+}
+function ijzApplyDragTransform(){
+  const el = ijzFrontInnerEl();
+  if(!el) return;
+  el.style.transform = `translate(${ijzDragState.offX}px,${ijzDragState.offY}px) scale(${ijzDragState.scale/100})`;
+  el.style.transformOrigin = 'top center';
+}
+function ijzSyncDragModeToBoard(){
+  const el = ijzFrontInnerEl();
+  const chk = document.getElementById('ijzDragMode');
+  if(!el || !chk) return;
+  const key = currentTingkatanKey();
+  const tpl = key ? getIjazahTemplate(key) : {};
+  ijzDragState.offX = Number(tpl.contentOffsetX)||0;
+  ijzDragState.offY = Number(tpl.contentOffsetY)||0;
+  ijzDragState.scale = Number(tpl.contentScale)||100;
+  el.classList.toggle('dragMode', chk.checked);
+}
+document.getElementById('ijzDragMode').addEventListener('change', (e)=>{
+  const el = ijzFrontInnerEl();
+  if(!el){ toast('Tampilkan ijazah dulu (klik "Tampilkan Ijazah")'); e.target.checked = false; return; }
+  ijzSyncDragModeToBoard();
+  if(e.target.checked) toast('Mode geser aktif: seret bagian depan, scroll untuk skala');
+});
+(function setupIjzDrag(){
+  const board = document.getElementById('ijazahBoard');
+  board.addEventListener('pointerdown', (e)=>{
+    if(!document.getElementById('ijzDragMode').checked) return;
+    const el = ijzFrontInnerEl();
+    if(!el || !el.contains(e.target)) return;
+    ijzDragActive = true;
+    ijzDragStart.clientX = e.clientX; ijzDragStart.clientY = e.clientY;
+    ijzDragStart.offX = ijzDragState.offX; ijzDragStart.offY = ijzDragState.offY;
+    try{ el.setPointerCapture(e.pointerId); }catch(err){}
+    e.preventDefault();
+  });
+  board.addEventListener('pointermove', (e)=>{
+    if(!ijzDragActive) return;
+    ijzDragState.offX = Math.round(ijzDragStart.offX + (e.clientX - ijzDragStart.clientX));
+    ijzDragState.offY = Math.round(ijzDragStart.offY + (e.clientY - ijzDragStart.clientY));
+    ijzApplyDragTransform();
+    const fx = document.getElementById('tplOffsetX'), fy = document.getElementById('tplOffsetY');
+    if(fx) fx.value = ijzDragState.offX;
+    if(fy) fy.value = ijzDragState.offY;
+  });
+  const stopDrag = ()=>{ ijzDragActive = false; };
+  board.addEventListener('pointerup', stopDrag);
+  board.addEventListener('pointercancel', stopDrag);
+  board.addEventListener('pointerleave', stopDrag);
+  board.addEventListener('wheel', (e)=>{
+    if(!document.getElementById('ijzDragMode').checked) return;
+    const el = ijzFrontInnerEl();
+    if(!el || !el.contains(e.target)) return;
+    e.preventDefault();
+    const delta = e.deltaY < 0 ? 2 : -2;
+    ijzDragState.scale = Math.min(150, Math.max(50, ijzDragState.scale + delta));
+    ijzApplyDragTransform();
+    const fs = document.getElementById('tplScale');
+    if(fs) fs.value = ijzDragState.scale;
+  }, {passive:false});
+})();
+document.getElementById('btnSaveDragPosition').addEventListener('click', ()=>{
+  const key = currentTingkatanKey();
+  if(!key){ toast('Tingkatan kelas aktif tidak didukung'); return; }
+  db.ref('rapor/ijazahTemplates/'+key).update({
+    contentOffsetX: ijzDragState.offX,
+    contentOffsetY: ijzDragState.offY,
+    contentScale: ijzDragState.scale,
+  }).then(()=> toast('Posisi bagian depan disimpan'));
 });
 
 const IJZ_PAPER_SIZES = { a4:{w:210,h:297}, f4:{w:215,h:330} };
