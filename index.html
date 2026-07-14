@@ -517,6 +517,35 @@
     </div>
 
     <div class="card">
+      <h2>Riwayat Absensi</h2>
+      <p class="hint">Daftar tanggal yang sudah pernah diisi. Klik "Edit" untuk memuat ulang tanggal tersebut ke form Absensi Harian di atas, ubah statusnya, lalu klik "Simpan Absensi Tanggal Ini" lagi untuk menyimpan perubahan.</p>
+      <div class="tablewrap">
+        <table id="riwayatAbsensiTable">
+          <thead><tr><th style="text-align:left;">Tanggal</th><th>Hadir</th><th>Sakit</th><th>Izin</th><th>Alpa</th><th class="noprint">Aksi</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="empty" id="riwayatAbsensiEmpty">Belum ada absensi yang tersimpan.</div>
+    </div>
+
+    <div class="card noprint">
+      <h2>Impor Absensi dari Template Excel</h2>
+      <p class="hint">Unduh template (kolom tanggal sudah otomatis dibuat), isi status tiap siswa di Excel (H = Hadir, S = Sakit, I = Izin, A = Alpa) untuk 1 pekan atau 1 bulan penuh sekaligus, lalu impor kembali file yang sudah diisi. Data tanggal yang sama akan ditimpa oleh isian dari file.</p>
+      <div class="row">
+        <div class="field" style="flex:0 0 200px;"><label>Tanggal Mulai (Template 1 Pekan)</label><input id="absTplMingguDari" type="date"></div>
+        <div class="field" style="flex:0 0 auto; align-self:flex-end;"><button class="secondary" id="btnTemplateAbsensiMinggu" type="button">⬇️ Unduh Template 1 Pekan</button></div>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:0 0 200px;"><label>Bulan (Template 1 Bulan Penuh)</label><input id="absTplBulan" type="month"></div>
+        <div class="field" style="flex:0 0 auto; align-self:flex-end;"><button class="secondary" id="btnTemplateAbsensiBulan" type="button">⬇️ Unduh Template 1 Bulan</button></div>
+      </div>
+      <div class="btnrow">
+        <button class="gold" id="btnImportAbsensiTrigger" type="button">⬆️ Impor File Absensi Terisi</button>
+        <input type="file" id="fileImportAbsensi" accept=".xlsx,.xls" style="display:none;">
+      </div>
+    </div>
+
+    <div class="card">
       <h2>Rekap Absensi</h2>
       <div class="row">
         <div class="field"><label>Dari Tanggal</label><input id="rekapAbsDari" type="date"></div>
@@ -1810,6 +1839,10 @@ function todayISO(){
 (function initAbsTanggal(){
   const el = document.getElementById('absTanggal');
   if(!el.value) el.value = todayISO();
+  const tplMinggu = document.getElementById('absTplMingguDari');
+  if(tplMinggu && !tplMinggu.value) tplMinggu.value = todayISO();
+  const tplBulan = document.getElementById('absTplBulan');
+  if(tplBulan && !tplBulan.value) tplBulan.value = todayISO().slice(0,7);
 })();
 
 function loadPendingFromDate(){
@@ -1841,6 +1874,41 @@ function renderAbsensiTable(){
         pendingAbsensi[wrap.dataset.id] = btn.dataset.st;
         wrap.querySelectorAll('button').forEach(b=>b.classList.toggle('on', b===btn));
       });
+    });
+  });
+  renderRiwayatAbsensi();
+}
+
+function renderRiwayatAbsensi(){
+  const tbody = document.querySelector('#riwayatAbsensiTable tbody');
+  const emptyEl = document.getElementById('riwayatAbsensiEmpty');
+  if(!tbody) return;
+  const dates = Object.keys(state.absensi || {}).sort().reverse();
+  emptyEl.style.display = dates.length ? 'none' : '';
+  tbody.innerHTML = dates.map(tgl=>{
+    const byStudent = state.absensi[tgl] || {};
+    const t = {H:0,S:0,I:0,A:0};
+    Object.values(byStudent).forEach(s=>{ if(t[s]!==undefined) t[s]++; });
+    return `<tr><td class="name">${escapeHtml(tgl)}</td><td class="num badgeH">${t.H}</td><td class="num badgeS">${t.S}</td><td class="num badgeI">${t.I}</td><td class="num badgeA">${t.A}</td>
+      <td class="noprint">
+        <button class="secondary" data-edit="${escapeHtml(tgl)}" type="button">✏️ Edit</button>
+        <button class="secondary" data-del="${escapeHtml(tgl)}" type="button">🗑️ Hapus</button>
+      </td></tr>`;
+  }).join('');
+  tbody.querySelectorAll('button[data-edit]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const tgl = b.dataset.edit;
+      document.getElementById('absTanggal').value = tgl;
+      loadPendingFromDate();
+      renderAbsensiTable();
+      toast('Absensi tanggal ' + tgl + ' dimuat untuk diedit — ubah status lalu klik "Simpan Absensi Tanggal Ini"');
+    });
+  });
+  tbody.querySelectorAll('button[data-del]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const tgl = b.dataset.del;
+      if(!confirm('Hapus semua data absensi tanggal ' + tgl + '?')) return;
+      dataRoot('absensi/'+tgl).remove().then(()=> toast('Absensi tanggal ' + tgl + ' dihapus'));
     });
   });
 }
@@ -2088,6 +2156,157 @@ document.getElementById('btnExportAbsensi')?.addEventListener('click', ()=>{
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, sheetFromAOA(rows,[4,22,8,8,8,8]), 'Rekap Absensi');
   downloadWorkbook(wb, `absensi-${kelasFileTag()}.xlsx`);
+});
+
+/* -- Template Impor Absensi: 1 Pekan / 1 Bulan Penuh -- */
+function absDateRangeWeek(startISO){
+  const start = new Date(startISO+'T00:00:00');
+  const days = [];
+  for(let i=0;i<7;i++){
+    const d = new Date(start);
+    d.setDate(start.getDate()+i);
+    days.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'));
+  }
+  return days;
+}
+function absDatesInMonth(monthISO){ // monthISO = 'YYYY-MM'
+  const [y,m] = monthISO.split('-').map(Number);
+  const daysInMonth = new Date(y, m, 0).getDate();
+  const days = [];
+  for(let d=1; d<=daysInMonth; d++){
+    days.push(y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0'));
+  }
+  return days;
+}
+function buildAbsensiTemplateWorkbook(dates){
+  const header = ['No','Nama', ...dates];
+  const rows = [header];
+  orderedStudents().forEach(st=> rows.push([st.no, st.nama, ...dates.map(()=>'H')]));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, sheetFromAOA(rows, [4,22,...dates.map(()=>10)]), 'Template Absensi');
+  const petunjuk = [
+    ['Petunjuk Pengisian Template Absensi'],
+    [''],
+    ['Kolom tanggal (format YYYY-MM-DD) diisi salah satu kode berikut:'],
+    ['H', 'Hadir'],
+    ['S', 'Sakit'],
+    ['I', 'Izin'],
+    ['A', 'Alpa'],
+    [''],
+    ['Semua sel sudah diisi default "H" (Hadir). Ubah menjadi S/I/A hanya untuk siswa yang tidak hadir penuh pada tanggal tersebut.'],
+    ['Jangan mengubah kolom No, Nama, atau nama/urutan kolom tanggal, lalu impor kembali file ini di tab Absensi > "Impor File Absensi Terisi".'],
+  ];
+  XLSX.utils.book_append_sheet(wb, sheetFromAOA(petunjuk, [70,14]), 'Petunjuk');
+  return wb;
+}
+document.getElementById('btnTemplateAbsensiMinggu')?.addEventListener('click', ()=>{
+  if(!activeKelasId){ toast('Pilih/buat kelas dulu'); return; }
+  if(!orderedStudents().length){ toast('Tambahkan siswa dulu di tab Siswa'); return; }
+  const start = document.getElementById('absTplMingguDari').value || todayISO();
+  const dates = absDateRangeWeek(start);
+  const wb = buildAbsensiTemplateWorkbook(dates);
+  downloadWorkbook(wb, `template-absensi-1pekan-${dates[0]}-${kelasFileTag()}.xlsx`);
+  toast('Template 1 pekan diunduh — isi status lalu impor kembali');
+});
+document.getElementById('btnTemplateAbsensiBulan')?.addEventListener('click', ()=>{
+  if(!activeKelasId){ toast('Pilih/buat kelas dulu'); return; }
+  if(!orderedStudents().length){ toast('Tambahkan siswa dulu di tab Siswa'); return; }
+  const bln = document.getElementById('absTplBulan').value || todayISO().slice(0,7);
+  const dates = absDatesInMonth(bln);
+  const wb = buildAbsensiTemplateWorkbook(dates);
+  downloadWorkbook(wb, `template-absensi-1bulan-${bln}-${kelasFileTag()}.xlsx`);
+  toast('Template 1 bulan diunduh — isi status lalu impor kembali');
+});
+
+/* -- Impor Absensi Terisi (dari template 1 pekan / 1 bulan, atau file serupa) -- */
+function absNormalizeStatus(v){
+  const s = String(v==null?'':v).trim().toUpperCase();
+  if(['H','HADIR'].includes(s)) return 'H';
+  if(['S','SAKIT'].includes(s)) return 'S';
+  if(['I','IZIN','IJIN'].includes(s)) return 'I';
+  if(['A','ALPA','ALPHA'].includes(s)) return 'A';
+  return null;
+}
+function absParseDateCell(v){
+  if(v===undefined || v===null || v==='') return null;
+  if(v instanceof Date){
+    return v.getFullYear()+'-'+String(v.getMonth()+1).padStart(2,'0')+'-'+String(v.getDate()).padStart(2,'0');
+  }
+  if(typeof v === 'number'){
+    if(typeof XLSX!=='undefined' && XLSX.SSF && XLSX.SSF.parse_date_code){
+      const d = XLSX.SSF.parse_date_code(v);
+      if(d) return d.y+'-'+String(d.m).padStart(2,'0')+'-'+String(d.d).padStart(2,'0');
+    }
+    return null;
+  }
+  const s = String(v).trim();
+  const m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m) return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');
+  return null;
+}
+document.getElementById('btnImportAbsensiTrigger')?.addEventListener('click', ()=>{
+  if(!activeKelasId){ toast('Pilih/buat kelas dulu'); return; }
+  document.getElementById('fileImportAbsensi').click();
+});
+document.getElementById('fileImportAbsensi')?.addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    try{
+      const wb = XLSX.read(ev.target.result, {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const aoa = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      if(!aoa.length){ toast('File kosong'); return; }
+      const header = aoa[0];
+      const headerStr = header.map(h=>String(h||'').trim());
+      const idxNo = headerStr.findIndex(h=>/^no\.?$/i.test(h));
+      const idxNama = headerStr.findIndex(h=>/^nama/i.test(h));
+      const dateCols = []; // {idx, tgl}
+      header.forEach((h,i)=>{
+        if(i===idxNo || i===idxNama) return;
+        const tgl = absParseDateCell(h);
+        if(tgl) dateCols.push({idx:i, tgl});
+      });
+      if(!dateCols.length){ toast('Tidak ada kolom tanggal yang dikenali (header kolom tanggal harus format YYYY-MM-DD)'); return; }
+
+      const byNo = {}, byNama = {};
+      orderedStudents().forEach(st=>{ byNo[String(st.no)] = st; byNama[st.nama.trim().toLowerCase()] = st; });
+
+      const updates = {};
+      let matchedStudents = 0;
+      const touchedDates = new Set();
+      for(let r=1;r<aoa.length;r++){
+        const row = aoa[r];
+        if(!row || !row.length) continue;
+        let st = null;
+        if(idxNo!==-1 && row[idxNo]!=='') st = byNo[String(row[idxNo]).trim()];
+        if(!st && idxNama!==-1 && row[idxNama]!=='') st = byNama[String(row[idxNama]).trim().toLowerCase()];
+        if(!st) continue;
+        let rowMatched = false;
+        dateCols.forEach(({idx, tgl})=>{
+          const status = absNormalizeStatus(row[idx]);
+          if(!status) return;
+          updates[tgl + '/' + st.id] = status;
+          touchedDates.add(tgl);
+          rowMatched = true;
+        });
+        if(rowMatched) matchedStudents++;
+      }
+      if(!Object.keys(updates).length){ toast('Tidak ada data valid yang bisa diimpor (cek kolom No/Nama & isi status H/S/I/A)'); return; }
+      dataRoot('absensi').update(updates).then(()=>{
+        toast(`Impor berhasil — ${touchedDates.size} tanggal, ${matchedStudents} siswa diperbarui`);
+        loadPendingFromDate();
+        renderAbsensiTable();
+      });
+    }catch(err){
+      console.error(err);
+      toast('Gagal membaca file: ' + err.message);
+    }finally{
+      e.target.value = '';
+    }
+  };
+  reader.readAsArrayBuffer(file);
 });
 
 /* -- Ekspor: Tabel Input Nilai (mode tabel) -- */
