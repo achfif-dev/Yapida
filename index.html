@@ -154,6 +154,7 @@
   }
   .ijazahPage.hasCustomBorder{ background-size:100% 100%; background-repeat:no-repeat; }
   [data-ijzel].dragMode{ cursor:move; outline:1.5px dashed var(--gold); outline-offset:2px; }
+  .ijazahInner.groupDragMode{ cursor:move; outline:1.5px dashed var(--gold); outline-offset:4px; }
   .ijazahPage::before{
     content:""; position:absolute; inset:6px;
     border:2px solid #1e6b3e;
@@ -772,12 +773,21 @@
         </div>
         <div class="row" style="align-items:center;">
           <div class="field" style="flex:0 0 auto;">
-            <label style="display:flex; align-items:center; gap:6px; font-weight:600;">
-              <input type="checkbox" id="ijzDragMode" style="width:auto;"> Mode Geser Posisi (per baris/komponen)
-            </label>
+            <label style="display:block; font-weight:600; margin-bottom:4px;">Mode Geser Posisi</label>
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <label style="display:flex; align-items:center; gap:6px; font-weight:400;">
+                <input type="radio" name="ijzDragModeRadio" id="ijzDragModeOff" value="off" checked style="width:auto;"> Nonaktif
+              </label>
+              <label style="display:flex; align-items:center; gap:6px; font-weight:400;">
+                <input type="radio" name="ijzDragModeRadio" id="ijzDragModeGroup" value="group" style="width:auto;"> Geser Grup (semua bergerak bersama)
+              </label>
+              <label style="display:flex; align-items:center; gap:6px; font-weight:400;">
+                <input type="radio" name="ijzDragModeRadio" id="ijzDragModeRow" value="row" style="width:auto;"> Geser Per Baris (komponen)
+              </label>
+            </div>
           </div>
           <div class="field" style="flex:2; min-width:220px;">
-            <p class="hint" style="margin:0;">Saat aktif: klik &amp; seret <strong>masing-masing baris/komponen</strong> ijazah bagian depan (di pratinjau bawah) satu per satu — nama madrasah, judul, nama siswa, tiap baris biodata, foto, tanda tangan, dll bisa digeser sendiri-sendiri, tidak ikut bergerak bersama. Klik "Simpan Posisi" setelah semua pas.</p>
+            <p class="hint" style="margin:0;"><strong>Geser Grup:</strong> klik &amp; seret di mana saja pada ijazah bagian depan untuk menggeser <strong>seluruh isi sekaligus</strong> (bergerak bersama-sama). <strong>Geser Per Baris:</strong> klik &amp; seret <strong>masing-masing baris/komponen</strong> satu per satu — nama madrasah, judul, nama siswa, tiap baris biodata, foto, tanda tangan, dll bisa digeser sendiri-sendiri, tidak ikut bergerak bersama. Klik "Simpan Posisi" setelah semua pas.</p>
           </div>
           <div class="field" style="flex:0 0 auto; align-self:flex-end;">
             <button class="secondary" id="btnResetDragPosition" type="button">↺ Reset Posisi</button>
@@ -969,6 +979,22 @@ const IJAZAH_DEFAULT_TEMPLATES = {
 const IJAZAH_LETTER_GRADES = [{min:85,label:'A'},{min:75,label:'B'},{min:65,label:'C'},{min:55,label:'D'},{min:45,label:'E'},{min:0,label:'F'}];
 function nilaiHuruf(v){
   for(const g of IJAZAH_LETTER_GRADES){ if(Number(v)>=g.min) return g.label; }
+}
+const IJZ_ANGKA_SATUAN = ['Nol','Satu','Dua','Tiga','Empat','Lima','Enam','Tujuh','Delapan','Sembilan'];
+const IJZ_ANGKA_BELASAN = ['Sepuluh','Sebelas','Dua Belas','Tiga Belas','Empat Belas','Lima Belas','Enam Belas','Tujuh Belas','Delapan Belas','Sembilan Belas'];
+const IJZ_ANGKA_PULUHAN = ['','','Dua Puluh','Tiga Puluh','Empat Puluh','Lima Puluh','Enam Puluh','Tujuh Puluh','Delapan Puluh','Sembilan Puluh'];
+// Mengubah angka nilai (bilangan bulat, umumnya 0-9 sesuai skala raport) menjadi kata bilangan Bahasa Indonesia.
+// Misal: 6 -> "Enam". Mendukung juga 10-99 untuk berjaga-jaga jika skala nilai berubah.
+function angkaKeKata(v){
+  let n = Math.round(Number(v)||0);
+  if(n<0) n = 0;
+  if(n<=9) return IJZ_ANGKA_SATUAN[n];
+  if(n<20) return IJZ_ANGKA_BELASAN[n-10];
+  if(n<100){
+    const puluh = Math.floor(n/10), sisa = n%10;
+    return (IJZ_ANGKA_PULUHAN[puluh] + (sisa ? ' ' + IJZ_ANGKA_SATUAN[sisa] : '')).trim();
+  }
+  return String(n);
   return 'F';
 }
 function tingkatanKey(tingkatan){
@@ -2544,7 +2570,7 @@ function buildIjazahHTML(studentId){
   const tpl = getIjazahTemplate(key);
   const st = orderedStudents().find(s=>s.id===studentId);
   if(!st) return null;
-  const row = ijazahRowFor(studentId) || {nilaiAsli: state.subjects.map(()=>0), jumlah:0, rata:0, peringkat:'-'};
+  const row = ijazahRowFor(studentId) || {nilaiAsli: state.subjects.map(()=>0), raport: state.subjects.map(()=>0), jumlah:0, rata:0, peringkat:'-'};
   const rec = state.ijazah[studentId] || {};
   const u = state.ijazahUmum || {};
   const m = state.meta || {};
@@ -2567,7 +2593,11 @@ function buildIjazahHTML(studentId){
     .replace(/\n/g,'<br>');
   const leadIntro = (tpl.leadIntro||'').replace(/\n/g,'<br>');
   const scl = (Number(tpl.contentScale)||100)/100;
-  const innerStyle = (scl!==1) ? ` style="transform:scale(${scl}); transform-origin:top center;"` : '';
+  const gp = tpl.groupPos || {x:0,y:0};
+  const innerTransformParts = [];
+  if(gp.x || gp.y) innerTransformParts.push(`translate(${gp.x}px,${gp.y}px)`);
+  if(scl!==1) innerTransformParts.push(`scale(${scl})`);
+  const innerStyle = innerTransformParts.length ? ` style="transform:${innerTransformParts.join(' ')}; transform-origin:top center;"` : '';
   const arabTopHtml = escapeHtml(tpl.arabTop||'').replace(/\n/g,'<br>');
   const elPos = tpl.elPos || {};
   function elAttr(key, extraStyle){
@@ -2613,9 +2643,14 @@ function buildIjazahHTML(studentId){
   const materiTambahan = (key==='tpq') ? (tpl.materiTambahan||[]) : [];
   const mainSubjects = state.subjects.filter(s=>!materiTambahan.includes(s));
   const tambahanSubjects = state.subjects.filter(s=>materiTambahan.includes(s));
-  function subVal(s){ const idx = state.subjects.indexOf(s); return idx>=0 ? Number(row.nilaiAsli[idx]||0) : 0; }
+  // Nilai di kolom "Angka" ijazah memakai nilai Raport (bukan nilai asli), dengan batas paling rendah 5.
+  function subVal(s){
+    const idx = state.subjects.indexOf(s);
+    const raportVal = idx>=0 ? Number((row.raport && row.raport[idx])||0) : 0;
+    return Math.max(raportVal, 5);
+  }
   function tblRows(list){
-    return list.map((s,i)=>`<tr><td>${i+1}</td><td style="text-align:left;">${escapeHtml(s)}</td><td>${subVal(s)}</td><td>${escapeHtml(nilaiHuruf(subVal(s)))}</td></tr>`).join('');
+    return list.map((s,i)=>`<tr><td>${i+1}</td><td style="text-align:left;">${escapeHtml(s)}</td><td>${subVal(s)}</td><td>${escapeHtml(angkaKeKata(subVal(s)))}</td></tr>`).join('');
   }
   const mainVals = mainSubjects.map(subVal);
   const mainJumlah = mainVals.reduce((a,b)=>a+b,0);
@@ -2680,13 +2715,27 @@ document.getElementById('btnBuildIjazah').addEventListener('click', ()=>{
   ijzSyncDragModeToBoard();
 });
 
-/* ---- Mode Geser Posisi (drag-to-position per baris/komponen, seperti Canva/Corel, khusus bagian depan) ---- */
-let ijzElState = {};   // key -> {x,y}, posisi berjalan (live) tiap komponen
-let ijzDragKey = null;  // key komponen yang sedang diseret
+/* ---- Mode Geser Posisi (drag-to-position, seperti Canva/Corel, khusus bagian depan) ----
+   Dua opsi:
+   - "group": seluruh isi ijazah bagian depan digeser bersama-sama (satu offset x/y untuk semua).
+   - "row"  : tiap baris/komponen digeser sendiri-sendiri (independen).
+*/
+let ijzElState = {};      // key -> {x,y}, posisi berjalan (live) tiap komponen (mode "row")
+let ijzGroupState = {x:0,y:0}; // posisi berjalan (live) grup (mode "group")
+let ijzDragKey = null;    // key komponen yang sedang diseret (mode "row")
+let ijzGroupDragging = false; // sedang menyeret grup? (mode "group")
 let ijzDragStart = { clientX:0, clientY:0, x:0, y:0 };
 
+function ijzDragMode(){
+  const el = document.querySelector('input[name="ijzDragModeRadio"]:checked');
+  return el ? el.value : 'off';
+}
 function ijzFrontPageEl(){
   return document.querySelector('#ijazahBoard .ijazahPage:first-child');
+}
+function ijzFrontInnerEl(){
+  const front = ijzFrontPageEl();
+  return front ? front.querySelector('.ijazahInner') : null;
 }
 function ijzDraggableEls(){
   const front = ijzFrontPageEl();
@@ -2700,48 +2749,86 @@ function ijzApplyElTransform(key){
   const p = ijzElState[key] || {x:0,y:0};
   el.style.transform = (p.x||p.y) ? `translate(${p.x}px,${p.y}px)` : '';
 }
+function ijzApplyGroupTransform(){
+  const inner = ijzFrontInnerEl();
+  if(!inner) return;
+  const key = currentTingkatanKey();
+  const tpl = key ? getIjazahTemplate(key) : {};
+  const scl = (Number(tpl.contentScale)||100)/100;
+  const p = ijzGroupState || {x:0,y:0};
+  const parts = [];
+  if(p.x || p.y) parts.push(`translate(${p.x}px,${p.y}px)`);
+  if(scl!==1) parts.push(`scale(${scl})`);
+  inner.style.transform = parts.length ? parts.join(' ') : '';
+}
 function ijzSyncDragModeToBoard(){
-  const chk = document.getElementById('ijzDragMode');
+  const mode = ijzDragMode();
   const key = currentTingkatanKey();
   const tpl = key ? getIjazahTemplate(key) : {};
   const src = tpl.elPos || {};
+  const gp = tpl.groupPos || {x:0,y:0};
+  ijzGroupState = { x:Number(gp.x)||0, y:Number(gp.y)||0 };
   ijzElState = {};
   ijzDraggableEls().forEach(el=>{
     const k = el.getAttribute('data-ijzel');
     const p = src[k] || {x:0,y:0};
     ijzElState[k] = { x:Number(p.x)||0, y:Number(p.y)||0 };
-    el.classList.toggle('dragMode', !!(chk && chk.checked));
+    el.classList.toggle('dragMode', mode==='row');
     ijzApplyElTransform(k);
   });
+  const inner = ijzFrontInnerEl();
+  if(inner) inner.classList.toggle('groupDragMode', mode==='group');
+  ijzApplyGroupTransform();
 }
-document.getElementById('ijzDragMode').addEventListener('change', (e)=>{
-  if(!ijzFrontPageEl()){ toast('Tampilkan ijazah dulu (klik "Tampilkan Ijazah")'); e.target.checked = false; return; }
-  ijzSyncDragModeToBoard();
-  if(e.target.checked) toast('Mode geser aktif: klik & seret tiap baris/komponen satu per satu');
+document.querySelectorAll('input[name="ijzDragModeRadio"]').forEach(radio=>{
+  radio.addEventListener('change', (e)=>{
+    if(e.target.value!=='off' && !ijzFrontPageEl()){
+      toast('Tampilkan ijazah dulu (klik "Tampilkan Ijazah")');
+      document.getElementById('ijzDragModeOff').checked = true;
+      return;
+    }
+    ijzSyncDragModeToBoard();
+    if(e.target.value==='group') toast('Mode geser grup aktif: klik & seret di mana saja untuk menggeser semua isi sekaligus');
+    else if(e.target.value==='row') toast('Mode geser per baris aktif: klik & seret tiap baris/komponen satu per satu');
+  });
 });
 (function setupIjzDrag(){
   const board = document.getElementById('ijazahBoard');
   board.addEventListener('pointerdown', (e)=>{
-    if(!document.getElementById('ijzDragMode').checked) return;
+    const mode = ijzDragMode();
+    if(mode==='off') return;
     const front = ijzFrontPageEl();
     if(!front || !front.contains(e.target)) return;
-    const target = e.target.closest('[data-ijzel]');
-    if(!target) return;
-    ijzDragKey = target.getAttribute('data-ijzel');
-    const p = ijzElState[ijzDragKey] || {x:0,y:0};
-    ijzDragStart = { clientX:e.clientX, clientY:e.clientY, x:p.x, y:p.y };
-    try{ target.setPointerCapture(e.pointerId); }catch(err){}
+    if(mode==='row'){
+      const target = e.target.closest('[data-ijzel]');
+      if(!target) return;
+      ijzDragKey = target.getAttribute('data-ijzel');
+      const p = ijzElState[ijzDragKey] || {x:0,y:0};
+      ijzDragStart = { clientX:e.clientX, clientY:e.clientY, x:p.x, y:p.y };
+      try{ target.setPointerCapture(e.pointerId); }catch(err){}
+    } else if(mode==='group'){
+      ijzGroupDragging = true;
+      const p = ijzGroupState || {x:0,y:0};
+      ijzDragStart = { clientX:e.clientX, clientY:e.clientY, x:p.x, y:p.y };
+      try{ front.setPointerCapture(e.pointerId); }catch(err){}
+    }
     e.preventDefault();
     e.stopPropagation();
   });
   board.addEventListener('pointermove', (e)=>{
-    if(!ijzDragKey) return;
-    const x = Math.round(ijzDragStart.x + (e.clientX - ijzDragStart.clientX));
-    const y = Math.round(ijzDragStart.y + (e.clientY - ijzDragStart.clientY));
-    ijzElState[ijzDragKey] = { x, y };
-    ijzApplyElTransform(ijzDragKey);
+    if(ijzDragKey){
+      const x = Math.round(ijzDragStart.x + (e.clientX - ijzDragStart.clientX));
+      const y = Math.round(ijzDragStart.y + (e.clientY - ijzDragStart.clientY));
+      ijzElState[ijzDragKey] = { x, y };
+      ijzApplyElTransform(ijzDragKey);
+    } else if(ijzGroupDragging){
+      const x = Math.round(ijzDragStart.x + (e.clientX - ijzDragStart.clientX));
+      const y = Math.round(ijzDragStart.y + (e.clientY - ijzDragStart.clientY));
+      ijzGroupState = { x, y };
+      ijzApplyGroupTransform();
+    }
   });
-  const stopDrag = ()=>{ ijzDragKey = null; };
+  const stopDrag = ()=>{ ijzDragKey = null; ijzGroupDragging = false; };
   board.addEventListener('pointerup', stopDrag);
   board.addEventListener('pointercancel', stopDrag);
   board.addEventListener('pointerleave', stopDrag);
@@ -2749,10 +2836,16 @@ document.getElementById('ijzDragMode').addEventListener('change', (e)=>{
 document.getElementById('btnSaveDragPosition').addEventListener('click', ()=>{
   const key = currentTingkatanKey();
   if(!key){ toast('Tingkatan kelas aktif tidak didukung'); return; }
-  db.ref('rapor/ijazahTemplates/'+key+'/elPos').set(ijzElState).then(()=> toast('Posisi tiap baris/komponen disimpan'));
+  db.ref('rapor/ijazahTemplates/'+key).update({ elPos: ijzElState, groupPos: ijzGroupState }).then(()=> toast('Posisi disimpan'));
 });
 document.getElementById('btnResetDragPosition').addEventListener('click', ()=>{
-  Object.keys(ijzElState).forEach(k=>{ ijzElState[k] = {x:0,y:0}; ijzApplyElTransform(k); });
+  const mode = ijzDragMode();
+  if(mode==='group'){
+    ijzGroupState = {x:0,y:0};
+    ijzApplyGroupTransform();
+  } else {
+    Object.keys(ijzElState).forEach(k=>{ ijzElState[k] = {x:0,y:0}; ijzApplyElTransform(k); });
+  }
   toast('Posisi direset (klik "Simpan Posisi" untuk menyimpan)');
 });
 
