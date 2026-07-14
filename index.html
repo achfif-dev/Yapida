@@ -172,11 +172,16 @@
   .ijazahBioRow .lbl{width:98px; flex:0 0 auto;}
   .ijazahBioRow .val{font-weight:600; text-decoration:underline; text-underline-offset:2px;}
   .ijazahTelahLulus{font-size:10px; margin-top:8px; text-align:justify;}
-  .ijazahFotoBox{width:70px; height:88px; border:1px solid #444; font-size:9px; text-align:center; display:flex; align-items:center; justify-content:center; color:#666; position:absolute; left:14px; bottom:70px; background:#fff;}
+  .ijazahFotoBox{width:70px; height:88px; border:1px solid #444; font-size:9px; text-align:center; display:flex; align-items:center; justify-content:center; color:#666; position:absolute; left:14px; bottom:70px; background:#fff; z-index:2;}
   .ijazahFotoBox img{width:100%; height:100%; object-fit:cover;}
-  .ijazahSignArea{margin-top:auto; font-size:10.5px;}
+  .ijazahSignArea{margin-top:auto; font-size:10.5px; position:relative; z-index:1;}
   .ijazahSignArea .ttd{text-align:center; margin-top:2px;}
   .ijazahSignArea .ttdNama{font-weight:700; text-decoration:underline; text-underline-offset:2px; margin-top:34px; display:block;}
+  /* Blok pengurus yayasan: digeser ke kanan foto & diratakan tengah agar tidak pernah tertutup pas foto */
+  .ijazahPengurusBlock{margin-top:12px; margin-left:88px; text-align:center;}
+  .ijazahPengurusBlock .ttd{text-align:center;}
+  .ijazahPengurusBlock .ttdNama{margin-top:26px;}
+  @media (max-width:520px){ .ijazahPengurusBlock{margin-left:78px;} }
   .ijazahBackTitle{text-align:center; font-family:'Fraunces',serif; font-weight:700; font-size:15px;}
   .ijazahBackSub{text-align:center; font-weight:800; font-size:11.5px;}
   .ijazahBackAddr{text-align:center; font-size:9.5px;}
@@ -685,12 +690,29 @@
         <div class="row" id="tplMateriTambahanRow">
           <div class="field" style="flex:2;"><label>Mapel "Materi Tambahan" (khusus TPQ, pisahkan koma)</label><input id="tplMateriTambahan" placeholder="Surat-surat Pendek, Niatnya Shalat, Do'a Sehari-hari"></div>
         </div>
+        <h3>Header Arab (baris "Bismillah / Yarfa'illah")</h3>
+        <p class="hint">Bisa diedit atau disembunyikan bila gambar bingkai kustom yang diunggah sudah memuat tulisan Arab sendiri, supaya tidak dobel.</p>
+        <div class="row">
+          <div class="field" style="flex:0 0 auto;">
+            <label style="display:flex; align-items:center; gap:6px; font-weight:600;">
+              <input type="checkbox" id="tplShowArabTop" style="width:auto;"> Tampilkan header Arab
+            </label>
+          </div>
+          <div class="field" style="flex:2;"><label>Teks header Arab (baris baru = ganti baris)</label><textarea id="tplArabTop" rows="2"></textarea></div>
+        </div>
         <div class="row">
           <div class="field" style="flex:2;">
             <label>Gambar Bingkai Kustom (opsional — akan menggantikan bingkai bawaan)</label>
             <input type="file" id="tplBorderFile" accept="image/*">
           </div>
           <div class="field" style="flex:0 0 auto; align-self:flex-end;"><button class="secondary" id="btnClearBorder" type="button">Hapus Bingkai Kustom</button></div>
+        </div>
+        <h3>Penyesuaian Posisi Tulisan (untuk menyamakan dengan bingkai kustom)</h3>
+        <p class="hint">Geser &amp; skalakan seluruh isi ijazah (teks + pas foto bergerak bersamaan) supaya pas simetris di dalam gambar bingkai yang diunggah. Biarkan 0 / 100% bila memakai bingkai bawaan.</p>
+        <div class="row">
+          <div class="field"><label>Geser Horizontal (px, boleh minus)</label><input id="tplOffsetX" type="number" step="1" placeholder="0"></div>
+          <div class="field"><label>Geser Vertikal (px, boleh minus)</label><input id="tplOffsetY" type="number" step="1" placeholder="0"></div>
+          <div class="field"><label>Skala Konten (%)</label><input id="tplScale" type="number" step="1" min="50" max="150" placeholder="100"></div>
         </div>
         <div class="btnrow"><button id="btnSaveTemplate">Simpan Template</button></div>
       </div>
@@ -716,6 +738,15 @@
         <div class="studentpick">
           <select id="ijzPickPreview"></select>
           <button class="secondary" id="btnBuildIjazah" type="button">Tampilkan Ijazah</button>
+        </div>
+        <div class="row">
+          <div class="field" style="flex:0 0 200px;">
+            <label>Ukuran Kertas (cetak / PDF)</label>
+            <select id="ijzPaperSize">
+              <option value="a4">A4 (210 × 297 mm)</option>
+              <option value="f4">F4 / Folio (215 × 330 mm)</option>
+            </select>
+          </div>
         </div>
         <div class="btnrow" id="ijazahExportBtns" style="display:none;">
           <button class="gold" id="btnPrintIjazah" type="button">🖨️ Cetak</button>
@@ -813,7 +844,10 @@ const IJAZAH_DEFAULT_TEMPLATES = {
     materiTambahan: ["Surat-surat Pendek","Niatnya Shalat","Do'a Sehari-hari"],
     leadIntro: "Yang bertandatangan di bawah ini,\nKepala Taman Pendidikan Al-Qur'an ( TPQ )\nMemutuskan Bahwa:",
     closingText: "Telah lulus dalam Evaluasi Belajar tulis baca Al-qur'an Tingkat ( TPQ ) yang di laksanakan pada tanggal {DARI_M} sampai {SAMPAI_M}.\nIjazah ini di berikan sebagai bukti bahwa nama tersebut telah menyelesaikan pendidikan di Taman Pendidikan Al-Qur'an ( TPQ ) Al-Hidayah",
-    borderImg: ""
+    borderImg: "",
+    showArabTop: true,
+    arabTop: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\nيَرْفَعِ اللَّهُ الَّذِينَ آمَنُوا مِنكُمْ وَالَّذِينَ أُوتُوا الْعِلْمَ دَرَجَاتٍ",
+    contentOffsetX: 0, contentOffsetY: 0, contentScale: 100
   },
   ibtidaiyah: {
     lembagaAtas: "YAYASAN PENDIDIKAN ISLAM AL-HIDAYAH (YAPIDA)",
@@ -832,7 +866,10 @@ const IJAZAH_DEFAULT_TEMPLATES = {
     materiTambahan: [],
     leadIntro: "Kami memutuskan bahwa :",
     closingText: "Telah lulus dalam Evaluasi Belajar Tahap Akhir tersebut diatas dan sebagai bukti surat ijazah ini kami berikan.",
-    borderImg: ""
+    borderImg: "",
+    showArabTop: true,
+    arabTop: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\nيَرْفَعِ اللَّهُ الَّذِينَ آمَنُوا مِنكُمْ وَالَّذِينَ أُوتُوا الْعِلْمَ دَرَجَاتٍ",
+    contentOffsetX: 0, contentOffsetY: 0, contentScale: 100
   },
   tsanawiyah: {
     lembagaAtas: "YAYASAN PENDIDIKAN ISLAM AL-HIDAYAH (YAPIDA)",
@@ -851,7 +888,10 @@ const IJAZAH_DEFAULT_TEMPLATES = {
     materiTambahan: [],
     leadIntro: "Kami memutuskan bahwa :",
     closingText: "Telah lulus dalam Evaluasi Belajar Tahap Akhir tersebut diatas dan sebagai bukti surat ijazah ini kami berikan.",
-    borderImg: ""
+    borderImg: "",
+    showArabTop: true,
+    arabTop: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\nيَرْفَعِ اللَّهُ الَّذِينَ آمَنُوا مِنكُمْ وَالَّذِينَ أُوتُوا الْعِلْمَ دَرَجَاتٍ",
+    contentOffsetX: 0, contentOffsetY: 0, contentScale: 100
   }
 };
 const IJAZAH_LETTER_GRADES = [{min:85,label:'A'},{min:75,label:'B'},{min:65,label:'C'},{min:55,label:'D'},{min:45,label:'E'},{min:0,label:'F'}];
@@ -2305,6 +2345,11 @@ function renderIjazahTab(){
   document.getElementById('tplPanitiaKetua').value = tpl.panitiaKetua || '';
   document.getElementById('tplPanitiaSekretaris').value = tpl.panitiaSekretaris || '';
   document.getElementById('tplMateriTambahan').value = (tpl.materiTambahan||[]).join(', ');
+  document.getElementById('tplShowArabTop').checked = tpl.showArabTop !== false;
+  document.getElementById('tplArabTop').value = tpl.arabTop || '';
+  document.getElementById('tplOffsetX').value = tpl.contentOffsetX || 0;
+  document.getElementById('tplOffsetY').value = tpl.contentOffsetY || 0;
+  document.getElementById('tplScale').value = tpl.contentScale || 100;
   document.getElementById('tplPanitiaRow').style.display = tpl.showPanitia ? '' : 'none';
   document.getElementById('tplMateriTambahanRow').style.display = (key==='tpq') ? '' : 'none';
 
@@ -2401,6 +2446,11 @@ document.getElementById('btnSaveTemplate').addEventListener('click', ()=>{
     panitiaKetua: document.getElementById('tplPanitiaKetua').value.trim(),
     panitiaSekretaris: document.getElementById('tplPanitiaSekretaris').value.trim(),
     materiTambahan: document.getElementById('tplMateriTambahan').value.split(',').map(s=>s.trim()).filter(Boolean),
+    showArabTop: document.getElementById('tplShowArabTop').checked,
+    arabTop: document.getElementById('tplArabTop').value,
+    contentOffsetX: Number(document.getElementById('tplOffsetX').value) || 0,
+    contentOffsetY: Number(document.getElementById('tplOffsetY').value) || 0,
+    contentScale: Number(document.getElementById('tplScale').value) || 100,
   });
   if(ijzPendingBorder !== undefined){ payload.borderImg = ijzPendingBorder; }
   db.ref('rapor/ijazahTemplates/'+key).set(payload).then(()=>{
@@ -2436,11 +2486,16 @@ function buildIjazahHTML(studentId){
     .replace('{DARI_M}', u.dariM||'').replace('{SAMPAI_M}', u.sampaiM||'')
     .replace(/\n/g,'<br>');
   const leadIntro = (tpl.leadIntro||'').replace(/\n/g,'<br>');
+  const offX = Number(tpl.contentOffsetX)||0;
+  const offY = Number(tpl.contentOffsetY)||0;
+  const scl = (Number(tpl.contentScale)||100)/100;
+  const innerStyle = (offX||offY||scl!==1) ? ` style="transform:translate(${offX}px,${offY}px) scale(${scl}); transform-origin:top center;"` : '';
+  const arabTopHtml = escapeHtml(tpl.arabTop||'').replace(/\n/g,'<br>');
 
   const front = `
     <div class="ijazahPage${borderClass}"${borderStyle}>
-      <div class="ijazahInner">
-        <div class="ijazahArabTop">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ<br>يَرْفَعِ اللَّهُ الَّذِينَ آمَنُوا مِنكُمْ وَالَّذِينَ أُوتُوا الْعِلْمَ دَرَجَاتٍ</div>
+      <div class="ijazahInner"${innerStyle}>
+        ${tpl.showArabTop!==false ? `<div class="ijazahArabTop">${arabTopHtml}</div>` : ''}
         <div class="ijazahLembaga">${escapeHtml(tpl.lembagaAtas||'')}</div>
         <div class="ijazahNos"><span>No. Ijazah: ${escapeHtml(noIjazah)}</span><span class="ijazahTitleWord" style="font-size:22px;">Ijazah</span><span>No. Induk: ${escapeHtml(noInduk)}</span></div>
         <div class="ijazahMadrasah">${escapeHtml(tpl.namaMadrasah||'')}</div>
@@ -2460,8 +2515,10 @@ function buildIjazahHTML(studentId){
         <div class="ijazahSignArea">
           <div style="text-align:right;">${escapeHtml(u.tempat||'Bangkalan')}, ${escapeHtml(u.terbitH||'')} H / ${escapeHtml(u.terbitM||'')} M</div>
           <div class="ttd" style="text-align:right;">${escapeHtml(tpl.kepalaLabel||'')}<span class="ttdNama">( ${escapeHtml(tpl.kepalaNama||'')} )</span></div>
-          <div style="margin-top:10px;">Mengetahui,<br>Pengurus Yayasan Pendidikan Islam Al-Hidayah<br>${escapeHtml(tpl.ketuaLabel||'Ketua')}</div>
-          <div class="ttd"><span class="ttdNama">( ${escapeHtml(tpl.ketuaNama||'')} )</span></div>
+          <div class="ijazahPengurusBlock">
+            <div>Mengetahui,<br>Pengurus Yayasan Pendidikan Islam Al-Hidayah<br>${escapeHtml(tpl.ketuaLabel||'Ketua')}</div>
+            <div class="ttd"><span class="ttdNama">( ${escapeHtml(tpl.ketuaNama||'')} )</span></div>
+          </div>
         </div>
       </div>
     </div>`;
@@ -2482,7 +2539,7 @@ function buildIjazahHTML(studentId){
 
   const back = `
     <div class="ijazahPage${borderClass}"${borderStyle}>
-      <div class="ijazahInner">
+      <div class="ijazahInner"${innerStyle}>
         <div class="ijazahBackTitle">${escapeHtml(tpl.judulBelakang||'EVALUASI BELAJAR TAHAP AKHIR')}</div>
         <div class="ijazahBackSub">${escapeHtml(tpl.namaMadrasah||'')}</div>
         <div class="ijazahBackAddr">${escapeHtml(tpl.alamat||'')}${tpl.showTingkatLine? (' — '+escapeHtml(tpl.tingkatLabel||'')):''}</div>
@@ -2533,7 +2590,27 @@ document.getElementById('btnBuildIjazah').addEventListener('click', ()=>{
   exportBtns.style.display = '';
 });
 
+const IJZ_PAPER_SIZES = { a4:{w:210,h:297}, f4:{w:215,h:330} };
+function ijzGetPaperSize(){
+  const sel = document.getElementById('ijzPaperSize');
+  return IJZ_PAPER_SIZES[(sel && sel.value) || 'a4'] || IJZ_PAPER_SIZES.a4;
+}
+function ijzApplyPrintPageStyle(){
+  const sz = ijzGetPaperSize();
+  let styleEl = document.getElementById('ijazahPrintPageStyle');
+  if(!styleEl){ styleEl = document.createElement('style'); styleEl.id = 'ijazahPrintPageStyle'; document.head.appendChild(styleEl); }
+  styleEl.textContent = `@media print{ @page{ size: ${sz.w}mm ${sz.h}mm; margin:8mm; } }`;
+}
+function ijzAddFittedImage(pdf, img, canvas, pageW, pageH){
+  const ratio = canvas.width / canvas.height;
+  let w = pageW, h = pageW / ratio;
+  if(h > pageH){ h = pageH; w = pageH * ratio; }
+  const x = (pageW - w) / 2, y = (pageH - h) / 2;
+  pdf.addImage(img, 'JPEG', x, y, w, h);
+}
+
 document.getElementById('btnPrintIjazah').addEventListener('click', ()=>{
+  ijzApplyPrintPageStyle();
   document.body.classList.add('printingIjazah');
   window.print();
 });
@@ -2557,13 +2634,13 @@ document.getElementById('btnPdfIjazah').addEventListener('click', async ()=>{
     const pages = document.querySelectorAll('#ijazahBoard .ijazahPage');
     if(!pages.length){ toast('Belum ada pratinjau'); return; }
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({orientation:'portrait', unit:'mm', format:'a5'});
+    const sz = ijzGetPaperSize();
+    const pdf = new jsPDF({orientation:'portrait', unit:'mm', format:[sz.w, sz.h]});
     for(let i=0;i<pages.length;i++){
       const canvas = await pageToCanvas(pages[i]);
       const img = canvas.toDataURL('image/jpeg', 0.92);
-      const w = pdf.internal.pageSize.getWidth(), h = pdf.internal.pageSize.getHeight();
-      if(i>0) pdf.addPage('a5','portrait');
-      pdf.addImage(img, 'JPEG', 0, 0, w, h);
+      if(i>0) pdf.addPage([sz.w, sz.h], 'portrait');
+      ijzAddFittedImage(pdf, img, canvas, sz.w, sz.h);
     }
     const st = orderedStudents().find(s=>s.id===ijzPreviewStudentId);
     pdf.save(`ijazah-${(st?.nama||'siswa').replace(/\s+/g,'_')}.pdf`);
@@ -2604,7 +2681,8 @@ document.getElementById('btnPdfIjazahSemua').addEventListener('click', async ()=
     hidden.style.position = 'fixed'; hidden.style.left = '-9999px'; hidden.style.top = '0';
     document.body.appendChild(hidden);
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({orientation:'portrait', unit:'mm', format:'a5'});
+    const sz = ijzGetPaperSize();
+    const pdf = new jsPDF({orientation:'portrait', unit:'mm', format:[sz.w, sz.h]});
     let first = true;
     for(const st of students){
       const pages = buildIjazahHTML(st.id);
@@ -2614,9 +2692,8 @@ document.getElementById('btnPdfIjazahSemua').addEventListener('click', async ()=
       for(const pageEl of pageEls){
         const canvas = await pageToCanvas(pageEl);
         const img = canvas.toDataURL('image/jpeg', 0.92);
-        const w = pdf.internal.pageSize.getWidth(), h = pdf.internal.pageSize.getHeight();
-        if(!first) pdf.addPage('a5','portrait');
-        pdf.addImage(img, 'JPEG', 0, 0, w, h);
+        if(!first) pdf.addPage([sz.w, sz.h], 'portrait');
+        ijzAddFittedImage(pdf, img, canvas, sz.w, sz.h);
         first = false;
       }
     }
