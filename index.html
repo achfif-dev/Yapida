@@ -207,6 +207,9 @@
     body.printingIjazah .ijazahPage, body.printingIjazah .ijazahPage *{
       -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important;
     }
+    body.printingRekapGabungan .card:not(#rekapGabunganCard){display:none !important;}
+    body.printingRekapGabungan #rekapGabunganCard{display:block !important; box-shadow:none; border:none;}
+    body.printingRekapGabungan #rekapGabunganCard .noprint{display:none !important;}
   }
   @media (max-width:640px){
     .topbar h1{font-size:19px;}
@@ -332,10 +335,24 @@
 
     <div class="card">
       <h2>Kelas Aktif</h2>
-      <p class="hint">Pilih kelas yang sedang dibuka. Semua tab lain (Siswa, Absensi, Input Nilai, Rekap) akan mengikuti kelas yang dipilih di sini.</p>
-      <div class="field">
-        <label>Kelas</label>
-        <select id="kelasSwitcher" class="noprint"><option value="">— belum ada kelas —</option></select>
+      <p class="hint">Pilih kelas yang sedang dibuka. Semua tab lain (Siswa, Absensi, Input Nilai, Rekap) akan mengikuti kelas yang dipilih di sini. Satu kelas dipakai utuh dari Catur Wulan 1 sampai 3 — gunakan pemilih Catur Wulan untuk berpindah antar-catur wulan TANPA membuat kelas baru.</p>
+      <div class="row">
+        <div class="field">
+          <label>Kelas</label>
+          <select id="kelasSwitcher" class="noprint"><option value="">— belum ada kelas —</option></select>
+        </div>
+        <div class="field" style="flex:0 0 180px;">
+          <label>Catur Wulan Aktif</label>
+          <select id="caturSwitcher" class="noprint">
+            <option value="cw1">Catur Wulan 1</option>
+            <option value="cw2">Catur Wulan 2</option>
+            <option value="cw3">Catur Wulan 3</option>
+          </select>
+        </div>
+      </div>
+      <div class="hint" id="legacyScoreBanner" style="display:none; background:var(--gold-soft); color:#5a3f18; padding:8px 10px; border-radius:8px; margin-top:8px;">
+        Kelas ini punya nilai dari format lama (sebelum ada Catur Wulan). Pindahkan ke Catur Wulan 1 supaya tidak tersembunyi:
+        <button class="secondary" id="btnMigrasiNilaiLama" type="button" style="margin-left:6px;">Migrasi ke Catur Wulan 1</button>
       </div>
     </div>
 
@@ -352,9 +369,9 @@
           </select>
         </div>
         <div class="field"><label>Nama / Nomor Kelas</label><input id="newKelasNama" placeholder="cth. 1 - TSANAWIYAH"></div>
-        <div class="field"><label>Catur Wulan / Semester</label><input id="newCatur" placeholder="cth. 1 (SATU)"></div>
         <div class="field"><label>Tahun Ajaran</label><input id="newTahun" placeholder="cth. 1446-1447 H"></div>
       </div>
+      <p class="hint">Satu kelas ini akan dipakai untuk Catur Wulan 1, 2, dan 3 sekaligus — tidak perlu buat kelas baru tiap ganti catur wulan. Buat kelas baru hanya saat siswa benar-benar naik ke tingkat/kelas berikutnya.</p>
       <div class="row" id="copySubjectsRow">
         <div class="field">
           <label>Salin daftar mapel dari kelas lain (opsional)</label>
@@ -372,7 +389,7 @@
       <div class="btnrow noprint"><button class="gold" id="btnExportKelas" type="button">⬇️ Ekspor Excel</button></div>
       <div class="tablewrap">
         <table id="kelasTable">
-          <thead><tr><th>Tingkatan</th><th style="text-align:left;">Kelas</th><th>Catur Wulan</th><th>Tahun Ajaran</th><th class="noprint">Aksi</th></tr></thead>
+          <thead><tr><th>Tingkatan</th><th style="text-align:left;">Kelas</th><th>Tahun Ajaran</th><th class="noprint">Aksi</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
@@ -380,7 +397,7 @@
     </div>
 
     <div class="card" id="identitasCard" style="display:none;">
-      <h2>Identitas Rapor — Kelas Aktif</h2>
+      <h2>Identitas Rapor — Kelas Aktif (berlaku sepanjang tahun)</h2>
       <div class="row">
         <div class="field"><label>Nama Madrasah</label><input id="mNama"></div>
         <div class="field"><label>Alamat</label><input id="mAlamat"></div>
@@ -388,7 +405,6 @@
       <div class="row">
         <div class="field"><label>Tingkat</label><input id="mTingkat"></div>
         <div class="field"><label>Kelas</label><input id="mKelas"></div>
-        <div class="field"><label>Catur Wulan / Semester</label><input id="mCatur"></div>
         <div class="field"><label>Tahun Ajaran</label><input id="mTahun"></div>
       </div>
       <div class="row">
@@ -397,9 +413,18 @@
       </div>
       <div class="row">
         <div class="field"><label>Tempat</label><input id="mTempat"></div>
-        <div class="field"><label>Tanggal Penulisan Raport</label><input id="mTanggal" type="date"></div>
       </div>
       <div class="btnrow"><button id="btnSaveMeta">Simpan Identitas</button></div>
+    </div>
+
+    <div class="card" id="caturMetaCard" style="display:none;">
+      <h2>Identitas Rapor — <span id="caturMetaLabel">Catur Wulan Aktif</span></h2>
+      <p class="hint">Khusus untuk catur wulan yang sedang dipilih di atas — label dan tanggal cetak boleh berbeda tiap catur wulan.</p>
+      <div class="row">
+        <div class="field"><label>Label Catur Wulan / Semester</label><input id="mCatur" placeholder="cth. 1 (SATU)"></div>
+        <div class="field"><label>Tanggal Penulisan Raport</label><input id="mTanggal" type="date"></div>
+      </div>
+      <div class="btnrow"><button id="btnSaveCaturMeta">Simpan Identitas Catur Wulan</button></div>
     </div>
 
     <div class="card" id="subjectsCard" style="display:none;">
@@ -471,9 +496,28 @@
     <div class="card">
       <h2>Daftar Siswa</h2>
       <div class="btnrow noprint"><button class="gold" id="btnExportSiswa" type="button">⬇️ Ekspor Excel</button></div>
+      <div class="row noprint" style="margin-bottom:10px;">
+        <div class="field" style="flex:2 1 220px;">
+          <label>Cari Siswa</label>
+          <input id="studentSearch" type="text" placeholder="Cari nama, NISN, NIS, alamat, ayah/ibu/wali…">
+        </div>
+        <div class="field" style="flex:0 0 150px;">
+          <label>Kelas</label>
+          <select id="studentFilterKelas"></select>
+        </div>
+        <div class="field" style="flex:0 0 130px;">
+          <label>Jenis Kelamin</label>
+          <select id="studentFilterJk">
+            <option value="">Semua</option>
+            <option value="L">Laki-laki</option>
+            <option value="P">Perempuan</option>
+          </select>
+        </div>
+      </div>
+      <p class="hint noprint" id="studentFilterHint" style="display:none;"></p>
       <div class="tablewrap">
         <table id="studentTable">
-          <thead><tr><th>No</th><th style="text-align:left;">Nama</th><th>NISN</th><th>JK</th><th class="noprint">Aksi</th></tr></thead>
+          <thead><tr><th>No</th><th style="text-align:left;">Nama</th><th>NISN</th><th>JK</th><th style="text-align:left;">Alamat</th><th class="noprint">Aksi</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
@@ -671,6 +715,17 @@
       </div>
     </div>
     <div id="cardArea"></div>
+
+    <div class="card noprint" id="rekapGabunganCard">
+      <h2 class="noprint">Rekap Akhir Tahun — Gabungan CW1 + CW2 + CW3</h2>
+      <p class="hint noprint">Nilai tiap mapel dirata-rata dari Catur Wulan yang sudah punya nilai, lalu diranking ulang. Absen (sakit/ijin/alpa) dan potongan dijumlah dari ketiga catur wulan. Dipakai untuk peringkat akhir tahun / bahan ijazah — rapor tiap catur wulan di atas tetap tersimpan & tercetak terpisah seperti biasa.</p>
+      <div class="btnrow noprint">
+        <button class="gold" id="btnMuatRekapGabungan" type="button">Muat Rekap Gabungan</button>
+        <button class="secondary" id="btnExportRekapGabungan" type="button" style="display:none;">⬇️ Ekspor Excel</button>
+        <button class="secondary" id="btnPrintRekapGabungan" type="button" style="display:none;">🖨️ Cetak</button>
+      </div>
+      <div id="rekapGabunganArea" style="margin-top:12px;"></div>
+    </div>
 
   </section>
 
@@ -887,20 +942,26 @@ document.getElementById('rekapLogo').src = LOGO_DATA_URI;
 const DEFAULT_SUBJECTS = ["Tauhid","Fiqih","Tafsir","Hadits","Nahwu","Shorrof","Qoidah Fiqh","Ushul Fiqh",
   "Ilmu Akhlaq","Akhlaq","Balaghah","Tarikh Islam","I'rob","Imla'","Baca Al-Qur'an","Baca Kitab","Kemasyarakatan"];
 
+const CATUR_KEYS = ['cw1','cw2','cw3'];
+const CATUR_LABELS = { cw1:'Catur Wulan 1', cw2:'Catur Wulan 2', cw3:'Catur Wulan 3' };
+
 let db = null;
 let activeKelasId = null;
+let activeCatur = localStorage.getItem('rapor_active_catur') || 'cw1';
 let currentDataRefs = [];
+let currentCaturRefs = []; // listener nilai (scores) & caturMeta — dilepas/dipasang ulang saat ganti Catur Wulan TANPA reset seluruh kelas
 let studentEditId = null; // null = mode tambah, terisi = mode ubah
 let kelasEditId = null; // null = mode buat kelas baru, terisi = mode ubah kelas
 
 let state = {
-  kelasList: {},   // kelasId -> {tingkatan, kelasNama, catur, tahun}
-  meta: {},
+  kelasList: {},   // kelasId -> {tingkatan, kelasNama, tahun} — 1 kelas dipakai utuh dari CW1 s/d CW3
+  meta: {},        // identitas kelas yang berlaku sepanjang tahun (nama madrasah, alamat, wali, kepala, tempat, tahun)
+  caturMeta: {},   // {label, tanggal} milik Catur Wulan yang sedang aktif (dataRoot('caturMeta/'+activeCatur))
   subjects: DEFAULT_SUBJECTS.slice(),
   students: {},   // id -> {no}  (enrollment/urutan siswa DI KELAS AKTIF SAJA)
-  studentsMaster: {}, // id -> {nama, nisn, nis, jk, ..., kelasAktifId, riwayatKelas:{kelasId:{no,tingkatan,kelasNama,catur,tahun,tanggal}}} — database murid, tidak terikat satu kelas
-  scores: {},     // id -> {mapel:{...}, absen:{sakit,ijin,alpa}, potongan, sikap:{...}}
-  absensi: {},     // tanggal -> { studentId -> 'H'|'S'|'I'|'A' }
+  studentsMaster: {}, // id -> {nama, nisn, nis, jk, ..., kelasAktifId, riwayatKelas:{kelasId:{no,tingkatan,kelasNama,tahun,tanggal}}} — database murid, tidak terikat satu kelas
+  scores: {},     // id -> {mapel:{...}, absen:{sakit,ijin,alpa}, potongan, sikap:{...}} — HANYA utk Catur Wulan aktif (dataRoot('scores/'+activeCatur))
+  absensi: {},     // tanggal -> { studentId -> 'H'|'S'|'I'|'A' } — menyatu sepanjang tahun ajaran
   tieBreak: [],    // array mapel, urutan prioritas untuk memecah peringkat yang sama
   ijazahUmum: {},  // data umum ijazah kelas aktif: {noAwal, dariH, dariM, sampaiH, sampaiM, tempat, terbitH, terbitM}
   ijazah: {}       // studentId -> {noIjazah, noInduk, foto}
@@ -1223,25 +1284,34 @@ function attachKelasListListener(){
 }
 
 function populateKelasSwitcher(){
-  const sel = document.getElementById('kelasSwitcher');
   const cur = activeKelasId;
-  sel.innerHTML = '';
   const entries = Object.entries(state.kelasList);
-  if(!entries.length){
-    sel.innerHTML = '<option value="">— belum ada kelas —</option>';
-    return;
-  }
-  entries.forEach(([id, k])=>{
-    const opt = document.createElement('option');
-    opt.value = id;
-    opt.textContent = `${k.tingkatan} ${k.kelasNama}${k.catur ? (' · CW '+k.catur) : ''}`;
-    sel.appendChild(opt);
+  ['kelasSwitcher','studentFilterKelas'].forEach(selId=>{
+    const sel = document.getElementById(selId);
+    if(!sel) return;
+    sel.innerHTML = '';
+    if(!entries.length){
+      sel.innerHTML = '<option value="">— belum ada kelas —</option>';
+      return;
+    }
+    entries.forEach(([id, k])=>{
+      const opt = document.createElement('option');
+      opt.value = id;
+      opt.textContent = `${k.tingkatan} ${k.kelasNama}${k.catur ? (' · CW '+k.catur) : ''}`;
+      sel.appendChild(opt);
+    });
+    if(cur) sel.value = cur;
   });
-  if(cur) sel.value = cur;
 }
 document.getElementById('kelasSwitcher').addEventListener('change', (e)=>{
   setActiveKelas(e.target.value || null);
 });
+document.getElementById('studentFilterKelas').addEventListener('change', (e)=>{
+  document.getElementById('kelasSwitcher').value = e.target.value;
+  setActiveKelas(e.target.value || null);
+});
+document.getElementById('studentSearch').addEventListener('input', debounce(renderStudentTable, 120));
+document.getElementById('studentFilterJk').addEventListener('change', renderStudentTable);
 
 function populateCopySubjectsFrom(){
   const sel = document.getElementById('copySubjectsFrom');
@@ -1267,7 +1337,6 @@ function renderKelasTable(){
     tr.innerHTML = `
       <td>${escapeHtml(k.tingkatan||'')}</td>
       <td class="name">${escapeHtml(k.kelasNama||'')} ${isActive ? '<span class="pill active">aktif</span>' : ''}</td>
-      <td>${escapeHtml(k.catur||'')}</td>
       <td>${escapeHtml(k.tahun||'')}</td>
       <td class="noprint">
         ${isActive ? '' : `<button class="secondary" data-act="switch" data-id="${id}" type="button">Pindah</button>`}
@@ -1298,7 +1367,6 @@ function resetKelasForm(){
   document.getElementById('kelasFormTitle').textContent = 'Buat Kelas / Tingkatan Baru';
   document.getElementById('newTingkatan').value = 'TPQ';
   document.getElementById('newKelasNama').value = '';
-  document.getElementById('newCatur').value = '';
   document.getElementById('newTahun').value = '';
   document.getElementById('copySubjectsFrom').value = '';
   document.getElementById('copySubjectsRow').style.display = '';
@@ -1313,7 +1381,6 @@ function fillKelasForm(id){
   document.getElementById('kelasFormTitle').textContent = 'Ubah Kelas';
   document.getElementById('newTingkatan').value = k.tingkatan || 'TPQ';
   document.getElementById('newKelasNama').value = k.kelasNama || '';
-  document.getElementById('newCatur').value = k.catur || '';
   document.getElementById('newTahun').value = k.tahun || '';
   document.getElementById('copySubjectsRow').style.display = 'none'; // tidak relevan saat mengubah kelas yang sudah ada
   document.getElementById('btnCreateKelas').textContent = 'Simpan Perubahan';
@@ -1328,16 +1395,15 @@ document.getElementById('btnCreateKelas').addEventListener('click', async ()=>{
   if(!db){ toast('Hubungkan Firebase dulu di tab Firebase'); return; }
   const tingkatan = document.getElementById('newTingkatan').value;
   const kelasNama = document.getElementById('newKelasNama').value.trim();
-  const catur = document.getElementById('newCatur').value.trim();
   const tahun = document.getElementById('newTahun').value.trim();
   if(!kelasNama){ toast('Isi nama/nomor kelas dulu'); return; }
 
   if(kelasEditId){
     // Mode ubah: kelas yang sudah ada, tidak menyentuh siswa/nilai/mapel
     const id = kelasEditId;
-    await kelasListRef(id).update({tingkatan, kelasNama, catur, tahun});
+    await kelasListRef(id).update({tingkatan, kelasNama, tahun});
     await db.ref('rapor/data/'+id+'/meta').update({
-      tingkat: tingkatan, kelas: kelasNama, catur, tahun
+      tingkat: tingkatan, kelas: kelasNama, tahun
     });
     toast('Kelas diperbarui');
     resetKelasForm();
@@ -1346,7 +1412,7 @@ document.getElementById('btnCreateKelas').addEventListener('click', async ()=>{
 
   const ref = kelasListRef().push();
   const id = ref.key;
-  await ref.set({tingkatan, kelasNama, catur, tahun});
+  await ref.set({tingkatan, kelasNama, tahun});
 
   const copyFromId = document.getElementById('copySubjectsFrom').value;
   let subjectsToUse = DEFAULT_SUBJECTS.slice();
@@ -1358,11 +1424,10 @@ document.getElementById('btnCreateKelas').addEventListener('click', async ()=>{
   await db.ref('rapor/data/'+id+'/subjects').set(subjectsToUse);
   await db.ref('rapor/data/'+id+'/meta').set({
     nama: 'MADRASAH TARBIYATUL ISLAM AL-HIDAYAH',
-    tingkat: tingkatan, kelas: kelasNama, catur, tahun
+    tingkat: tingkatan, kelas: kelasNama, tahun
   });
 
   document.getElementById('newKelasNama').value = '';
-  document.getElementById('newCatur').value = '';
   document.getElementById('newTahun').value = '';
   toast('Kelas dibuat');
   setActiveKelas(id);
@@ -1371,29 +1436,38 @@ document.getElementById('btnCreateKelas').addEventListener('click', async ()=>{
 function setActiveKelas(id){
   currentDataRefs.forEach(ref=>ref.off());
   currentDataRefs = [];
+  currentCaturRefs.forEach(ref=>ref.off());
+  currentCaturRefs = [];
   activeKelasId = id;
   localStorage.setItem('rapor_active_kelas', id || '');
   populateKelasSwitcher();
   renderKelasTable();
+  syncCaturSwitcherUI();
 
   const identitasCard = document.getElementById('identitasCard');
+  const caturMetaCard = document.getElementById('caturMetaCard');
   const subjectsCard = document.getElementById('subjectsCard');
   const tieBreakCard = document.getElementById('tieBreakCard');
 
   if(!id){
     identitasCard.style.display = 'none';
+    caturMetaCard.style.display = 'none';
     subjectsCard.style.display = 'none';
     tieBreakCard.style.display = 'none';
-    state.meta = {}; state.subjects = DEFAULT_SUBJECTS.slice(); state.students = {}; state.scores = {}; state.absensi = {}; state.tieBreak = [];
+    state.meta = {}; state.caturMeta = {}; state.subjects = DEFAULT_SUBJECTS.slice(); state.students = {}; state.scores = {}; state.absensi = {}; state.tieBreak = [];
     state.ijazahUmum = {}; state.ijazah = {};
     updateHeaderLine();
     renderStudentTable(); renderStudentPicker(); renderRekap(); renderSubjectList(); renderAbsensiTable(); renderTieBreakList(); renderIjazahTab();
+    document.getElementById('legacyScoreBanner').style.display = 'none';
     return;
   }
   identitasCard.style.display = '';
+  caturMetaCard.style.display = '';
   subjectsCard.style.display = '';
   tieBreakCard.style.display = '';
   attachDataListeners();
+  attachCaturListeners();
+  checkLegacyScores();
 }
 
 function attachDataListeners(){
@@ -1410,7 +1484,7 @@ function attachDataListeners(){
     renderInputFormIfSelected();
   });
 
-  // ---- students, scores, absensi: pakai child_* event, bukan 'value' ----
+  // ---- students, absensi: pakai child_* event, bukan 'value' ----
   // Hemat kuota Firebase gratis (Spark, 10GB/bulan): listener 'value' mengirim
   // ULANG seluruh isi node setiap kali ada satu perubahan kecil di dalamnya.
   // Untuk node yang terus tumbuh (banyak siswa, banyak tanggal absensi),
@@ -1428,13 +1502,6 @@ function attachDataListeners(){
   });
   stRef.on('child_changed', snap=>{ state.students[snap.key] = snap.val(); renderStudents(); });
   stRef.on('child_removed', snap=>{ delete state.students[snap.key]; renderStudents(); });
-
-  const scRef = dataRoot('scores');
-  state.scores = {};
-  const renderScores = debounce(()=>{ renderRekap(); renderInputFormIfSelected(); }, 80);
-  scRef.on('child_added', snap=>{ state.scores[snap.key] = snap.val(); renderScores(); });
-  scRef.on('child_changed', snap=>{ state.scores[snap.key] = snap.val(); renderScores(); });
-  scRef.on('child_removed', snap=>{ delete state.scores[snap.key]; renderScores(); });
 
   const abRef = dataRoot('absensi');
   state.absensi = {};
@@ -1460,8 +1527,84 @@ function attachDataListeners(){
   ijRef.on('child_changed', snap=>{ state.ijazah[snap.key] = snap.val(); renderIjz(); });
   ijRef.on('child_removed', snap=>{ delete state.ijazah[snap.key]; renderIjz(); });
 
-  currentDataRefs = [mRef, sRef, stRef, scRef, abRef, tbRef, ijUmumRef, ijRef];
+  currentDataRefs = [mRef, sRef, stRef, abRef, tbRef, ijUmumRef, ijRef];
 }
+
+// Nilai (scores) & identitas per-Catur Wulan dipasang terpisah dari attachDataListeners()
+// supaya berpindah Catur Wulan (cw1/cw2/cw3) TIDAK perlu melepas & memasang ulang semua
+// listener kelas lainnya (siswa, absensi, ijazah, dst) — cukup nilai & identitas catur wulannya saja.
+function attachCaturListeners(){
+  currentCaturRefs.forEach(ref=>ref.off());
+  currentCaturRefs = [];
+  if(!activeKelasId) return;
+
+  const cmRef = dataRoot('caturMeta/'+activeCatur);
+  cmRef.on('value', snap=>{ state.caturMeta = snap.val() || {}; fillCaturMetaForm(); });
+
+  const scRef = dataRoot('scores/'+activeCatur);
+  state.scores = {};
+  const renderScores = debounce(()=>{ renderRekap(); renderInputFormIfSelected(); renderTabelMassal(); }, 80);
+  scRef.on('child_added', snap=>{ state.scores[snap.key] = snap.val(); renderScores(); });
+  scRef.on('child_changed', snap=>{ state.scores[snap.key] = snap.val(); renderScores(); });
+  scRef.on('child_removed', snap=>{ delete state.scores[snap.key]; renderScores(); });
+
+  currentCaturRefs = [cmRef, scRef];
+}
+
+function syncCaturSwitcherUI(){
+  const sel = document.getElementById('caturSwitcher');
+  if(sel) sel.value = activeCatur;
+}
+
+// Deteksi sisa data nilai format lama (sebelum ada Catur Wulan): tersimpan langsung di
+// rapor/data/{kelasId}/scores/{studentId}/mapel, bukan di scores/{cw1|cw2|cw3}/{studentId}.
+async function checkLegacyScores(){
+  const banner = document.getElementById('legacyScoreBanner');
+  if(!banner || !activeKelasId) return;
+  try{
+    const snap = await dataRoot('scores').get();
+    const v = snap.val() || {};
+    const hasLegacy = Object.entries(v).some(([k,val])=> !CATUR_KEYS.includes(k) && val && typeof val==='object' && ('mapel' in val));
+    banner.style.display = hasLegacy ? '' : 'none';
+  }catch(e){ console.error(e); }
+}
+
+document.getElementById('btnMigrasiNilaiLama').addEventListener('click', async ()=>{
+  if(!activeKelasId) return;
+  if(!confirm('Pindahkan semua nilai format lama di kelas ini ke Catur Wulan 1? Data lama akan dihapus setelah dipindah.')) return;
+  try{
+    const snap = await dataRoot('scores').get();
+    const v = snap.val() || {};
+    const updates = {};
+    let count = 0;
+    Object.entries(v).forEach(([k,val])=>{
+      if(CATUR_KEYS.includes(k)) return; // sudah format baru, lewati
+      if(val && typeof val==='object' && ('mapel' in val)){
+        updates['cw1/'+k] = val;
+        updates[k] = null; // hapus yang lama
+        count++;
+      }
+    });
+    if(!count){ toast('Tidak ada nilai lama yang perlu dimigrasi'); return; }
+    await dataRoot('scores').update(updates);
+    toast(`${count} data nilai berhasil dipindah ke Catur Wulan 1`);
+    document.getElementById('legacyScoreBanner').style.display = 'none';
+    if(activeCatur==='cw1') attachCaturListeners();
+  }catch(e){ console.error(e); toast('Gagal migrasi: '+e.message); }
+});
+
+document.getElementById('caturSwitcher').addEventListener('change', (e)=>{
+  switchCatur(e.target.value);
+});
+function switchCatur(catur){
+  if(!CATUR_KEYS.includes(catur)) return;
+  activeCatur = catur;
+  localStorage.setItem('rapor_active_catur', catur);
+  syncCaturSwitcherUI();
+  if(activeKelasId) attachCaturListeners();
+  else { renderRekap(); renderInputFormIfSelected(); renderTabelMassal(); }
+}
+
 
 function updateHeaderLine(){
   // Header dibuat umum (tidak menampilkan kelas/catur wulan yang sedang dibuka).
@@ -1476,12 +1619,17 @@ function fillMetaForm(){
   document.getElementById('mAlamat').value = m.alamat || '';
   document.getElementById('mTingkat').value = m.tingkat || '';
   document.getElementById('mKelas').value = m.kelas || '';
-  document.getElementById('mCatur').value = m.catur || '';
   document.getElementById('mTahun').value = m.tahun || '';
   document.getElementById('mWali').value = m.wali || '';
   document.getElementById('mKepala').value = m.kepala || '';
   document.getElementById('mTempat').value = m.tempat || '';
-  document.getElementById('mTanggal').value = m.tanggal || '';
+}
+function fillCaturMetaForm(){
+  const cm = state.caturMeta || {};
+  const label = document.getElementById('caturMetaLabel');
+  if(label) label.textContent = CATUR_LABELS[activeCatur] || 'Catur Wulan Aktif';
+  document.getElementById('mCatur').value = cm.label || '';
+  document.getElementById('mTanggal').value = cm.tanggal || '';
 }
 
 document.getElementById('btnSaveMeta').addEventListener('click', ()=>{
@@ -1491,14 +1639,21 @@ document.getElementById('btnSaveMeta').addEventListener('click', ()=>{
     alamat: document.getElementById('mAlamat').value,
     tingkat: document.getElementById('mTingkat').value,
     kelas: document.getElementById('mKelas').value,
-    catur: document.getElementById('mCatur').value,
     tahun: document.getElementById('mTahun').value,
     wali: document.getElementById('mWali').value,
     kepala: document.getElementById('mKepala').value,
     tempat: document.getElementById('mTempat').value,
-    tanggal: document.getElementById('mTanggal').value,
   };
   dataRoot('meta').set(meta).then(()=>toast('Identitas rapor disimpan'));
+});
+
+document.getElementById('btnSaveCaturMeta').addEventListener('click', ()=>{
+  if(!activeKelasId){ toast('Pilih/buat kelas dulu'); return; }
+  const caturMeta = {
+    label: document.getElementById('mCatur').value,
+    tanggal: document.getElementById('mTanggal').value,
+  };
+  dataRoot('caturMeta/'+activeCatur).set(caturMeta).then(()=>toast(`Identitas ${CATUR_LABELS[activeCatur]} disimpan`));
 });
 
 /* ===================== Subjects ===================== */
@@ -1590,11 +1745,39 @@ document.getElementById('btnSaveTieBreak').addEventListener('click', ()=>{
 });
 
 /* ===================== Siswa (database profil lengkap) ===================== */
+function studentMatchesFilters(st, q, jk){
+  if(jk && (st.jk||'')!==jk) return false;
+  if(q){
+    const haystack = [st.nama, st.nisn, st.nis, st.alamat, st.tempatLahir, st.ayah, st.ibu, st.wali, st.telp]
+      .filter(Boolean).join(' ').toLowerCase();
+    if(!haystack.includes(q)) return false;
+  }
+  return true;
+}
+function filteredOrderedStudents(){
+  const list = orderedStudents();
+  const qEl = document.getElementById('studentSearch');
+  const jkEl = document.getElementById('studentFilterJk');
+  const q = qEl ? qEl.value.trim().toLowerCase() : '';
+  const jk = jkEl ? jkEl.value : '';
+  if(!q && !jk) return list;
+  return list.filter(st=>studentMatchesFilters(st, q, jk));
+}
 function renderStudentTable(){
   const tbody = document.querySelector('#studentTable tbody');
   tbody.innerHTML = '';
-  const list = orderedStudents();
-  document.getElementById('studentEmpty').style.display = list.length ? 'none' : '';
+  const all = orderedStudents();
+  const list = filteredOrderedStudents();
+  document.getElementById('studentEmpty').style.display = all.length ? 'none' : '';
+  const hint = document.getElementById('studentFilterHint');
+  if(hint){
+    if(all.length && list.length!==all.length){
+      hint.style.display = '';
+      hint.textContent = `Menampilkan ${list.length} dari ${all.length} siswa sesuai pencarian/filter.`;
+    } else {
+      hint.style.display = 'none';
+    }
+  }
   list.forEach((st)=>{
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -1602,18 +1785,24 @@ function renderStudentTable(){
       <td class="name">${escapeHtml(st.nama)}</td>
       <td class="num">${escapeHtml(st.nisn||'-')}</td>
       <td>${escapeHtml(st.jk||'-')}</td>
+      <td style="text-align:left;">${escapeHtml(st.alamat||'-')}</td>
       <td class="noprint">
         <button class="secondary" data-act="edit" data-id="${st.id}" type="button">Ubah</button>
         <button class="danger" data-act="del" data-id="${st.id}" type="button">Keluarkan</button>
       </td>`;
     tbody.appendChild(tr);
   });
+  if(all.length && !list.length){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td colspan="6" class="empty" style="padding:16px;">Tidak ada siswa yang cocok dengan pencarian/filter.</td>`;
+    tbody.appendChild(tr);
+  }
   tbody.querySelectorAll('button[data-act="del"]').forEach(b=>{
     b.addEventListener('click', ()=>{
       const id = b.dataset.id;
       if(!confirm('Keluarkan siswa ini dari kelas ini? Nilai & absensi di kelas ini akan terhapus. Biodata & riwayat nilai di kelas lain (jika ada) tetap aman.')) return;
       dataRoot('students/'+id).remove();
-      dataRoot('scores/'+id).remove();
+      CATUR_KEYS.forEach(cw=> dataRoot('scores/'+cw+'/'+id).remove());
       const m = state.studentsMaster[id];
       if(m){
         const riwayat = {...(m.riwayatKelas||{})};
@@ -1815,26 +2004,31 @@ async function renderRiwayatKelas(){
   box.innerHTML = '<div class="hint">Memuat riwayat nilai…</div>';
   const rowsHtml = [];
   for(const [kelasId, r] of entries){
-    const [subjSnap, scoreSnap] = await Promise.all([
+    const [subjSnap, ...scoreSnaps] = await Promise.all([
       db.ref('rapor/data/'+kelasId+'/subjects').get(),
-      db.ref('rapor/data/'+kelasId+'/scores/'+id).get()
+      ...CATUR_KEYS.map(cw=> db.ref('rapor/data/'+kelasId+'/scores/'+cw+'/'+id).get())
     ]);
     if(myRequestId !== renderRiwayatKelas._reqId) return; // sudah ganti siswa/kelas, batalkan render lama
     const subjects = subjSnap.val() || [];
-    const sc = scoreSnap.val() || {};
-    const nilaiTxt = subjects.length
-      ? subjects.map(s=> `${escapeHtml(s)}: ${(sc.mapel && sc.mapel[s]!=null) ? sc.mapel[s] : '-'}`).join(' · ')
-      : '';
     const aktif = m.kelasAktifId===kelasId ? ' <span class="pill active">aktif</span>' : '';
-    rowsHtml.push(`<tr>
-      <td class="name">${escapeHtml(r.tingkatan||'')} ${escapeHtml(r.kelasNama||'')}${aktif}</td>
-      <td>${escapeHtml(r.catur||'')}</td>
-      <td>${escapeHtml(r.tahun||'')}</td>
-      <td style="text-align:left;font-size:11.5px;">${nilaiTxt || '<span class="hint">Belum ada nilai</span>'}</td>
-    </tr>`);
+    CATUR_KEYS.forEach((cw,i)=>{
+      const sc = scoreSnaps[i].val() || {};
+      if(!subjects.length && !sc.mapel) return; // tidak ada apa-apa utk catur wulan ini, jangan tampilkan baris kosong
+      const nilaiTxt = subjects.length
+        ? subjects.map(s=> `${escapeHtml(s)}: ${(sc.mapel && sc.mapel[s]!=null) ? sc.mapel[s] : '-'}`).join(' · ')
+        : '';
+      rowsHtml.push(`<tr>
+        <td class="name">${escapeHtml(r.tingkatan||'')} ${escapeHtml(r.kelasNama||'')}${aktif}</td>
+        <td>${CATUR_LABELS[cw]}</td>
+        <td>${escapeHtml(r.tahun||'')}</td>
+        <td style="text-align:left;font-size:11.5px;">${nilaiTxt || '<span class="hint">Belum ada nilai</span>'}</td>
+      </tr>`);
+    });
   }
   if(myRequestId !== renderRiwayatKelas._reqId) return;
-  box.innerHTML = `<table><thead><tr><th style="text-align:left;">Kelas</th><th>Catur Wulan</th><th>Tahun</th><th style="text-align:left;">Nilai per Mapel</th></tr></thead><tbody>${rowsHtml.join('')}</tbody></table>`;
+  box.innerHTML = rowsHtml.length
+    ? `<table><thead><tr><th style="text-align:left;">Kelas</th><th>Catur Wulan</th><th>Tahun</th><th style="text-align:left;">Nilai per Mapel</th></tr></thead><tbody>${rowsHtml.join('')}</tbody></table>`
+    : '<div class="empty">Belum ada nilai tersimpan di kelas manapun untuk siswa ini.</div>';
 }
 document.getElementById('riwayatSiswaPick').addEventListener('change', renderRiwayatKelas);
 
@@ -2063,7 +2257,7 @@ document.getElementById('btnSaveScore').addEventListener('click', ()=>{
       kebersihan: document.getElementById('sikapKebersihan').value.trim(),
     }
   };
-  dataRoot('scores/'+id).set(payload).then(()=>toast('Nilai disimpan'));
+  dataRoot('scores/'+activeCatur+'/'+id).set(payload).then(()=>toast(`Nilai ${CATUR_LABELS[activeCatur]} disimpan`));
 });
 
 /* ===================== Mode Input: Per Siswa vs Tabel ===================== */
@@ -2110,7 +2304,7 @@ document.getElementById('btnSaveTabelMassal').addEventListener('click', ()=>{
     updates[inp.dataset.id + '/mapel/' + inp.dataset.subj] = Number(v);
   });
   if(!Object.keys(updates).length){ toast('Belum ada nilai yang diisi'); return; }
-  dataRoot('scores').update(updates).then(()=>toast('Semua nilai di tabel disimpan'));
+  dataRoot('scores/'+activeCatur).update(updates).then(()=>toast(`Semua nilai ${CATUR_LABELS[activeCatur]} di tabel disimpan`));
 });
 
 /* ===================== Ekspor XLSX (helper umum) ===================== */
@@ -2129,10 +2323,10 @@ function sheetFromAOA(aoa, colWidths){
 
 /* -- Ekspor: Kelas -- */
 document.getElementById('btnExportKelas')?.addEventListener('click', ()=>{
-  const rows = [['Tingkatan','Kelas','Catur Wulan','Tahun Ajaran']];
-  Object.values(state.kelasList).forEach(k=> rows.push([k.tingkatan||'', k.kelasNama||'', k.catur||'', k.tahun||'']));
+  const rows = [['Tingkatan','Kelas','Tahun Ajaran']];
+  Object.values(state.kelasList).forEach(k=> rows.push([k.tingkatan||'', k.kelasNama||'', k.tahun||'']));
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, sheetFromAOA(rows,[14,22,14,14]), 'Daftar Kelas');
+  XLSX.utils.book_append_sheet(wb, sheetFromAOA(rows,[14,22,14]), 'Daftar Kelas');
   downloadWorkbook(wb, 'daftar-kelas.xlsx');
 });
 
@@ -2389,8 +2583,8 @@ document.getElementById('fileImportNilai').addEventListener('change', (e)=>{
         });
       }
       if(!matched){ toast('Tidak ada baris yang cocok dengan siswa di kelas ini (cek kolom No/Nama)'); return; }
-      dataRoot('scores').update(updates).then(()=>{
-        toast(`Impor berhasil — ${matched} siswa diperbarui`);
+      dataRoot('scores/'+activeCatur).update(updates).then(()=>{
+        toast(`Impor ${CATUR_LABELS[activeCatur]} berhasil — ${matched} siswa diperbarui`);
         renderTabelMassal();
       });
     }catch(err){
@@ -2414,29 +2608,12 @@ function toRaportValue(v){
   return 4;
 }
 
-function computeAll(){
-  const students = orderedStudents();
-  const rows = students.map(st=>{
-    const sc = state.scores[st.id] || {};
-    const mapel = sc.mapel || {};
-    const nilaiAsli = state.subjects.map(s=> Number(mapel[s]||0));
-    const jumlah = nilaiAsli.reduce((a,b)=>a+b,0);            // U
-    const potongan = Number(sc.potongan||0);                   // V
-    const bersih = jumlah - potongan;                           // W
-    const rata = state.subjects.length ? bersih/state.subjects.length : 0; // X
-    const raport = nilaiAsli.map(toRaportValue);
-    return {
-      id: st.id, no: st.no, nama: st.nama,
-      nilaiAsli, raport, jumlah, potongan, bersih, rata,
-      absen: sc.absen||{}, sikap: sc.sikap||{}
-    };
-  });
-  const allBersih = rows.map(r=>r.bersih);
-  const tieSubs = (state.tieBreak||[]).filter(s=> state.subjects.includes(s));
+function rankRows(rows, subjects){
+  const tieSubs = (state.tieBreak||[]).filter(s=> subjects.includes(s));
   function compareRows(a,b){
     if(b.bersih !== a.bersih) return b.bersih - a.bersih;
     for(const subj of tieSubs){
-      const idx = state.subjects.indexOf(subj);
+      const idx = subjects.indexOf(subj);
       if(idx===-1) continue;
       const av = Number(a.nilaiAsli[idx]||0), bv = Number(b.nilaiAsli[idx]||0);
       if(bv !== av) return bv - av;
@@ -2456,13 +2633,75 @@ function computeAll(){
   return rows;
 }
 
+// scoresMap opsional: default state.scores (Catur Wulan yang sedang aktif). Dipakai juga oleh
+// rekap gabungan akhir tahun dengan mengoper peta nilai rata-rata gabungan CW1+CW2+CW3.
+function computeAll(scoresMap){
+  const sc0 = scoresMap || state.scores;
+  const students = orderedStudents();
+  const rows = students.map(st=>{
+    const sc = sc0[st.id] || {};
+    const mapel = sc.mapel || {};
+    const nilaiAsli = state.subjects.map(s=> Number(mapel[s]||0));
+    const jumlah = nilaiAsli.reduce((a,b)=>a+b,0);            // U
+    const potongan = Number(sc.potongan||0);                   // V
+    const bersih = jumlah - potongan;                           // W
+    const rata = state.subjects.length ? bersih/state.subjects.length : 0; // X
+    const raport = nilaiAsli.map(toRaportValue);
+    return {
+      id: st.id, no: st.no, nama: st.nama,
+      nilaiAsli, raport, jumlah, potongan, bersih, rata,
+      absen: sc.absen||{}, sikap: sc.sikap||{}
+    };
+  });
+  return rankRows(rows, state.subjects);
+}
+
+// Menggabungkan nilai 3 Catur Wulan jadi satu nilai akhir per siswa per mapel (rata-rata dari
+// catur wulan yang punya data), lalu diranking ulang — untuk rekap akhir tahun.
+function computeCombined(scoresByC){
+  const subjects = state.subjects;
+  const students = orderedStudents();
+  const rows = students.map(st=>{
+    const layers = CATUR_KEYS.map(cw=> (scoresByC[cw]||{})[st.id]).filter(Boolean);
+    const n = layers.length || 1;
+    const mapel = {};
+    subjects.forEach(s=>{
+      const sum = layers.reduce((a,l)=> a + Number((l.mapel||{})[s]||0), 0);
+      mapel[s] = layers.length ? sum/layers.length : 0;
+    });
+    const nilaiAsli = subjects.map(s=> mapel[s]);
+    const jumlah = nilaiAsli.reduce((a,b)=>a+b,0);
+    const potongan = layers.reduce((a,l)=> a+Number(l.potongan||0), 0);
+    const bersih = jumlah - potongan;
+    const rata = subjects.length ? bersih/subjects.length : 0;
+    const raport = nilaiAsli.map(toRaportValue);
+    const absen = {
+      sakit: layers.reduce((a,l)=>a+Number((l.absen||{}).sakit||0),0),
+      ijin: layers.reduce((a,l)=>a+Number((l.absen||{}).ijin||0),0),
+      alpa: layers.reduce((a,l)=>a+Number((l.absen||{}).alpa||0),0),
+    };
+    const sikapSrc = (scoresByC.cw3||{})[st.id]?.sikap || (scoresByC.cw2||{})[st.id]?.sikap || (scoresByC.cw1||{})[st.id]?.sikap || {};
+    return {
+      id: st.id, no: st.no, nama: st.nama,
+      nilaiAsli, raport, jumlah, potongan, bersih, rata,
+      absen, sikap: sikapSrc, caturTerisi: layers.length
+    };
+  });
+  return rankRows(rows, subjects);
+}
+
+function caturDisplayLabel(){
+  const custom = (state.caturMeta || {}).label;
+  return custom || CATUR_LABELS[activeCatur] || '';
+}
+
 /* ===================== Rekap tables ===================== */
 function renderRekap(){
   const m = state.meta;
   document.getElementById('printSchool').textContent = m.nama || 'MADRASAH TARBIYATUL ISLAM AL-HIDAYAH';
   document.getElementById('printAddr').textContent = m.alamat || '';
   document.getElementById('printKelas').textContent = m.kelas ? ('Kelas: ' + m.kelas) : '';
-  document.getElementById('printCatur').textContent = m.catur ? ('Catur Wulan: ' + m.catur) : '';
+  document.getElementById('printCatur').textContent = 'Catur Wulan: ' + caturDisplayLabel();
   document.getElementById('printTahun').textContent = m.tahun ? ('Tahun Ajaran: ' + m.tahun) : '';
 
   const rows = computeAll();
@@ -2540,6 +2779,80 @@ document.getElementById('btnExportRekap').addEventListener('click', ()=>{
   downloadWorkbook(wb, `rekap-${kelasFileTag()}.xlsx`);
 });
 
+/* ===================== Rekap Akhir Tahun (Gabungan CW1+CW2+CW3) ===================== */
+let rekapGabunganRows = null;
+document.getElementById('btnMuatRekapGabungan').addEventListener('click', async ()=>{
+  if(!activeKelasId){ toast('Pilih/buat kelas dulu'); return; }
+  const area = document.getElementById('rekapGabunganArea');
+  area.innerHTML = '<div class="hint">Memuat nilai 3 catur wulan…</div>';
+  try{
+    const snaps = await Promise.all(CATUR_KEYS.map(cw=> dataRoot('scores/'+cw).get()));
+    const scoresByC = {};
+    CATUR_KEYS.forEach((cw,i)=> scoresByC[cw] = snaps[i].val() || {});
+    rekapGabunganRows = computeCombined(scoresByC);
+    renderRekapGabungan(rekapGabunganRows, scoresByC);
+    document.getElementById('btnExportRekapGabungan').style.display = '';
+    document.getElementById('btnPrintRekapGabungan').style.display = '';
+  }catch(e){
+    console.error(e);
+    area.innerHTML = '<div class="empty">Gagal memuat rekap gabungan.</div>';
+    toast('Gagal memuat rekap gabungan: '+e.message);
+  }
+});
+
+function renderRekapGabungan(rows, scoresByC){
+  const area = document.getElementById('rekapGabunganArea');
+  const subjects = state.subjects;
+  const m = state.meta || {};
+  if(!rows.length){
+    area.innerHTML = '<div class="empty">Belum ada data siswa/nilai untuk direkap.</div>';
+    return;
+  }
+  const caturTerisiCount = CATUR_KEYS.filter(cw=> Object.keys(scoresByC[cw]||{}).length>0).length;
+  const head = '<tr><th>No</th><th style="text-align:left;">Nama</th>' +
+    subjects.map(s=>`<th>${escapeHtml(s)}</th>`).join('') +
+    '<th>Jml</th><th>Absen</th><th>Bersih</th><th>Rata²</th><th>Rank</th><th>CW Terisi</th></tr>';
+  const body = rows.map(r=>
+    `<tr><td>${r.no}</td><td class="name">${escapeHtml(r.nama)}</td>` +
+    r.nilaiAsli.map(v=>`<td class="num${Number(v)<=54?' nilaiMerah':''}">${v.toFixed(1)}</td>`).join('') +
+    `<td class="num">${r.jumlah.toFixed(1)}</td><td class="num">${r.potongan}</td><td class="num">${r.bersih.toFixed(1)}</td><td class="num">${r.rata.toFixed(2)}</td><td class="num">${r.peringkat}${r.peringkatTie?' <span class="hint" title="Nilai bersih sama, belum ada mapel prioritas yang membedakan">*</span>':''}</td><td class="num">${r.caturTerisi}/3</td></tr>`
+  ).join('');
+  area.innerHTML = `
+    <div class="certframe">
+      <div class="certHead">
+        <img src="${LOGO_DATA_URI}" class="certLogo" alt="Logo Madrasah">
+        <div class="certHeadText">
+          <div class="school">${escapeHtml(m.nama||'')}</div>
+          <div class="addr">${escapeHtml(m.alamat||'')}</div>
+        </div>
+      </div>
+      <div class="meta">
+        <span>Kelas: ${escapeHtml(m.kelas||'')}</span><span>Rekap Akhir Tahun (Gabungan ${caturTerisiCount}/3 Catur Wulan)</span><span>Tahun Ajaran: ${escapeHtml(m.tahun||'')}</span>
+      </div>
+    </div>
+    <div class="tablewrap"><table><thead>${head}</thead><tbody>${body}</tbody></table></div>
+    <p class="hint">Kolom "CW Terisi" menunjukkan dari berapa catur wulan nilai siswa tsb dirata-rata — kalau belum 3/3, rekap ini masih sementara.</p>
+  `;
+}
+
+document.getElementById('btnExportRekapGabungan').addEventListener('click', ()=>{
+  if(!rekapGabunganRows || !rekapGabunganRows.length){ toast('Muat rekap gabungan dulu'); return; }
+  const subjects = state.subjects;
+  const rows = rekapGabunganRows;
+  const wb = XLSX.utils.book_new();
+  const asliRows = [['No','Nama', ...subjects, 'Jml','Absen','Bersih','Rata²','Peringkat','CW Terisi']];
+  rows.forEach(r=> asliRows.push([r.no, r.nama, ...r.nilaiAsli.map(v=>Number(v.toFixed(2))), Number(r.jumlah.toFixed(2)), r.potongan, Number(r.bersih.toFixed(2)), Number(r.rata.toFixed(2)), r.peringkat, r.caturTerisi+'/3']));
+  XLSX.utils.book_append_sheet(wb, sheetFromAOA(asliRows, [4,22,...subjects.map(()=>10),8,8,8,8,10,8]), 'Rekap Gabungan');
+  downloadWorkbook(wb, `rekap-akhir-tahun-${kelasFileTag()}.xlsx`);
+});
+
+document.getElementById('btnPrintRekapGabungan').addEventListener('click', ()=>{
+  if(!rekapGabunganRows || !rekapGabunganRows.length){ toast('Muat rekap gabungan dulu'); return; }
+  document.body.classList.add('printingRekapGabungan');
+  window.print();
+  setTimeout(()=> document.body.classList.remove('printingRekapGabungan'), 500);
+});
+
 /* ===================== Kartu Raport per siswa ===================== */
 document.getElementById('btnBuildCard').addEventListener('click', ()=>{
   const id = document.getElementById('pickPrintStudent').value;
@@ -2566,7 +2879,7 @@ document.getElementById('btnBuildCard').addEventListener('click', ()=>{
       </div>
       <div class="meta">
         <span>Kelas: ${escapeHtml(m.kelas||'')}</span>
-        <span>Catur Wulan: ${escapeHtml(m.catur||'')}</span>
+        <span>Catur Wulan: ${escapeHtml(caturDisplayLabel())}</span>
         <span>Tahun Ajaran: ${escapeHtml(m.tahun||'')}</span>
       </div>
       <h3 style="text-align:center;margin-top:14px;">${escapeHtml(r.nama)} <span class="hint">(No. ${r.no})</span></h3>
