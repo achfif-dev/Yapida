@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Buku Nilai Raport — Madrasah</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Playfair+Display:wght@500;600;700&family=EB+Garamond:wght@400;500;600;700&family=Merriweather:wght@400;700&family=Lora:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Playfair+Display:wght@500;600;700&family=EB+Garamond:wght@400;500;600;700&family=Merriweather:wght@400;700&family=Lora:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600;700&family=Cinzel:wght@400;500;600;700&family=Crimson+Text:wght@400;600;700&family=Libre+Baskerville:wght@400;700&family=Spectral:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Nunito:wght@400;600;700&family=Raleway:wght@400;500;600;700&family=Work+Sans:wght@400;500;600&family=Marcellus&family=Josefin+Sans:wght@400;500;600&family=Great+Vibes&family=DM+Serif+Display&family=Amiri:wght@400;700&family=Scheherazade+New:wght@400;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Aref+Ruqaa:wght@400;700&family=Reem+Kufi:wght@400;500;600;700&family=El+Messiri:wght@400;500;600;700&family=Lateef:wght@400;700&family=Cairo:wght@400;500;600;700&family=Tajawal:wght@400;500;700&family=Rakkas&family=Harmattan:wght@400;700&family=Mada:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --ink:#1c2320;
@@ -147,13 +147,13 @@
   /* ---------- Ijazah ---------- */
   .ijazahBoard{display:flex; gap:18px; flex-wrap:wrap; justify-content:center;}
   .ijazahPage{
-    width:480px; aspect-ratio:3/5; background:#fbfbf2; position:relative;
+    width:480px; aspect-ratio:210/297; background:#fbfbf2; position:relative;
     border:10px solid #1e6b3e; border-radius:4px; padding:16px 14px;
     box-shadow:var(--shadow); overflow:hidden;
     -webkit-print-color-adjust:exact; print-color-adjust:exact; color-adjust:exact;
   }
   .ijazahPage.hasCustomBorder{ background-size:100% 100%; background-repeat:no-repeat; }
-  .ijazahInner.dragMode{ cursor:move; outline:2px dashed var(--gold); touch-action:none; }
+  [data-ijzel].dragMode{ cursor:move; outline:1.5px dashed var(--gold); outline-offset:2px; }
   .ijazahPage::before{
     content:""; position:absolute; inset:6px;
     border:2px solid #1e6b3e;
@@ -161,7 +161,7 @@
     pointer-events:none;
   }
   .ijazahInner{position:relative; z-index:1; height:100%; display:flex; flex-direction:column; font-family:var(--ijzFontBody, 'Public Sans', system-ui, sans-serif);}
-  .ijazahArabTop{text-align:center; font-size:15px; line-height:1.6; color:#153627; direction:rtl;}
+  .ijazahArabTop{text-align:center; font-size:15px; line-height:1.6; color:#153627; direction:rtl; font-family:var(--ijzFontArab, 'Amiri', serif);}
   .ijazahLembaga{text-align:center; font-weight:800; font-size:12.5px; margin-top:6px; color:#153627;}
   .ijazahTitleWord{text-align:center; font-family:var(--ijzFontTitle, 'Fraunces', serif); font-weight:700; font-size:26px; margin:2px 0; color:#153627;}
   .ijazahNos{display:flex; justify-content:space-between; font-size:10px; margin-top:-4px;}
@@ -705,15 +705,20 @@
           <div class="field" style="flex:2;"><label>Teks header Arab (baris baru = ganti baris)</label><textarea id="tplArabTop" rows="2"></textarea></div>
         </div>
         <h3>Font Ijazah</h3>
-        <p class="hint">Pilih gaya huruf untuk judul "Ijazah" dan seluruh isi teks sertifikat.</p>
+        <p class="hint">Pilih gaya huruf Latin untuk judul "Ijazah" dan seluruh isi teks sertifikat, serta gaya huruf Arab untuk header Arab di bagian atas.</p>
         <div class="row">
           <div class="field" style="flex:0 0 320px;">
-            <label>Gaya Font</label>
+            <label>Gaya Font Latin</label>
             <select id="tplFontPreset"></select>
+          </div>
+          <div class="field" style="flex:0 0 320px;">
+            <label>Gaya Font Arab</label>
+            <select id="tplFontPresetArab"></select>
           </div>
           <div class="field" id="tplFontPreviewWrap" style="flex:2; min-width:220px;">
             <label>Pratinjau</label>
             <div id="tplFontPreview" style="border:1px solid var(--line); border-radius:8px; padding:10px 12px; background:var(--paper);">
+              <div id="tplFontPreviewArab" style="font-size:16px; margin-bottom:4px; color:var(--deep-2); direction:rtl;">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
               <div id="tplFontPreviewTitle" style="font-size:22px; font-weight:700; color:var(--deep-2);">Ijazah</div>
               <div id="tplFontPreviewBody" style="font-size:13px;">Kami memutuskan bahwa: Aulia Insani Aunillah</div>
             </div>
@@ -727,11 +732,9 @@
           <div class="field" style="flex:0 0 auto; align-self:flex-end;"><button class="secondary" id="btnClearBorder" type="button">Hapus Bingkai Kustom</button></div>
         </div>
         <h3>Penyesuaian Posisi Tulisan (untuk menyamakan dengan bingkai kustom)</h3>
-        <p class="hint">Geser &amp; skalakan seluruh isi ijazah (teks + pas foto bergerak bersamaan) supaya pas simetris di dalam gambar bingkai yang diunggah. Biarkan 0 / 100% bila memakai bingkai bawaan.</p>
+        <p class="hint">Skala keseluruhan isi ijazah (teks + pas foto membesar/mengecil bersamaan) supaya muat di dalam gambar bingkai yang diunggah. Untuk menggeser tiap baris/komponen satu per satu (nama madrasah, judul, nama siswa, tiap baris biodata, foto, tanda tangan, dll — masing-masing independen, tidak digabung), gunakan "Mode Geser Posisi" di kartu Pratinjau &amp; Cetak di bawah.</p>
         <div class="row">
-          <div class="field"><label>Geser Horizontal (px, boleh minus)</label><input id="tplOffsetX" type="number" step="1" placeholder="0"></div>
-          <div class="field"><label>Geser Vertikal (px, boleh minus)</label><input id="tplOffsetY" type="number" step="1" placeholder="0"></div>
-          <div class="field"><label>Skala Konten (%)</label><input id="tplScale" type="number" step="1" min="50" max="150" placeholder="100"></div>
+          <div class="field" style="flex:0 0 200px;"><label>Skala Konten (%)</label><input id="tplScale" type="number" step="1" min="50" max="150" placeholder="100"></div>
         </div>
         <div class="btnrow"><button id="btnSaveTemplate">Simpan Template</button></div>
       </div>
@@ -770,13 +773,14 @@
         <div class="row" style="align-items:center;">
           <div class="field" style="flex:0 0 auto;">
             <label style="display:flex; align-items:center; gap:6px; font-weight:600;">
-              <input type="checkbox" id="ijzDragMode" style="width:auto;"> Mode Geser Posisi (bagian depan)
+              <input type="checkbox" id="ijzDragMode" style="width:auto;"> Mode Geser Posisi (per baris/komponen)
             </label>
           </div>
           <div class="field" style="flex:2; min-width:220px;">
-            <p class="hint" style="margin:0;">Saat aktif: klik &amp; seret bagian depan ijazah (di pratinjau bawah) untuk memposisikan teks pas dengan bingkai, layaknya di Canva/Corel. Putar scroll mouse di atasnya untuk memperbesar/mengecilkan. Klik "Simpan Posisi" setelah pas.</p>
+            <p class="hint" style="margin:0;">Saat aktif: klik &amp; seret <strong>masing-masing baris/komponen</strong> ijazah bagian depan (di pratinjau bawah) satu per satu — nama madrasah, judul, nama siswa, tiap baris biodata, foto, tanda tangan, dll bisa digeser sendiri-sendiri, tidak ikut bergerak bersama. Klik "Simpan Posisi" setelah semua pas.</p>
           </div>
           <div class="field" style="flex:0 0 auto; align-self:flex-end;">
+            <button class="secondary" id="btnResetDragPosition" type="button">↺ Reset Posisi</button>
             <button class="secondary" id="btnSaveDragPosition" type="button">💾 Simpan Posisi</button>
           </div>
         </div>
@@ -864,8 +868,32 @@ const IJAZAH_FONT_PRESETS = {
   formal: { label:"Formal — Merriweather & Lora", title:"'Merriweather', serif", body:"'Lora', serif" },
   modern: { label:"Modern — Poppins & Inter", title:"'Poppins', sans-serif", body:"'Inter', sans-serif" },
   naskah: { label:"Naskah Klasik — Cormorant Garamond", title:"'Cormorant Garamond', serif", body:"'Cormorant Garamond', serif" },
+  regal: { label:"Regal — Cinzel & Crimson Text", title:"'Cinzel', serif", body:"'Crimson Text', serif" },
+  pustaka: { label:"Pustaka Kuno — Libre Baskerville & EB Garamond", title:"'Libre Baskerville', serif", body:"'EB Garamond', serif" },
+  kontemporer: { label:"Kontemporer — Montserrat & Nunito", title:"'Montserrat', sans-serif", body:"'Nunito', sans-serif" },
+  minimalis: { label:"Minimalis — Raleway & Work Sans", title:"'Raleway', sans-serif", body:"'Work Sans', sans-serif" },
+  spektral: { label:"Spektral Anggun — Spectral & Spectral", title:"'Spectral', serif", body:"'Spectral', serif" },
+  marcelus: { label:"Anggun Tipis — Marcellus & Josefin Sans", title:"'Marcellus', serif", body:"'Josefin Sans', sans-serif" },
+  skrip: { label:"Skrip Mewah — Great Vibes & EB Garamond", title:"'Great Vibes', cursive", body:"'EB Garamond', serif" },
+  displaymewah: { label:"Display Mewah — DM Serif Display & Lora", title:"'DM Serif Display', serif", body:"'Lora', serif" },
 };
 function ijzFontPreset(key){ return IJAZAH_FONT_PRESETS[key] || IJAZAH_FONT_PRESETS.klasik; }
+
+const IJAZAH_ARABIC_FONTS = {
+  amiri: { label:"Amiri — Naskh Klasik", family:"'Amiri', serif" },
+  scheherazade: { label:"Scheherazade New — Naskh Mushaf", family:"'Scheherazade New', serif" },
+  notonaskh: { label:"Noto Naskh Arabic — Naskh Modern", family:"'Noto Naskh Arabic', serif" },
+  lateef: { label:"Lateef — Naskh Ringan", family:"'Lateef', serif" },
+  arefruqaa: { label:"Aref Ruqaa — Gaya Ruq'ah/Kaligrafi", family:"'Aref Ruqaa', serif" },
+  rakkas: { label:"Rakkas — Dekoratif Tebal", family:"'Rakkas', cursive" },
+  reemkufi: { label:"Reem Kufi — Kufi Modern", family:"'Reem Kufi', sans-serif" },
+  elmessiri: { label:"El Messiri — Kufi Kontemporer", family:"'El Messiri', sans-serif" },
+  cairo: { label:"Cairo — Sans Modern", family:"'Cairo', sans-serif" },
+  tajawal: { label:"Tajawal — Sans Bersih", family:"'Tajawal', sans-serif" },
+  mada: { label:"Mada — Sans Geometris", family:"'Mada', sans-serif" },
+  harmattan: { label:"Harmattan — Klasik Sahara", family:"'Harmattan', serif" },
+};
+function ijzArabFont(key){ return IJAZAH_ARABIC_FONTS[key] || IJAZAH_ARABIC_FONTS.amiri; }
 
 const IJAZAH_DEFAULT_TEMPLATES = {
   tpq: {
@@ -889,7 +917,7 @@ const IJAZAH_DEFAULT_TEMPLATES = {
     showArabTop: true,
     arabTop: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\nيَرْفَعِ اللَّهُ الَّذِينَ آمَنُوا مِنكُمْ وَالَّذِينَ أُوتُوا الْعِلْمَ دَرَجَاتٍ",
     contentOffsetX: 0, contentOffsetY: 0, contentScale: 100,
-    fontPreset: "klasik"
+    fontPreset: "klasik", fontPresetArab: "amiri"
   },
   ibtidaiyah: {
     lembagaAtas: "YAYASAN PENDIDIKAN ISLAM AL-HIDAYAH (YAPIDA)",
@@ -912,7 +940,7 @@ const IJAZAH_DEFAULT_TEMPLATES = {
     showArabTop: true,
     arabTop: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\nيَرْفَعِ اللَّهُ الَّذِينَ آمَنُوا مِنكُمْ وَالَّذِينَ أُوتُوا الْعِلْمَ دَرَجَاتٍ",
     contentOffsetX: 0, contentOffsetY: 0, contentScale: 100,
-    fontPreset: "klasik"
+    fontPreset: "klasik", fontPresetArab: "amiri"
   },
   tsanawiyah: {
     lembagaAtas: "YAYASAN PENDIDIKAN ISLAM AL-HIDAYAH (YAPIDA)",
@@ -935,7 +963,7 @@ const IJAZAH_DEFAULT_TEMPLATES = {
     showArabTop: true,
     arabTop: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\nيَرْفَعِ اللَّهُ الَّذِينَ آمَنُوا مِنكُمْ وَالَّذِينَ أُوتُوا الْعِلْمَ دَرَجَاتٍ",
     contentOffsetX: 0, contentOffsetY: 0, contentScale: 100,
-    fontPreset: "klasik"
+    fontPreset: "klasik", fontPresetArab: "amiri"
   }
 };
 const IJAZAH_LETTER_GRADES = [{min:85,label:'A'},{min:75,label:'B'},{min:65,label:'C'},{min:55,label:'D'},{min:45,label:'E'},{min:0,label:'F'}];
@@ -2391,10 +2419,9 @@ function renderIjazahTab(){
   document.getElementById('tplMateriTambahan').value = (tpl.materiTambahan||[]).join(', ');
   document.getElementById('tplShowArabTop').checked = tpl.showArabTop !== false;
   document.getElementById('tplArabTop').value = tpl.arabTop || '';
-  document.getElementById('tplOffsetX').value = tpl.contentOffsetX || 0;
-  document.getElementById('tplOffsetY').value = tpl.contentOffsetY || 0;
   document.getElementById('tplScale').value = tpl.contentScale || 100;
   document.getElementById('tplFontPreset').value = tpl.fontPreset || 'klasik';
+  document.getElementById('tplFontPresetArab').value = tpl.fontPresetArab || 'amiri';
   updateFontPreview();
   document.getElementById('tplPanitiaRow').style.display = tpl.showPanitia ? '' : 'none';
   document.getElementById('tplMateriTambahanRow').style.display = (key==='tpq') ? '' : 'none';
@@ -2494,10 +2521,9 @@ document.getElementById('btnSaveTemplate').addEventListener('click', ()=>{
     materiTambahan: document.getElementById('tplMateriTambahan').value.split(',').map(s=>s.trim()).filter(Boolean),
     showArabTop: document.getElementById('tplShowArabTop').checked,
     arabTop: document.getElementById('tplArabTop').value,
-    contentOffsetX: Number(document.getElementById('tplOffsetX').value) || 0,
-    contentOffsetY: Number(document.getElementById('tplOffsetY').value) || 0,
     contentScale: Number(document.getElementById('tplScale').value) || 100,
     fontPreset: document.getElementById('tplFontPreset').value || 'klasik',
+    fontPresetArab: document.getElementById('tplFontPresetArab').value || 'amiri',
   });
   if(ijzPendingBorder !== undefined){ payload.borderImg = ijzPendingBorder; }
   db.ref('rapor/ijazahTemplates/'+key).set(payload).then(()=>{
@@ -2527,10 +2553,12 @@ function buildIjazahHTML(studentId){
   const fotoInner = rec.foto ? `<img src="${rec.foto}">` : 'Photo<br>3x4';
   const tahunH = (m.tahun||'').split('/')[0] || (m.tahun||'');
   const fontPreset = ijzFontPreset(tpl.fontPreset);
+  const arabFont = ijzArabFont(tpl.fontPresetArab);
   const pageStyleParts = [];
   if(tpl.borderImg) pageStyleParts.push(`background-image:url('${tpl.borderImg}')`);
   pageStyleParts.push(`--ijzFontTitle:${fontPreset.title}`);
   pageStyleParts.push(`--ijzFontBody:${fontPreset.body}`);
+  pageStyleParts.push(`--ijzFontArab:${arabFont.family}`);
   const borderStyle = ` style="${pageStyleParts.join(';')}"`;
   const borderClass = tpl.borderImg ? ' hasCustomBorder' : '';
 
@@ -2538,36 +2566,43 @@ function buildIjazahHTML(studentId){
     .replace('{DARI_M}', u.dariM||'').replace('{SAMPAI_M}', u.sampaiM||'')
     .replace(/\n/g,'<br>');
   const leadIntro = (tpl.leadIntro||'').replace(/\n/g,'<br>');
-  const offX = Number(tpl.contentOffsetX)||0;
-  const offY = Number(tpl.contentOffsetY)||0;
   const scl = (Number(tpl.contentScale)||100)/100;
-  const innerStyle = (offX||offY||scl!==1) ? ` style="transform:translate(${offX}px,${offY}px) scale(${scl}); transform-origin:top center;"` : '';
+  const innerStyle = (scl!==1) ? ` style="transform:scale(${scl}); transform-origin:top center;"` : '';
   const arabTopHtml = escapeHtml(tpl.arabTop||'').replace(/\n/g,'<br>');
+  const elPos = tpl.elPos || {};
+  function elAttr(key, extraStyle){
+    const p = elPos[key];
+    const t = (p && (p.x||p.y)) ? `transform:translate(${p.x}px,${p.y}px);` : '';
+    const style = `${extraStyle||''}${t}`;
+    return ` data-ijzel="${key}"${style ? ` style="${style}"` : ''}`;
+  }
 
   const front = `
     <div class="ijazahPage${borderClass}"${borderStyle}>
       <div class="ijazahInner"${innerStyle}>
-        ${tpl.showArabTop!==false ? `<div class="ijazahArabTop">${arabTopHtml}</div>` : ''}
-        <div class="ijazahLembaga">${escapeHtml(tpl.lembagaAtas||'')}</div>
-        <div class="ijazahNos"><span>No. Ijazah: ${escapeHtml(noIjazah)}</span><span class="ijazahTitleWord" style="font-size:22px;">Ijazah</span><span>No. Induk: ${escapeHtml(noInduk)}</span></div>
-        <div class="ijazahMadrasah">${escapeHtml(tpl.namaMadrasah||'')}</div>
-        <div class="ijazahAddr">${escapeHtml(tpl.alamat||'')}</div>
-        ${tpl.showTingkatLine ? `<div class="ijazahTingkat">${escapeHtml(tpl.tingkatLabel||'')}</div>` : ''}
-        <div class="ijazahTahun">TAHUN PELAJARAN : ${escapeHtml(m.tahun||'')}</div>
-        ${tpl.showSesudahLine ? `<div class="ijazahTahun">Sesudah diadakan Evaluasi Belajar Tahap Akhir (EBTA)</div>
-        <div class="ijazahTahun">Dari tanggal ${escapeHtml(u.dariH||'')} H sampai tanggal ${escapeHtml(u.sampaiH||'')} H<br>atau tanggal ${escapeHtml(u.dariM||'')} M sampai tanggal ${escapeHtml(u.sampaiM||'')} M</div>` : ''}
-        <div class="ijazahLead">${leadIntro}</div>
-        <div class="ijazahNama">${escapeHtml(st.nama||'')}</div>
-        <div class="ijazahBioRow"><span class="lbl">Lahir di</span><span>:</span><span class="val">${escapeHtml(st.tempatLahir||'')}</span></div>
-        <div class="ijazahBioRow"><span class="lbl">Pada Tanggal</span><span>:</span><span class="val">${escapeHtml(st.tglLahir||'')}</span></div>
-        <div class="ijazahBioRow"><span class="lbl">Putra / Putri dari</span><span>:</span><span class="val">${escapeHtml(st.ayah||st.wali||'')}</span></div>
-        <div class="ijazahBioRow"><span class="lbl">Alamat</span><span>:</span><span class="val">${escapeHtml(st.alamat||'')}</span></div>
-        <div class="ijazahTelahLulus">${closing}</div>
-        <div class="ijazahFotoBox">${fotoInner}</div>
+        ${tpl.showArabTop!==false ? `<div class="ijazahArabTop"${elAttr('arabTop')}>${arabTopHtml}</div>` : ''}
+        <div class="ijazahLembaga"${elAttr('lembaga')}>${escapeHtml(tpl.lembagaAtas||'')}</div>
+        <div class="ijazahNos"><span${elAttr('noIjazah')}>No. Ijazah: ${escapeHtml(noIjazah)}</span><span class="ijazahTitleWord"${elAttr('titleIjazah','font-size:22px;')}>Ijazah</span><span${elAttr('noInduk')}>No. Induk: ${escapeHtml(noInduk)}</span></div>
+        <div class="ijazahMadrasah"${elAttr('madrasah')}>${escapeHtml(tpl.namaMadrasah||'')}</div>
+        <div class="ijazahAddr"${elAttr('addr')}>${escapeHtml(tpl.alamat||'')}</div>
+        ${tpl.showTingkatLine ? `<div class="ijazahTingkat"${elAttr('tingkat')}>${escapeHtml(tpl.tingkatLabel||'')}</div>` : ''}
+        <div class="ijazahTahun"${elAttr('tahun')}>TAHUN PELAJARAN : ${escapeHtml(m.tahun||'')}</div>
+        ${tpl.showSesudahLine ? `<div${elAttr('sesudah')}>
+        <div class="ijazahTahun">Sesudah diadakan Evaluasi Belajar Tahap Akhir (EBTA)</div>
+        <div class="ijazahTahun">Dari tanggal ${escapeHtml(u.dariH||'')} H sampai tanggal ${escapeHtml(u.sampaiH||'')} H<br>atau tanggal ${escapeHtml(u.dariM||'')} M sampai tanggal ${escapeHtml(u.sampaiM||'')} M</div>
+        </div>` : ''}
+        <div class="ijazahLead"${elAttr('lead')}>${leadIntro}</div>
+        <div class="ijazahNama"${elAttr('nama')}>${escapeHtml(st.nama||'')}</div>
+        <div class="ijazahBioRow"${elAttr('bio1')}><span class="lbl">Lahir di</span><span>:</span><span class="val">${escapeHtml(st.tempatLahir||'')}</span></div>
+        <div class="ijazahBioRow"${elAttr('bio2')}><span class="lbl">Pada Tanggal</span><span>:</span><span class="val">${escapeHtml(st.tglLahir||'')}</span></div>
+        <div class="ijazahBioRow"${elAttr('bio3')}><span class="lbl">Putra / Putri dari</span><span>:</span><span class="val">${escapeHtml(st.ayah||st.wali||'')}</span></div>
+        <div class="ijazahBioRow"${elAttr('bio4')}><span class="lbl">Alamat</span><span>:</span><span class="val">${escapeHtml(st.alamat||'')}</span></div>
+        <div class="ijazahTelahLulus"${elAttr('closing')}>${closing}</div>
+        <div class="ijazahFotoBox"${elAttr('foto')}>${fotoInner}</div>
         <div class="ijazahSignArea">
-          <div style="text-align:right;">${escapeHtml(u.tempat||'Bangkalan')}, ${escapeHtml(u.terbitH||'')} H / ${escapeHtml(u.terbitM||'')} M</div>
-          <div class="ttd" style="text-align:right;">${escapeHtml(tpl.kepalaLabel||'')}<span class="ttdNama">( ${escapeHtml(tpl.kepalaNama||'')} )</span></div>
-          <div class="ijazahPengurusBlock">
+          <div${elAttr('signDate','text-align:right;')}>${escapeHtml(u.tempat||'Bangkalan')}, ${escapeHtml(u.terbitH||'')} H / ${escapeHtml(u.terbitM||'')} M</div>
+          <div class="ttd"${elAttr('signKepala','text-align:right;')}>${escapeHtml(tpl.kepalaLabel||'')}<span class="ttdNama">( ${escapeHtml(tpl.kepalaNama||'')} )</span></div>
+          <div class="ijazahPengurusBlock"${elAttr('pengurus')}>
             <div>Mengetahui,<br>Pengurus Yayasan Pendidikan Islam Al-Hidayah<br>${escapeHtml(tpl.ketuaLabel||'Ketua')}</div>
             <div class="ttd"><span class="ttdNama">( ${escapeHtml(tpl.ketuaNama||'')} )</span></div>
           </div>
@@ -2641,85 +2676,84 @@ document.getElementById('btnBuildIjazah').addEventListener('click', ()=>{
   if(!pages){ board.innerHTML=''; exportBtns.style.display='none'; return; }
   board.innerHTML = pages.front + pages.back;
   exportBtns.style.display = '';
+  ijzApplyPreviewAspect(board);
   ijzSyncDragModeToBoard();
 });
 
-/* ---- Mode Geser Posisi (drag-to-position seperti Canva/Corel, khusus bagian depan) ---- */
-let ijzDragState = { offX:0, offY:0, scale:100 };
-let ijzDragActive = false; // apakah sedang menyeret (pointer down)
-let ijzDragStart = { clientX:0, clientY:0, offX:0, offY:0 };
+/* ---- Mode Geser Posisi (drag-to-position per baris/komponen, seperti Canva/Corel, khusus bagian depan) ---- */
+let ijzElState = {};   // key -> {x,y}, posisi berjalan (live) tiap komponen
+let ijzDragKey = null;  // key komponen yang sedang diseret
+let ijzDragStart = { clientX:0, clientY:0, x:0, y:0 };
 
-function ijzFrontInnerEl(){
-  return document.querySelector('#ijazahBoard .ijazahPage:first-child .ijazahInner');
+function ijzFrontPageEl(){
+  return document.querySelector('#ijazahBoard .ijazahPage:first-child');
 }
-function ijzApplyDragTransform(){
-  const el = ijzFrontInnerEl();
+function ijzDraggableEls(){
+  const front = ijzFrontPageEl();
+  return front ? front.querySelectorAll('[data-ijzel]') : [];
+}
+function ijzApplyElTransform(key){
+  const front = ijzFrontPageEl();
+  if(!front) return;
+  const el = front.querySelector(`[data-ijzel="${key}"]`);
   if(!el) return;
-  el.style.transform = `translate(${ijzDragState.offX}px,${ijzDragState.offY}px) scale(${ijzDragState.scale/100})`;
-  el.style.transformOrigin = 'top center';
+  const p = ijzElState[key] || {x:0,y:0};
+  el.style.transform = (p.x||p.y) ? `translate(${p.x}px,${p.y}px)` : '';
 }
 function ijzSyncDragModeToBoard(){
-  const el = ijzFrontInnerEl();
   const chk = document.getElementById('ijzDragMode');
-  if(!el || !chk) return;
   const key = currentTingkatanKey();
   const tpl = key ? getIjazahTemplate(key) : {};
-  ijzDragState.offX = Number(tpl.contentOffsetX)||0;
-  ijzDragState.offY = Number(tpl.contentOffsetY)||0;
-  ijzDragState.scale = Number(tpl.contentScale)||100;
-  el.classList.toggle('dragMode', chk.checked);
+  const src = tpl.elPos || {};
+  ijzElState = {};
+  ijzDraggableEls().forEach(el=>{
+    const k = el.getAttribute('data-ijzel');
+    const p = src[k] || {x:0,y:0};
+    ijzElState[k] = { x:Number(p.x)||0, y:Number(p.y)||0 };
+    el.classList.toggle('dragMode', !!(chk && chk.checked));
+    ijzApplyElTransform(k);
+  });
 }
 document.getElementById('ijzDragMode').addEventListener('change', (e)=>{
-  const el = ijzFrontInnerEl();
-  if(!el){ toast('Tampilkan ijazah dulu (klik "Tampilkan Ijazah")'); e.target.checked = false; return; }
+  if(!ijzFrontPageEl()){ toast('Tampilkan ijazah dulu (klik "Tampilkan Ijazah")'); e.target.checked = false; return; }
   ijzSyncDragModeToBoard();
-  if(e.target.checked) toast('Mode geser aktif: seret bagian depan, scroll untuk skala');
+  if(e.target.checked) toast('Mode geser aktif: klik & seret tiap baris/komponen satu per satu');
 });
 (function setupIjzDrag(){
   const board = document.getElementById('ijazahBoard');
   board.addEventListener('pointerdown', (e)=>{
     if(!document.getElementById('ijzDragMode').checked) return;
-    const el = ijzFrontInnerEl();
-    if(!el || !el.contains(e.target)) return;
-    ijzDragActive = true;
-    ijzDragStart.clientX = e.clientX; ijzDragStart.clientY = e.clientY;
-    ijzDragStart.offX = ijzDragState.offX; ijzDragStart.offY = ijzDragState.offY;
-    try{ el.setPointerCapture(e.pointerId); }catch(err){}
+    const front = ijzFrontPageEl();
+    if(!front || !front.contains(e.target)) return;
+    const target = e.target.closest('[data-ijzel]');
+    if(!target) return;
+    ijzDragKey = target.getAttribute('data-ijzel');
+    const p = ijzElState[ijzDragKey] || {x:0,y:0};
+    ijzDragStart = { clientX:e.clientX, clientY:e.clientY, x:p.x, y:p.y };
+    try{ target.setPointerCapture(e.pointerId); }catch(err){}
     e.preventDefault();
+    e.stopPropagation();
   });
   board.addEventListener('pointermove', (e)=>{
-    if(!ijzDragActive) return;
-    ijzDragState.offX = Math.round(ijzDragStart.offX + (e.clientX - ijzDragStart.clientX));
-    ijzDragState.offY = Math.round(ijzDragStart.offY + (e.clientY - ijzDragStart.clientY));
-    ijzApplyDragTransform();
-    const fx = document.getElementById('tplOffsetX'), fy = document.getElementById('tplOffsetY');
-    if(fx) fx.value = ijzDragState.offX;
-    if(fy) fy.value = ijzDragState.offY;
+    if(!ijzDragKey) return;
+    const x = Math.round(ijzDragStart.x + (e.clientX - ijzDragStart.clientX));
+    const y = Math.round(ijzDragStart.y + (e.clientY - ijzDragStart.clientY));
+    ijzElState[ijzDragKey] = { x, y };
+    ijzApplyElTransform(ijzDragKey);
   });
-  const stopDrag = ()=>{ ijzDragActive = false; };
+  const stopDrag = ()=>{ ijzDragKey = null; };
   board.addEventListener('pointerup', stopDrag);
   board.addEventListener('pointercancel', stopDrag);
   board.addEventListener('pointerleave', stopDrag);
-  board.addEventListener('wheel', (e)=>{
-    if(!document.getElementById('ijzDragMode').checked) return;
-    const el = ijzFrontInnerEl();
-    if(!el || !el.contains(e.target)) return;
-    e.preventDefault();
-    const delta = e.deltaY < 0 ? 2 : -2;
-    ijzDragState.scale = Math.min(150, Math.max(50, ijzDragState.scale + delta));
-    ijzApplyDragTransform();
-    const fs = document.getElementById('tplScale');
-    if(fs) fs.value = ijzDragState.scale;
-  }, {passive:false});
 })();
 document.getElementById('btnSaveDragPosition').addEventListener('click', ()=>{
   const key = currentTingkatanKey();
   if(!key){ toast('Tingkatan kelas aktif tidak didukung'); return; }
-  db.ref('rapor/ijazahTemplates/'+key).update({
-    contentOffsetX: ijzDragState.offX,
-    contentOffsetY: ijzDragState.offY,
-    contentScale: ijzDragState.scale,
-  }).then(()=> toast('Posisi bagian depan disimpan'));
+  db.ref('rapor/ijazahTemplates/'+key+'/elPos').set(ijzElState).then(()=> toast('Posisi tiap baris/komponen disimpan'));
+});
+document.getElementById('btnResetDragPosition').addEventListener('click', ()=>{
+  Object.keys(ijzElState).forEach(k=>{ ijzElState[k] = {x:0,y:0}; ijzApplyElTransform(k); });
+  toast('Posisi direset (klik "Simpan Posisi" untuk menyimpan)');
 });
 
 const IJZ_PAPER_SIZES = { a4:{w:210,h:297}, f4:{w:215,h:330} };
@@ -2727,6 +2761,12 @@ function ijzGetPaperSize(){
   const sel = document.getElementById('ijzPaperSize');
   return IJZ_PAPER_SIZES[(sel && sel.value) || 'a4'] || IJZ_PAPER_SIZES.a4;
 }
+function ijzApplyPreviewAspect(root){
+  const sz = ijzGetPaperSize();
+  const scope = root || document;
+  scope.querySelectorAll('.ijazahPage').forEach(el=>{ el.style.aspectRatio = `${sz.w} / ${sz.h}`; });
+}
+document.getElementById('ijzPaperSize').addEventListener('change', ()=> ijzApplyPreviewAspect());
 function ijzApplyPrintPageStyle(){
   const sz = ijzGetPaperSize();
   let styleEl = document.getElementById('ijazahPrintPageStyle');
@@ -2820,6 +2860,7 @@ document.getElementById('btnPdfIjazahSemua').addEventListener('click', async ()=
       const pages = buildIjazahHTML(st.id);
       if(!pages) continue;
       hidden.innerHTML = pages.front + pages.back;
+      ijzApplyPreviewAspect(hidden);
       const pageEls = hidden.querySelectorAll('.ijazahPage');
       for(const pageEl of pageEls){
         const canvas = await pageToCanvas(pageEl);
@@ -2837,19 +2878,25 @@ document.getElementById('btnPdfIjazahSemua').addEventListener('click', async ()=
 
 function populateFontPresetSelect(){
   const sel = document.getElementById('tplFontPreset');
-  if(!sel) return;
-  sel.innerHTML = Object.keys(IJAZAH_FONT_PRESETS).map(k=>`<option value="${k}">${escapeHtml(IJAZAH_FONT_PRESETS[k].label)}</option>`).join('');
+  if(sel) sel.innerHTML = Object.keys(IJAZAH_FONT_PRESETS).map(k=>`<option value="${k}">${escapeHtml(IJAZAH_FONT_PRESETS[k].label)}</option>`).join('');
+  const selArab = document.getElementById('tplFontPresetArab');
+  if(selArab) selArab.innerHTML = Object.keys(IJAZAH_ARABIC_FONTS).map(k=>`<option value="${k}">${escapeHtml(IJAZAH_ARABIC_FONTS[k].label)}</option>`).join('');
 }
 function updateFontPreview(){
   const sel = document.getElementById('tplFontPreset');
+  const selArab = document.getElementById('tplFontPresetArab');
   if(!sel) return;
   const preset = ijzFontPreset(sel.value);
+  const arabFont = ijzArabFont(selArab ? selArab.value : undefined);
   const titleEl = document.getElementById('tplFontPreviewTitle');
   const bodyEl = document.getElementById('tplFontPreviewBody');
+  const arabEl = document.getElementById('tplFontPreviewArab');
   if(titleEl) titleEl.style.fontFamily = preset.title;
   if(bodyEl) bodyEl.style.fontFamily = preset.body;
+  if(arabEl) arabEl.style.fontFamily = arabFont.family;
 }
 document.getElementById('tplFontPreset').addEventListener('change', updateFontPreview);
+document.getElementById('tplFontPresetArab').addEventListener('change', updateFontPreview);
 
 /* ===================== Init ===================== */
 resetStudentForm();
