@@ -532,7 +532,13 @@
     </div>
     <div class="card">
       <h2>Daftar Siswa</h2>
-      <div class="btnrow noprint"><button class="gold" id="btnExportSiswa" type="button">⬇️ Ekspor Excel</button></div>
+      <div class="btnrow noprint">
+        <button class="gold" id="btnExportSiswa" type="button">⬇️ Ekspor Excel</button>
+        <button class="secondary" id="btnDownloadTemplateSiswa" type="button">📄 Template Import Siswa</button>
+        <button class="secondary" id="btnImportSiswaTrigger" type="button">⬆️ Import dari Excel</button>
+        <input type="file" id="fileImportSiswa" accept=".xlsx,.xls" style="display:none;">
+      </div>
+      <p class="hint noprint">Import akan menambahkan siswa baru ke <strong>kelas aktif</strong>. Jika NISN atau Nama pada file sudah cocok dengan siswa yang ada di kelas aktif, datanya akan diperbarui (tidak dobel).</p>
       <div class="row noprint" style="margin-bottom:10px;">
         <div class="field" style="flex:2 1 220px;">
           <label>Cari Siswa</label>
@@ -1153,6 +1159,27 @@ function tingkatanKey(tingkatan){
   return null;
 }
 
+/* ---- Urutan tingkatan & kelas (TPQ -> Ibtidaiyah -> Tsanawiyah -> Aliyah, kelas 1 -> kelas terakhir) ---- */
+const TINGKATAN_ORDER = ['TPQ','Ibtidaiyah','Tsanawiyah','Aliyah'];
+function tingkatanOrderIndex(t){
+  const i = TINGKATAN_ORDER.indexOf(t||'');
+  return i===-1 ? TINGKATAN_ORDER.length : i;
+}
+function kelasNumOrder(k){
+  const m = String(k.kelasNama||'').match(/\d+/);
+  return m ? parseInt(m[0],10) : 999;
+}
+function sortKelasEntries(entries){
+  return entries.slice().sort((a,b)=>{
+    const ka=a[1]||{}, kb=b[1]||{};
+    const ti = tingkatanOrderIndex(ka.tingkatan) - tingkatanOrderIndex(kb.tingkatan);
+    if(ti!==0) return ti;
+    const ni = kelasNumOrder(ka) - kelasNumOrder(kb);
+    if(ni!==0) return ni;
+    return String(ka.kelasNama||'').localeCompare(String(kb.kelasNama||''));
+  });
+}
+
 function toast(msg){
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
@@ -1410,7 +1437,7 @@ function attachKelasListListener(){
 
 function populateKelasSwitcher(){
   const cur = activeKelasId;
-  const entries = Object.entries(state.kelasList);
+  const entries = sortKelasEntries(Object.entries(state.kelasList));
   ['kelasSwitcher','studentFilterKelas'].forEach(selId=>{
     const sel = document.getElementById(selId);
     if(!sel) return;
@@ -1419,11 +1446,19 @@ function populateKelasSwitcher(){
       sel.innerHTML = '<option value="">— belum ada kelas —</option>';
       return;
     }
+    let curGroup = null, groupEl = sel;
     entries.forEach(([id, k])=>{
+      const tLabel = k.tingkatan || 'Lainnya';
+      if(tLabel !== curGroup){
+        curGroup = tLabel;
+        groupEl = document.createElement('optgroup');
+        groupEl.label = tLabel;
+        sel.appendChild(groupEl);
+      }
       const opt = document.createElement('option');
       opt.value = id;
       opt.textContent = `${k.tingkatan} ${k.kelasNama}${k.catur ? (' · CW '+k.catur) : ''}`;
-      sel.appendChild(opt);
+      groupEl.appendChild(opt);
     });
     if(cur) sel.value = cur;
   });
@@ -1523,7 +1558,16 @@ function renderKelasTable(){
     const trHead = document.createElement('tr');
     trHead.innerHTML = `<td colspan="5" style="text-align:left; background:var(--paper-2); font-weight:700; color:var(--deep-2);">📅 Tahun Ajaran: ${escapeHtml(g.label)} <span class="hint" style="font-weight:400;">(${g.items.length} kelas)</span></td>`;
     tbody.appendChild(trHead);
-    g.items.forEach(([id,k])=>{
+    const items = sortKelasEntries(g.items);
+    let curTingkatan = null;
+    items.forEach(([id,k])=>{
+      const tLabel = k.tingkatan || 'Lainnya';
+      if(tLabel !== curTingkatan){
+        curTingkatan = tLabel;
+        const trSub = document.createElement('tr');
+        trSub.innerHTML = `<td colspan="5" style="text-align:left; background:#f7f4ea; font-weight:600; color:var(--gold); font-size:11.5px; letter-spacing:.03em; text-transform:uppercase;">— ${escapeHtml(tLabel)} —</td>`;
+        tbody.appendChild(trSub);
+      }
       const tr = document.createElement('tr');
       const isActive = id===activeKelasId;
       tr.innerHTML = `
@@ -2181,11 +2225,19 @@ function populatePindahRiwayatSelects(){
   if(selTujuan){
     const curT = selTujuan.value;
     selTujuan.innerHTML = '<option value="">— pilih kelas tujuan —</option>';
-    Object.entries(state.kelasList).forEach(([id,k])=>{
+    let curGroup = null, groupEl = selTujuan;
+    sortKelasEntries(Object.entries(state.kelasList)).forEach(([id,k])=>{
       if(id===activeKelasId) return;
+      const tLabel = k.tingkatan || 'Lainnya';
+      if(tLabel !== curGroup){
+        curGroup = tLabel;
+        groupEl = document.createElement('optgroup');
+        groupEl.label = tLabel;
+        selTujuan.appendChild(groupEl);
+      }
       const opt = document.createElement('option');
       opt.value = id; opt.textContent = `${k.tingkatan||''} ${k.kelasNama||''}${kelasGroupLabel(k)!=='Tanpa Tahun Ajaran' ? (' — '+kelasGroupLabel(k)) : ''}`;
-      selTujuan.appendChild(opt);
+      groupEl.appendChild(opt);
     });
     if(curT) selTujuan.value = curT;
   }
@@ -2597,6 +2649,152 @@ document.getElementById('btnExportSiswa')?.addEventListener('click', ()=>{
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, sheetFromAOA(rows,[4,22,14,12,4,14,14,22,18,18,18,14]), 'Daftar Siswa');
   downloadWorkbook(wb, `siswa-${kelasFileTag()}.xlsx`);
+});
+
+/* -- Template Import Siswa -- */
+document.getElementById('btnDownloadTemplateSiswa')?.addEventListener('click', ()=>{
+  const rows = [
+    ['No','Nama','NISN','NIS','JK','Tempat Lahir','Tanggal Lahir','Alamat','Ayah','Ibu','Wali','No. HP'],
+    [1,'Contoh: Ahmad Fauzi','1234567890','001','L','Jakarta','2015-05-17','Jl. Contoh No. 1','Bpk. Fulan','Ibu Fulanah','','081234567890'],
+  ];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, sheetFromAOA(rows,[4,22,14,12,4,14,14,22,18,18,18,14]), 'Template Siswa');
+  const petunjuk = [
+    ['Petunjuk Pengisian Template Import Siswa'],
+    ['1. Kolom "No" = nomor urut siswa di kelas ini. Boleh dikosongkan (otomatis melanjutkan nomor terakhir).'],
+    ['2. Kolom "JK" diisi L (Laki-laki) atau P (Perempuan).'],
+    ['3. Kolom "Tanggal Lahir" diisi format YYYY-MM-DD (cth. 2015-05-17), atau boleh format tanggal Excel biasa.'],
+    ['4. Import akan menambahkan siswa ke kelas yang sedang AKTIF saat file diimpor — pastikan kelas aktif sudah benar sebelum impor.'],
+    ['5. Jika NISN atau Nama pada baris sudah cocok dengan siswa yang sudah ada di kelas aktif, datanya akan DIPERBARUI, bukan dibuat dobel.'],
+    ['6. Hapus baris contoh (baris ke-2) sebelum mengisi data sungguhan.'],
+  ];
+  XLSX.utils.book_append_sheet(wb, sheetFromAOA(petunjuk,[75]), 'Petunjuk');
+  downloadWorkbook(wb, 'template-import-siswa.xlsx');
+  toast('Template diunduh — isi data siswa lalu impor kembali');
+});
+
+/* -- Import Siswa dari Excel -- */
+function siswaParseDateCell(v){
+  if(v===undefined || v===null || v==='') return '';
+  if(v instanceof Date){
+    return v.getFullYear()+'-'+String(v.getMonth()+1).padStart(2,'0')+'-'+String(v.getDate()).padStart(2,'0');
+  }
+  if(typeof v === 'number'){
+    if(typeof XLSX!=='undefined' && XLSX.SSF && XLSX.SSF.parse_date_code){
+      const d = XLSX.SSF.parse_date_code(v);
+      if(d) return d.y+'-'+String(d.m).padStart(2,'0')+'-'+String(d.d).padStart(2,'0');
+    }
+    return '';
+  }
+  const s = String(v).trim();
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m) return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');
+  m = s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+  if(m) return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
+  return '';
+}
+document.getElementById('btnImportSiswaTrigger')?.addEventListener('click', ()=>{
+  if(!activeKelasId){ toast('Pilih/buat kelas dulu di tab Kelas'); return; }
+  document.getElementById('fileImportSiswa').click();
+});
+document.getElementById('fileImportSiswa')?.addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  if(!activeKelasId){ toast('Pilih/buat kelas dulu'); e.target.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = async (ev)=>{
+    const btn = document.getElementById('btnImportSiswaTrigger');
+    try{
+      const wb = XLSX.read(ev.target.result, {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const aoa = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      if(!aoa.length){ toast('File kosong'); return; }
+      const header = aoa[0].map(h=>String(h||'').trim());
+      const findIdx = (re)=> header.findIndex(h=> re.test(h));
+      const idx = {
+        no: findIdx(/^no\.?$/i),
+        nama: findIdx(/^nama/i),
+        nisn: findIdx(/^nisn/i),
+        nis: findIdx(/^nis(\s*lokal)?$/i),
+        jk: findIdx(/^jk$|jenis\s*kelamin/i),
+        tempatLahir: findIdx(/tempat\s*lahir/i),
+        tglLahir: findIdx(/tanggal\s*lahir|tgl\s*lahir/i),
+        alamat: findIdx(/^alamat/i),
+        ayah: findIdx(/ayah/i),
+        ibu: findIdx(/ibu/i),
+        wali: findIdx(/^wali/i),
+        telp: findIdx(/hp|telp|telepon/i),
+      };
+      if(idx.nama===-1){ toast('Kolom "Nama" tidak ditemukan di file — cek header sesuai template'); return; }
+
+      if(btn){ btn.disabled = true; btn.textContent = 'Mengimpor…'; }
+
+      const existing = orderedStudents();
+      const byNisn = {}, byNama = {};
+      existing.forEach(st=>{
+        if(st.nisn) byNisn[String(st.nisn).trim()] = st;
+        if(st.nama) byNama[st.nama.trim().toLowerCase()] = st;
+      });
+      let nextNo = existing.length ? Math.max(...existing.map(s=>s.no||0))+1 : 1;
+      const k = state.kelasList[activeKelasId] || {};
+
+      let ditambah=0, diperbarui=0;
+      for(let r=1;r<aoa.length;r++){
+        const row = aoa[r];
+        if(!row || !row.length) continue;
+        const nama = String(row[idx.nama]||'').trim();
+        if(!nama) continue;
+        const nisn = idx.nisn!==-1 ? String(row[idx.nisn]||'').trim() : '';
+        const jkRaw = idx.jk!==-1 ? String(row[idx.jk]||'').trim().toUpperCase() : '';
+        const biodata = {
+          nama,
+          jk: jkRaw.startsWith('P') ? 'P' : 'L',
+          nisn,
+          nis: idx.nis!==-1 ? String(row[idx.nis]||'').trim() : '',
+          tempatLahir: idx.tempatLahir!==-1 ? String(row[idx.tempatLahir]||'').trim() : '',
+          tglLahir: idx.tglLahir!==-1 ? siswaParseDateCell(row[idx.tglLahir]) : '',
+          alamat: idx.alamat!==-1 ? String(row[idx.alamat]||'').trim() : '',
+          ayah: idx.ayah!==-1 ? String(row[idx.ayah]||'').trim() : '',
+          ibu: idx.ibu!==-1 ? String(row[idx.ibu]||'').trim() : '',
+          wali: idx.wali!==-1 ? String(row[idx.wali]||'').trim() : '',
+          telp: idx.telp!==-1 ? String(row[idx.telp]||'').trim() : '',
+        };
+        let no = (idx.no!==-1 && row[idx.no]!=='' && !isNaN(Number(row[idx.no]))) ? Number(row[idx.no]) : null;
+
+        const match = (nisn && byNisn[nisn]) || byNama[nama.toLowerCase()];
+        if(match){
+          await studentsRootRef(match.id).update(biodata);
+          if(no!=null) await dataRoot('students/'+match.id).update({no});
+          diperbarui++;
+        }else{
+          if(no==null) no = nextNo;
+          const newRef = studentsRootRef().push();
+          const id = newRef.key;
+          const master = {
+            ...biodata,
+            kelasAktifId: activeKelasId,
+            riwayatKelas: { [activeKelasId]: { no, tingkatan:k.tingkatan||'', kelasNama:k.kelasNama||'', catur:k.catur||'', tahun:k.tahun||'', tahunMasehi:k.tahunMasehi||'', tanggal: todayISO() } }
+          };
+          await newRef.set(master);
+          await dataRoot('students/'+id).set({no});
+          nextNo = Math.max(nextNo, no+1);
+          byNama[nama.toLowerCase()] = {id, nisn};
+          if(nisn) byNisn[nisn] = {id, nisn};
+          ditambah++;
+        }
+      }
+      if(!ditambah && !diperbarui){ toast('Tidak ada data valid yang bisa diimpor (cek kolom Nama)'); return; }
+      toast(`Impor selesai — ${ditambah} siswa baru, ${diperbarui} diperbarui`);
+      resetStudentForm();
+    }catch(err){
+      console.error(err);
+      toast('Gagal membaca file: '+err.message);
+    }finally{
+      if(btn){ btn.disabled = false; btn.textContent = '⬆️ Import dari Excel'; }
+      e.target.value = '';
+    }
+  };
+  reader.readAsArrayBuffer(file);
 });
 
 /* -- Ekspor: Absensi (rekap yang sedang ditampilkan) -- */
