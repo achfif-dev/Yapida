@@ -318,6 +318,24 @@
     </div>
 
     <div class="card">
+      <h2>Backup &amp; Restore Database</h2>
+      <p class="hint">Backup mengunduh SELURUH data (semua kelas, siswa, nilai, absensi, template ijazah, dst) sebagai satu file JSON. Restore akan MENIMPA seluruh data yang ada saat ini dengan isi file backup — pastikan file backup benar sebelum memulihkan.</p>
+      <div class="btnrow">
+        <button class="gold" id="btnBackupDb" type="button">⬇️ Unduh Backup (JSON)</button>
+      </div>
+      <div class="row" style="margin-top:12px; align-items:flex-end;">
+        <div class="field" style="flex:2;">
+          <label>Pulihkan dari File Backup</label>
+          <input type="file" id="restoreDbFile" accept="application/json,.json">
+        </div>
+        <div class="field" style="flex:0 0 auto;">
+          <button class="danger" id="btnRestoreDb" type="button" disabled>Pulihkan Database</button>
+        </div>
+      </div>
+      <div class="hint" id="restoreDbInfo"></div>
+    </div>
+
+    <div class="card">
       <h2>Batas Konversi Nilai Asli → Nilai Raport</h2>
       <p class="hint">Berlaku untuk semua kelas: ≥85→9, 75–84→8, 65–74→7, 55–64→6, 45–54→5, &lt;45→4.</p>
       <div class="tablewrap">
@@ -369,13 +387,23 @@
           </select>
         </div>
         <div class="field"><label>Nama / Nomor Kelas</label><input id="newKelasNama" placeholder="cth. 1 - TSANAWIYAH"></div>
-        <div class="field"><label>Tahun Ajaran</label><input id="newTahun" placeholder="cth. 1446-1447 H"></div>
+        <div class="field"><label>Tahun Ajaran (Hijriyah)</label><input id="newTahun" placeholder="cth. 1446-1447 H"></div>
+        <div class="field"><label>Tahun Ajaran (Masehi)</label><input id="newTahunMasehi" placeholder="cth. 2024-2025 M"></div>
       </div>
-      <p class="hint">Satu kelas ini akan dipakai untuk Catur Wulan 1, 2, dan 3 sekaligus — tidak perlu buat kelas baru tiap ganti catur wulan. Buat kelas baru hanya saat siswa benar-benar naik ke tingkat/kelas berikutnya.</p>
+      <div class="row">
+        <div class="field" style="flex:0 0 auto;">
+          <label style="display:flex; align-items:center; gap:6px; font-weight:600;">
+            <input type="checkbox" id="newKelasAkhir" style="width:auto;"> Kelas / Tingkat Akhir (kelulusan)
+          </label>
+          <p class="hint" style="margin:4px 0 0;">Centang HANYA untuk kelas tertinggi di tingkatan ini (mis. kelas 3 Tsanawiyah, kelas 6 Ibtidaiyah) — tab <strong>Ijazah</strong> hanya aktif untuk kelas yang ditandai sebagai kelas akhir.</p>
+        </div>
+      </div>
+      <p class="hint">Satu kelas ini akan dipakai untuk Catur Wulan 1, 2, dan 3 sekaligus — tidak perlu buat kelas baru tiap ganti catur wulan. Buat kelas baru hanya saat siswa benar-benar naik ke tingkat/kelas berikutnya, atau saat mulai tahun pelajaran baru.</p>
       <div class="row" id="copySubjectsRow">
-        <div class="field">
-          <label>Salin daftar mapel dari kelas lain (opsional)</label>
-          <select id="copySubjectsFrom"><option value="">— pakai daftar mapel default —</option></select>
+        <div class="field" style="flex:2;">
+          <label>Copy Format dari Kelas Tahun Sebelumnya (opsional)</label>
+          <select id="copySubjectsFrom"><option value="">— jangan salin, isi manual —</option></select>
+          <p class="hint" style="margin:4px 0 0;">Otomatis mengisi Tingkatan &amp; Nama/Nomor Kelas dari kelas yang dipilih (tinggal ganti Tahun Ajaran ke yang baru), dan menyalin daftar mapelnya. Cocok dipakai saat membuat kelas untuk tahun pelajaran berikutnya dengan format yang sama.</p>
         </div>
       </div>
       <div class="btnrow">
@@ -386,14 +414,22 @@
 
     <div class="card">
       <h2>Semua Kelas</h2>
-      <div class="btnrow noprint"><button class="gold" id="btnExportKelas" type="button">⬇️ Ekspor Excel</button></div>
+      <p class="hint">Kelas dikelompokkan otomatis per Tahun Ajaran supaya lebih mudah mencari kelas dari tahun tertentu.</p>
+      <div class="row noprint" style="align-items:flex-end;">
+        <div class="field" style="flex:0 0 280px;">
+          <label>Filter Tahun Ajaran</label>
+          <select id="kelasFilterTahun"><option value="">— Semua Tahun —</option></select>
+        </div>
+        <div class="field" style="flex:0 0 auto;"><button class="secondary" id="btnExportKelas" type="button">⬇️ Ekspor Excel</button></div>
+      </div>
       <div class="tablewrap">
         <table id="kelasTable">
-          <thead><tr><th>Tingkatan</th><th style="text-align:left;">Kelas</th><th>Tahun Ajaran</th><th class="noprint">Aksi</th></tr></thead>
+          <thead><tr><th>Tingkatan</th><th style="text-align:left;">Kelas</th><th>Tahun Ajaran (H)</th><th>Tahun Ajaran (M)</th><th class="noprint">Aksi</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
       <div class="empty" id="kelasEmpty" style="display:none;">Belum ada kelas. Buat kelas pertama di atas.</div>
+      <div class="empty" id="kelasFilterEmpty" style="display:none;">Tidak ada kelas untuk tahun ajaran yang dipilih.</div>
     </div>
 
     <div class="card" id="identitasCard" style="display:none;">
@@ -405,7 +441,8 @@
       <div class="row">
         <div class="field"><label>Tingkat</label><input id="mTingkat"></div>
         <div class="field"><label>Kelas</label><input id="mKelas"></div>
-        <div class="field"><label>Tahun Ajaran</label><input id="mTahun"></div>
+        <div class="field"><label>Tahun Ajaran (Hijriyah)</label><input id="mTahun"></div>
+        <div class="field"><label>Tahun Ajaran (Masehi)</label><input id="mTahunMasehi" placeholder="cth. 2024-2025 M"></div>
       </div>
       <div class="row">
         <div class="field"><label>Wali Kelas</label><input id="mWali"></div>
@@ -526,13 +563,24 @@
 
     <div class="card">
       <h2>Kenaikan / Pindah Kelas</h2>
-      <p class="hint">Saat siswa naik kelas atau tinggal kelas, gunakan ini — bukan hapus &amp; input ulang. Biodata dan semua nilai di kelas-kelas sebelumnya tetap tersimpan dan bisa dilihat lewat "Riwayat Kelas &amp; Nilai" di bawah.</p>
+      <p class="hint">Saat naik tahun ajaran / naik kelas, gunakan ini untuk memindahkan siswa dari kelas aktif ke kelas tujuan — bukan hapus &amp; input ulang. Biodata dan semua nilai di kelas-kelas sebelumnya tetap tersimpan dan bisa dilihat lewat "Riwayat Kelas &amp; Nilai" di bawah.</p>
+      <p class="hint">Secara default <strong>semua siswa tercentang</strong> (migrasi otomatis semua ke kelas baru). Hilangkan centang pada siswa yang <strong>tidak naik / tinggal kelas</strong> supaya tetap berada di kelas ini.</p>
       <div class="row">
-        <div class="field"><label>Siswa (dari kelas aktif)</label><select id="pindahSiswa"></select></div>
         <div class="field"><label>Pindah ke Kelas</label><select id="pindahKelasTujuan"></select></div>
-        <div class="field" style="flex:0 0 120px;"><label>No. Urut Baru</label><input id="pindahNoBaru" type="number" min="1"></div>
+        <div class="field" style="flex:0 0 160px;"><label>No. Urut Mulai Dari</label><input id="pindahNoBaru" type="number" min="1" value="1"></div>
       </div>
-      <div class="btnrow"><button id="btnPindahKelas">Pindahkan Siswa</button></div>
+      <div class="btnrow noprint">
+        <button class="secondary" id="btnPindahPilihSemua" type="button">☑️ Pilih Semua</button>
+        <button class="secondary" id="btnPindahKosongkanSemua" type="button">☐ Kosongkan Semua</button>
+      </div>
+      <div class="tablewrap" style="margin-top:8px;">
+        <table id="pindahSiswaTable">
+          <thead><tr><th style="width:34px;"></th><th style="width:44px;">No</th><th style="text-align:left;">Nama</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="empty" id="pindahSiswaEmpty" style="display:none;">Belum ada siswa di kelas aktif ini.</div>
+      <div class="btnrow"><button id="btnPindahKelas">Pindahkan Siswa Terpilih</button></div>
     </div>
 
     <div class="card">
@@ -736,7 +784,7 @@
       <h2>Ijazah — Kelas Akhir</h2>
       <p class="hint">Ijazah dibuat dari <strong>kelas yang sedang aktif</strong> (pilih/atur di tab "Kelas"). Fitur ini khusus untuk kelas akhir tingkat TPQ, Ibtidaiyah (Awwaliyah 6 Tahun), dan Tsanawiyah (Wustho 3 Tahun) — nilai diambil otomatis dari data Input Nilai kelas tersebut.</p>
       <div id="ijazahNoKelas" class="empty" style="display:none;">Pilih atau buat kelas dulu di tab "Kelas".</div>
-      <div id="ijazahNotSupported" class="empty" style="display:none;">Tingkatan kelas aktif ini (<span id="ijazahTingkatanNow"></span>) belum punya template Ijazah. Template tersedia untuk: TPQ, Ibtidaiyah, Tsanawiyah.</div>
+      <div id="ijazahNotSupported" class="empty" style="display:none;"></div>
     </div>
 
     <div id="ijazahBody" style="display:none;">
@@ -1208,6 +1256,82 @@ function initFirebase(){
   }
 }
 
+/* ===================== Backup & Restore Database =====================
+   Backup: mengunduh SELURUH isi node 'rapor' (kelasList, data per-kelas, students, ijazahTemplates, dst)
+   sebagai satu file JSON — bisa dibuka lagi di komputer/HP lain lewat "Restore".
+   Restore: membaca file JSON tsb dan MENIMPA seluruh node 'rapor' saat ini (db.ref('rapor').set(...)).
+   Ini operasi berat & merusak-jika-salah, jadi selalu minta konfirmasi eksplisit dari pengguna. */
+let restoreDbPendingData = null;
+
+document.getElementById('btnBackupDb').addEventListener('click', async ()=>{
+  if(!db){ toast('Hubungkan Firebase dulu (masuk akun)'); return; }
+  try{
+    toast('Menyiapkan backup…');
+    const snap = await db.ref('rapor').get();
+    const data = snap.val() || {};
+    const payload = {
+      _backupInfo: { app: 'Buku Nilai Raport — Madrasah', dibuatPada: new Date().toISOString() },
+      rapor: data
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `backup-rapor-${todayISO()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('Backup berhasil diunduh');
+  }catch(e){
+    console.error(e);
+    toast('Gagal membuat backup: ' + e.message);
+  }
+});
+
+document.getElementById('restoreDbFile').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  const btn = document.getElementById('btnRestoreDb');
+  const info = document.getElementById('restoreDbInfo');
+  restoreDbPendingData = null;
+  btn.disabled = true;
+  info.textContent = '';
+  if(!file) return;
+  try{
+    const text = await file.text();
+    const parsed = JSON.parse(text);
+    // Terima dua bentuk file: {_backupInfo, rapor:{...}} (hasil tombol Backup di atas)
+    // ATAU langsung isi node 'rapor' itu sendiri (mis. hasil ekspor manual dari Firebase console).
+    const raporData = (parsed && typeof parsed==='object' && 'rapor' in parsed) ? parsed.rapor : parsed;
+    if(!raporData || typeof raporData!=='object'){ throw new Error('Format file tidak dikenali'); }
+    restoreDbPendingData = raporData;
+    const jumlahKelas = Object.keys(raporData.kelasList||{}).length;
+    const jumlahSiswa = Object.keys(raporData.students||{}).length;
+    info.textContent = `File terbaca: ${jumlahKelas} kelas, ${jumlahSiswa} siswa (global). Klik "Pulihkan Database" untuk melanjutkan.`;
+    btn.disabled = false;
+  }catch(err){
+    console.error(err);
+    info.textContent = 'Gagal membaca file: ' + err.message;
+    toast('File backup tidak valid');
+  }
+});
+
+document.getElementById('btnRestoreDb').addEventListener('click', async ()=>{
+  if(!db){ toast('Hubungkan Firebase dulu (masuk akun)'); return; }
+  if(!restoreDbPendingData){ toast('Pilih file backup dulu'); return; }
+  const ok1 = confirm('PERINGATAN: Memulihkan backup akan MENIMPA / MENGHAPUS seluruh data yang ada saat ini (semua kelas, siswa, nilai, absensi, ijazah) dan menggantinya dengan isi file backup. Tindakan ini TIDAK BISA DIBATALKAN. Lanjutkan?');
+  if(!ok1) return;
+  const ok2 = confirm('Konfirmasi sekali lagi: apakah Anda yakin ingin menimpa seluruh database dengan file backup ini?');
+  if(!ok2) return;
+  try{
+    toast('Memulihkan database… mohon tunggu, jangan tutup halaman ini');
+    await db.ref('rapor').set(restoreDbPendingData);
+    toast('Database berhasil dipulihkan. Memuat ulang halaman…');
+    setTimeout(()=> location.reload(), 1200);
+  }catch(e){
+    console.error(e);
+    toast('Gagal memulihkan database: ' + e.message);
+  }
+});
+
 /* ===================== Kelas (multi-tingkatan) ===================== */
 function kelasListRef(path){ return db.ref('rapor/kelasList' + (path?('/'+path):'')); }
 function dataRoot(path){ return db.ref('rapor/data/' + activeKelasId + (path?('/'+path):'')); }
@@ -1256,7 +1380,7 @@ function migrateLegacyStudentIfNeeded(kelasId, studentId, v){
     nama:v.nama||'', jk:v.jk||'', nisn:v.nisn||'', nis:v.nis||'', tempatLahir:v.tempatLahir||'',
     tglLahir:v.tglLahir||'', alamat:v.alamat||'', ayah:v.ayah||'', ibu:v.ibu||'', wali:v.wali||'', telp:v.telp||'',
     kelasAktifId: kelasId,
-    riwayatKelas: { [kelasId]: { no:v.no||0, tingkatan:k.tingkatan||'', kelasNama:k.kelasNama||'', catur:k.catur||'', tahun:k.tahun||'', tanggal: todayISO() } }
+    riwayatKelas: { [kelasId]: { no:v.no||0, tingkatan:k.tingkatan||'', kelasNama:k.kelasNama||'', catur:k.catur||'', tahun:k.tahun||'', tahunMasehi:k.tahunMasehi||'', tanggal: todayISO() } }
   };
   studentsRootRef(studentId).set(master);
   db.ref('rapor/data/'+kelasId+'/students/'+studentId).set({no: v.no||0});
@@ -1265,6 +1389,7 @@ function migrateLegacyStudentIfNeeded(kelasId, studentId, v){
 function attachKelasListListener(){
   kelasListRef().on('value', snap=>{
     state.kelasList = snap.val() || {};
+    populateKelasFilterTahun();
     renderKelasTable();
     populateKelasSwitcher();
     populateCopySubjectsFrom();
@@ -1316,35 +1441,105 @@ document.getElementById('studentFilterJk').addEventListener('change', renderStud
 function populateCopySubjectsFrom(){
   const sel = document.getElementById('copySubjectsFrom');
   const cur = sel.value;
-  sel.innerHTML = '<option value="">— pakai daftar mapel default —</option>';
-  Object.entries(state.kelasList).forEach(([id,k])=>{
-    const opt = document.createElement('option');
-    opt.value = id;
-    opt.textContent = `${k.tingkatan} ${k.kelasNama}`;
-    sel.appendChild(opt);
-  });
+  sel.innerHTML = '<option value="">— jangan salin, isi manual —</option>';
+  // Diurutkan tahun terbaru dulu supaya "kelas tahun sebelumnya" gampang ditemukan saat mau buat kelas tahun baru.
+  Object.entries(state.kelasList)
+    .sort((a,b)=> kelasGroupYearNum(kelasGroupKey(b[1])) - kelasGroupYearNum(kelasGroupKey(a[1])))
+    .forEach(([id,k])=>{
+      const opt = document.createElement('option');
+      opt.value = id;
+      const tahunLabel = kelasGroupLabel(k);
+      opt.textContent = `${k.tingkatan||''} ${k.kelasNama||''}${tahunLabel!=='Tanpa Tahun Ajaran' ? (' — '+tahunLabel) : ''}`;
+      sel.appendChild(opt);
+    });
   sel.value = cur;
 }
+document.getElementById('copySubjectsFrom').addEventListener('change', (e)=>{
+  const id = e.target.value;
+  if(!id || kelasEditId) return; // hanya isi otomatis saat mode buat kelas baru
+  const k = state.kelasList[id];
+  if(!k) return;
+  document.getElementById('newTingkatan').value = k.tingkatan || 'TPQ';
+  document.getElementById('newKelasNama').value = k.kelasNama || '';
+  toast('Nama & mapel disalin — sesuaikan Tahun Ajaran ke tahun yang baru');
+});
+
+/* ---- Pengelompokan kelas per Tahun Ajaran (untuk grouping & filter) ---- */
+function kelasGroupKey(k){
+  const h = (k.tahun||'').trim();
+  const m = (k.tahunMasehi||'').trim();
+  if(!h && !m) return '__none__';
+  return h + '||' + m;
+}
+function kelasGroupLabel(k){
+  const h = (k.tahun||'').trim();
+  const m = (k.tahunMasehi||'').trim();
+  if(!h && !m) return 'Tanpa Tahun Ajaran';
+  return [h, m].filter(Boolean).join(' / ');
+}
+function kelasGroupYearNum(key){
+  const match = (key||'').match(/\d{3,4}/);
+  return match ? parseInt(match[0],10) : -1;
+}
+function populateKelasFilterTahun(){
+  const sel = document.getElementById('kelasFilterTahun');
+  if(!sel) return;
+  const cur = sel.value;
+  const groups = {}; // key -> {label, count}
+  Object.values(state.kelasList).forEach(k=>{
+    const key = kelasGroupKey(k);
+    if(!groups[key]) groups[key] = {label: kelasGroupLabel(k), count: 0};
+    groups[key].count++;
+  });
+  const sortedKeys = Object.keys(groups).sort((a,b)=> kelasGroupYearNum(b) - kelasGroupYearNum(a));
+  sel.innerHTML = '<option value="">— Semua Tahun —</option>' +
+    sortedKeys.map(key=> `<option value="${escapeHtml(key)}">${escapeHtml(groups[key].label)} (${groups[key].count} kelas)</option>`).join('');
+  if(cur && groups[cur]) sel.value = cur; else sel.value = '';
+}
+document.getElementById('kelasFilterTahun')?.addEventListener('change', renderKelasTable);
 
 function renderKelasTable(){
   const tbody = document.querySelector('#kelasTable tbody');
   tbody.innerHTML = '';
-  const entries = Object.entries(state.kelasList);
-  document.getElementById('kelasEmpty').style.display = entries.length ? 'none' : '';
+  const allEntries = Object.entries(state.kelasList);
+  document.getElementById('kelasEmpty').style.display = allEntries.length ? 'none' : '';
+
+  const filterVal = document.getElementById('kelasFilterTahun')?.value || '';
+  const entries = filterVal ? allEntries.filter(([id,k])=> kelasGroupKey(k)===filterVal) : allEntries;
+  const filterEmptyEl = document.getElementById('kelasFilterEmpty');
+  if(filterEmptyEl) filterEmptyEl.style.display = (allEntries.length && !entries.length) ? '' : 'none';
+
+  // Kelompokkan berdasarkan Tahun Ajaran, urutkan grup dari tahun terbaru ke terlama.
+  const groups = {}; // key -> {label, items:[[id,k],...]}
   entries.forEach(([id,k])=>{
-    const tr = document.createElement('tr');
-    const isActive = id===activeKelasId;
-    tr.innerHTML = `
-      <td>${escapeHtml(k.tingkatan||'')}</td>
-      <td class="name">${escapeHtml(k.kelasNama||'')} ${isActive ? '<span class="pill active">aktif</span>' : ''}</td>
-      <td>${escapeHtml(k.tahun||'')}</td>
-      <td class="noprint">
-        ${isActive ? '' : `<button class="secondary" data-act="switch" data-id="${id}" type="button">Pindah</button>`}
-        <button class="secondary" data-act="edit" data-id="${id}" type="button">Ubah</button>
-        <button class="danger" data-act="del" data-id="${id}" type="button">Hapus</button>
-      </td>`;
-    tbody.appendChild(tr);
+    const key = kelasGroupKey(k);
+    if(!groups[key]) groups[key] = {label: kelasGroupLabel(k), items: []};
+    groups[key].items.push([id,k]);
   });
+  const sortedKeys = Object.keys(groups).sort((a,b)=> kelasGroupYearNum(b) - kelasGroupYearNum(a));
+
+  sortedKeys.forEach(key=>{
+    const g = groups[key];
+    const trHead = document.createElement('tr');
+    trHead.innerHTML = `<td colspan="5" style="text-align:left; background:var(--paper-2); font-weight:700; color:var(--deep-2);">📅 Tahun Ajaran: ${escapeHtml(g.label)} <span class="hint" style="font-weight:400;">(${g.items.length} kelas)</span></td>`;
+    tbody.appendChild(trHead);
+    g.items.forEach(([id,k])=>{
+      const tr = document.createElement('tr');
+      const isActive = id===activeKelasId;
+      tr.innerHTML = `
+        <td>${escapeHtml(k.tingkatan||'')}</td>
+        <td class="name">${escapeHtml(k.kelasNama||'')} ${isActive ? '<span class="pill active">aktif</span>' : ''} ${k.kelasAkhir ? '<span class="pill" title="Kelas akhir — tab Ijazah aktif">🎓 Kelas Akhir</span>' : ''}</td>
+        <td>${escapeHtml(k.tahun||'')}</td>
+        <td>${escapeHtml(k.tahunMasehi||'')}</td>
+        <td class="noprint">
+          ${isActive ? '' : `<button class="secondary" data-act="switch" data-id="${id}" type="button">Pindah</button>`}
+          <button class="secondary" data-act="edit" data-id="${id}" type="button">Ubah</button>
+          <button class="danger" data-act="del" data-id="${id}" type="button">Hapus</button>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+  });
+
   tbody.querySelectorAll('button[data-act="switch"]').forEach(b=>{
     b.addEventListener('click', ()=> setActiveKelas(b.dataset.id));
   });
@@ -1368,6 +1563,8 @@ function resetKelasForm(){
   document.getElementById('newTingkatan').value = 'TPQ';
   document.getElementById('newKelasNama').value = '';
   document.getElementById('newTahun').value = '';
+  document.getElementById('newTahunMasehi').value = '';
+  document.getElementById('newKelasAkhir').checked = false;
   document.getElementById('copySubjectsFrom').value = '';
   document.getElementById('copySubjectsRow').style.display = '';
   document.getElementById('btnCreateKelas').textContent = '+ Buat Kelas';
@@ -1382,6 +1579,8 @@ function fillKelasForm(id){
   document.getElementById('newTingkatan').value = k.tingkatan || 'TPQ';
   document.getElementById('newKelasNama').value = k.kelasNama || '';
   document.getElementById('newTahun').value = k.tahun || '';
+  document.getElementById('newTahunMasehi').value = k.tahunMasehi || '';
+  document.getElementById('newKelasAkhir').checked = !!k.kelasAkhir;
   document.getElementById('copySubjectsRow').style.display = 'none'; // tidak relevan saat mengubah kelas yang sudah ada
   document.getElementById('btnCreateKelas').textContent = 'Simpan Perubahan';
   document.getElementById('btnCancelKelasEdit').style.display = '';
@@ -1396,14 +1595,16 @@ document.getElementById('btnCreateKelas').addEventListener('click', async ()=>{
   const tingkatan = document.getElementById('newTingkatan').value;
   const kelasNama = document.getElementById('newKelasNama').value.trim();
   const tahun = document.getElementById('newTahun').value.trim();
+  const tahunMasehi = document.getElementById('newTahunMasehi').value.trim();
+  const kelasAkhir = document.getElementById('newKelasAkhir').checked;
   if(!kelasNama){ toast('Isi nama/nomor kelas dulu'); return; }
 
   if(kelasEditId){
     // Mode ubah: kelas yang sudah ada, tidak menyentuh siswa/nilai/mapel
     const id = kelasEditId;
-    await kelasListRef(id).update({tingkatan, kelasNama, tahun});
+    await kelasListRef(id).update({tingkatan, kelasNama, tahun, tahunMasehi, kelasAkhir});
     await db.ref('rapor/data/'+id+'/meta').update({
-      tingkat: tingkatan, kelas: kelasNama, tahun
+      tingkat: tingkatan, kelas: kelasNama, tahun, tahunMasehi
     });
     toast('Kelas diperbarui');
     resetKelasForm();
@@ -1412,7 +1613,7 @@ document.getElementById('btnCreateKelas').addEventListener('click', async ()=>{
 
   const ref = kelasListRef().push();
   const id = ref.key;
-  await ref.set({tingkatan, kelasNama, tahun});
+  await ref.set({tingkatan, kelasNama, tahun, tahunMasehi, kelasAkhir});
 
   const copyFromId = document.getElementById('copySubjectsFrom').value;
   let subjectsToUse = DEFAULT_SUBJECTS.slice();
@@ -1424,11 +1625,13 @@ document.getElementById('btnCreateKelas').addEventListener('click', async ()=>{
   await db.ref('rapor/data/'+id+'/subjects').set(subjectsToUse);
   await db.ref('rapor/data/'+id+'/meta').set({
     nama: 'MADRASAH TARBIYATUL ISLAM AL-HIDAYAH',
-    tingkat: tingkatan, kelas: kelasNama, tahun
+    tingkat: tingkatan, kelas: kelasNama, tahun, tahunMasehi
   });
 
   document.getElementById('newKelasNama').value = '';
   document.getElementById('newTahun').value = '';
+  document.getElementById('newTahunMasehi').value = '';
+  document.getElementById('newKelasAkhir').checked = false;
   toast('Kelas dibuat');
   setActiveKelas(id);
 });
@@ -1620,6 +1823,7 @@ function fillMetaForm(){
   document.getElementById('mTingkat').value = m.tingkat || '';
   document.getElementById('mKelas').value = m.kelas || '';
   document.getElementById('mTahun').value = m.tahun || '';
+  document.getElementById('mTahunMasehi').value = m.tahunMasehi || '';
   document.getElementById('mWali').value = m.wali || '';
   document.getElementById('mKepala').value = m.kepala || '';
   document.getElementById('mTempat').value = m.tempat || '';
@@ -1640,6 +1844,7 @@ document.getElementById('btnSaveMeta').addEventListener('click', ()=>{
     tingkat: document.getElementById('mTingkat').value,
     kelas: document.getElementById('mKelas').value,
     tahun: document.getElementById('mTahun').value,
+    tahunMasehi: document.getElementById('mTahunMasehi').value,
     wali: document.getElementById('mWali').value,
     kepala: document.getElementById('mKepala').value,
     tempat: document.getElementById('mTempat').value,
@@ -1918,7 +2123,7 @@ document.getElementById('btnSaveStudent').addEventListener('click', ()=>{
   const master = {
     ...biodata,
     kelasAktifId: activeKelasId,
-    riwayatKelas: { [activeKelasId]: { no, tingkatan:k.tingkatan||'', kelasNama:k.kelasNama||'', catur:k.catur||'', tahun:k.tahun||'', tanggal: todayISO() } }
+    riwayatKelas: { [activeKelasId]: { no, tingkatan:k.tingkatan||'', kelasNama:k.kelasNama||'', catur:k.catur||'', tahun:k.tahun||'', tahunMasehi:k.tahunMasehi||'', tanggal: todayISO() } }
   };
   newRef.set(master).then(()=> dataRoot('students/'+id).set({no})).then(()=>{
     toast('Siswa ditambahkan');
@@ -1927,24 +2132,50 @@ document.getElementById('btnSaveStudent').addEventListener('click', ()=>{
 });
 
 /* ===================== Kenaikan / Pindah Kelas & Riwayat ===================== */
+let pindahSelectedIds = new Set(); // studentId yang tercentang untuk dipindahkan (default: semua)
+let pindahKnownIds = new Set(); // studentId yang sudah pernah dirender di checklist ini (supaya tidak "auto-centang ulang" siswa yang sengaja di-uncheck)
+
 function populatePindahRiwayatSelects(){
-  const selSiswa = document.getElementById('pindahSiswa');
   const selRiwayat = document.getElementById('riwayatSiswaPick');
-  if(!selSiswa || !selRiwayat) return; // belum ter-render (mis. sebelum login)
+  const pindahTbody = document.querySelector('#pindahSiswaTable tbody');
+  if(!selRiwayat || !pindahTbody) return; // belum ter-render (mis. sebelum login)
 
   const list = orderedStudents();
-  const curSiswa = selSiswa.value, curRiwayat = selRiwayat.value;
-  selSiswa.innerHTML = ''; selRiwayat.innerHTML = '';
+  const curRiwayat = selRiwayat.value;
+  selRiwayat.innerHTML = '';
   if(!list.length){
-    selSiswa.innerHTML = '<option value="">— belum ada siswa di kelas ini —</option>';
     selRiwayat.innerHTML = '<option value="">— belum ada siswa —</option>';
   }
   list.forEach(st=>{
-    const o1 = document.createElement('option'); o1.value = st.id; o1.textContent = `${st.no}. ${st.nama}`; selSiswa.appendChild(o1);
     const o2 = document.createElement('option'); o2.value = st.id; o2.textContent = `${st.no}. ${st.nama}`; selRiwayat.appendChild(o2);
   });
-  if(curSiswa && list.some(s=>s.id===curSiswa)) selSiswa.value = curSiswa;
   if(curRiwayat && list.some(s=>s.id===curRiwayat)) selRiwayat.value = curRiwayat;
+
+  // Checklist siswa yang mau dipindahkan — default semua tercentang. Siswa yang pernah sengaja
+  // di-uncheck TIDAK otomatis tercentang lagi walau tabel di-render ulang karena data lain berubah.
+  const validIds = new Set(list.map(s=>s.id));
+  Array.from(pindahSelectedIds).forEach(id=>{ if(!validIds.has(id)) pindahSelectedIds.delete(id); });
+  Array.from(pindahKnownIds).forEach(id=>{ if(!validIds.has(id)) pindahKnownIds.delete(id); });
+  list.forEach(st=>{
+    if(!pindahKnownIds.has(st.id)){
+      pindahKnownIds.add(st.id);
+      pindahSelectedIds.add(st.id); // siswa baru dilihat pertama kali -> default tercentang
+    }
+  });
+
+  document.getElementById('pindahSiswaEmpty').style.display = list.length ? 'none' : '';
+  pindahTbody.innerHTML = list.map(st=>`
+    <tr>
+      <td><input type="checkbox" class="pindahChk" data-id="${st.id}" ${pindahSelectedIds.has(st.id)?'checked':''} style="width:auto;"></td>
+      <td>${st.no}</td>
+      <td class="name">${escapeHtml(st.nama)}</td>
+    </tr>`).join('');
+  pindahTbody.querySelectorAll('.pindahChk').forEach(chk=>{
+    chk.addEventListener('change', ()=>{
+      if(chk.checked) pindahSelectedIds.add(chk.dataset.id);
+      else pindahSelectedIds.delete(chk.dataset.id);
+    });
+  });
 
   const selTujuan = document.getElementById('pindahKelasTujuan');
   if(selTujuan){
@@ -1953,7 +2184,7 @@ function populatePindahRiwayatSelects(){
     Object.entries(state.kelasList).forEach(([id,k])=>{
       if(id===activeKelasId) return;
       const opt = document.createElement('option');
-      opt.value = id; opt.textContent = `${k.tingkatan||''} ${k.kelasNama||''}${k.catur?(' · CW '+k.catur):''}`;
+      opt.value = id; opt.textContent = `${k.tingkatan||''} ${k.kelasNama||''}${kelasGroupLabel(k)!=='Tanpa Tahun Ajaran' ? (' — '+kelasGroupLabel(k)) : ''}`;
       selTujuan.appendChild(opt);
     });
     if(curT) selTujuan.value = curT;
@@ -1962,30 +2193,58 @@ function populatePindahRiwayatSelects(){
   renderRiwayatKelas();
 }
 
+document.getElementById('btnPindahPilihSemua').addEventListener('click', ()=>{
+  orderedStudents().forEach(st=> pindahSelectedIds.add(st.id));
+  document.querySelectorAll('#pindahSiswaTable .pindahChk').forEach(chk=> chk.checked = true);
+});
+document.getElementById('btnPindahKosongkanSemua').addEventListener('click', ()=>{
+  pindahSelectedIds.clear();
+  document.querySelectorAll('#pindahSiswaTable .pindahChk').forEach(chk=> chk.checked = false);
+});
+
 document.getElementById('btnPindahKelas').addEventListener('click', async ()=>{
   if(!activeKelasId){ toast('Pilih/buat kelas dulu'); return; }
-  const id = document.getElementById('pindahSiswa').value;
   const tujuanId = document.getElementById('pindahKelasTujuan').value;
-  const noBaru = Number(document.getElementById('pindahNoBaru').value || 1);
-  if(!id){ toast('Pilih siswa dulu'); return; }
+  const noMulai = Number(document.getElementById('pindahNoBaru').value || 1);
   if(!tujuanId){ toast('Pilih kelas tujuan dulu'); return; }
-  const kt = state.kelasList[tujuanId] || {};
-  const nama = (state.studentsMaster[id]||{}).nama || '';
-  if(!confirm(`Pindahkan "${nama}" ke kelas ${kt.tingkatan||''} ${kt.kelasNama||''}? Nilai di kelas ini tetap tersimpan sebagai riwayat dan bisa dilihat lagi lewat "Riwayat Kelas & Nilai".`)) return;
 
+  // Urutkan siswa terpilih berdasarkan no urut saat ini, supaya penomoran baru tetap berurutan rapi.
+  const selected = orderedStudents().filter(st=> pindahSelectedIds.has(st.id));
+  if(!selected.length){ toast('Pilih minimal satu siswa untuk dipindahkan'); return; }
+
+  const kt = state.kelasList[tujuanId] || {};
+  const tujuanLabel = `${kt.tingkatan||''} ${kt.kelasNama||''}`.trim();
+  const totalDiKelasIni = orderedStudents().length;
+  const confirmMsg = selected.length===totalDiKelasIni
+    ? `Pindahkan SEMUA (${selected.length}) siswa di kelas ini ke kelas ${tujuanLabel}? Nilai di kelas ini tetap tersimpan sebagai riwayat dan bisa dilihat lagi lewat "Riwayat Kelas & Nilai".`
+    : `Pindahkan ${selected.length} dari ${totalDiKelasIni} siswa terpilih ke kelas ${tujuanLabel}? ${totalDiKelasIni-selected.length} siswa yang tidak dicentang akan TETAP di kelas ini (tinggal kelas). Nilai tetap tersimpan sebagai riwayat.`;
+  if(!confirm(confirmMsg)) return;
+
+  const btn = document.getElementById('btnPindahKelas');
+  btn.disabled = true;
+  let noBaru = noMulai;
+  let sukses = 0, gagal = 0;
   try{
-    await db.ref('rapor/data/'+tujuanId+'/students/'+id).set({no: noBaru});
-    await studentsRootRef(id+'/riwayatKelas/'+tujuanId).set({
-      no: noBaru, tingkatan: kt.tingkatan||'', kelasNama: kt.kelasNama||'', catur: kt.catur||'', tahun: kt.tahun||'',
-      tanggal: todayISO()
-    });
-    await studentsRootRef(id+'/kelasAktifId').set(tujuanId);
-    await dataRoot('students/'+id).remove(); // keluar dari roster kelas lama; nilai & riwayat kelas lama tetap tersimpan
-    toast('Siswa dipindahkan ke kelas baru');
-    document.getElementById('pindahNoBaru').value = '';
-  }catch(e){
-    console.error(e);
-    toast('Gagal memindahkan siswa');
+    for(const st of selected){
+      try{
+        await db.ref('rapor/data/'+tujuanId+'/students/'+st.id).set({no: noBaru});
+        await studentsRootRef(st.id+'/riwayatKelas/'+tujuanId).set({
+          no: noBaru, tingkatan: kt.tingkatan||'', kelasNama: kt.kelasNama||'', catur: kt.catur||'', tahun: kt.tahun||'', tahunMasehi: kt.tahunMasehi||'',
+          tanggal: todayISO()
+        });
+        await studentsRootRef(st.id+'/kelasAktifId').set(tujuanId);
+        await dataRoot('students/'+st.id).remove(); // keluar dari roster kelas lama; nilai & riwayat kelas lama tetap tersimpan
+        pindahSelectedIds.delete(st.id);
+        sukses++;
+        noBaru++;
+      }catch(e){
+        console.error('Gagal memindahkan', st.nama, e);
+        gagal++;
+      }
+    }
+    toast(gagal ? `${sukses} siswa dipindahkan, ${gagal} gagal` : `${sukses} siswa berhasil dipindahkan ke kelas baru`);
+  }finally{
+    btn.disabled = false;
   }
 });
 
@@ -2020,7 +2279,7 @@ async function renderRiwayatKelas(){
       rowsHtml.push(`<tr>
         <td class="name">${escapeHtml(r.tingkatan||'')} ${escapeHtml(r.kelasNama||'')}${aktif}</td>
         <td>${CATUR_LABELS[cw]}</td>
-        <td>${escapeHtml(r.tahun||'')}</td>
+        <td>${escapeHtml(r.tahun||'')}${r.tahunMasehi?('<br>'+escapeHtml(r.tahunMasehi)):''}</td>
         <td style="text-align:left;font-size:11.5px;">${nilaiTxt || '<span class="hint">Belum ada nilai</span>'}</td>
       </tr>`);
     });
@@ -2323,10 +2582,10 @@ function sheetFromAOA(aoa, colWidths){
 
 /* -- Ekspor: Kelas -- */
 document.getElementById('btnExportKelas')?.addEventListener('click', ()=>{
-  const rows = [['Tingkatan','Kelas','Tahun Ajaran']];
-  Object.values(state.kelasList).forEach(k=> rows.push([k.tingkatan||'', k.kelasNama||'', k.tahun||'']));
+  const rows = [['Tingkatan','Kelas','Tahun Ajaran (H)','Tahun Ajaran (M)']];
+  Object.values(state.kelasList).forEach(k=> rows.push([k.tingkatan||'', k.kelasNama||'', k.tahun||'', k.tahunMasehi||'']));
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, sheetFromAOA(rows,[14,22,14]), 'Daftar Kelas');
+  XLSX.utils.book_append_sheet(wb, sheetFromAOA(rows,[14,22,14,14]), 'Daftar Kelas');
   downloadWorkbook(wb, 'daftar-kelas.xlsx');
 });
 
@@ -2702,7 +2961,7 @@ function renderRekap(){
   document.getElementById('printAddr').textContent = m.alamat || '';
   document.getElementById('printKelas').textContent = m.kelas ? ('Kelas: ' + m.kelas) : '';
   document.getElementById('printCatur').textContent = 'Catur Wulan: ' + caturDisplayLabel();
-  document.getElementById('printTahun').textContent = m.tahun ? ('Tahun Ajaran: ' + m.tahun) : '';
+  document.getElementById('printTahun').textContent = m.tahun ? ('Tahun Ajaran: ' + m.tahun + (m.tahunMasehi?(' / '+m.tahunMasehi):'')) : '';
 
   const rows = computeAll();
   const subjects = state.subjects;
@@ -2827,7 +3086,7 @@ function renderRekapGabungan(rows, scoresByC){
         </div>
       </div>
       <div class="meta">
-        <span>Kelas: ${escapeHtml(m.kelas||'')}</span><span>Rekap Akhir Tahun (Gabungan ${caturTerisiCount}/3 Catur Wulan)</span><span>Tahun Ajaran: ${escapeHtml(m.tahun||'')}</span>
+        <span>Kelas: ${escapeHtml(m.kelas||'')}</span><span>Rekap Akhir Tahun (Gabungan ${caturTerisiCount}/3 Catur Wulan)</span><span>Tahun Ajaran: ${escapeHtml(m.tahun||'')}${m.tahunMasehi?(' / '+escapeHtml(m.tahunMasehi)):''}</span>
       </div>
     </div>
     <div class="tablewrap"><table><thead>${head}</thead><tbody>${body}</tbody></table></div>
@@ -2880,7 +3139,7 @@ document.getElementById('btnBuildCard').addEventListener('click', ()=>{
       <div class="meta">
         <span>Kelas: ${escapeHtml(m.kelas||'')}</span>
         <span>Catur Wulan: ${escapeHtml(caturDisplayLabel())}</span>
-        <span>Tahun Ajaran: ${escapeHtml(m.tahun||'')}</span>
+        <span>Tahun Ajaran: ${escapeHtml(m.tahun||'')}${m.tahunMasehi?(' / '+escapeHtml(m.tahunMasehi)):''}</span>
       </div>
       <h3 style="text-align:center;margin-top:14px;">${escapeHtml(r.nama)} <span class="hint">(No. ${r.no})</span></h3>
       <div class="tablewrap">
@@ -2918,7 +3177,9 @@ let ijzPendingBorder = undefined; // undefined = tidak diubah, '' = dihapus, str
 function currentTingkatanKey(){
   if(!activeKelasId) return null;
   const k = state.kelasList[activeKelasId];
-  return k ? tingkatanKey(k.tingkatan) : null;
+  if(!k) return null;
+  if(!k.kelasAkhir) return null; // Ijazah hanya berlaku untuk kelas yang ditandai sebagai kelas/tingkat akhir
+  return tingkatanKey(k.tingkatan);
 }
 
 function fileToDataUri(file, maxW){
@@ -2955,7 +3216,13 @@ function renderIjazahTab(){
   if(!key){
     noKelas.style.display = 'none';
     notSupported.style.display = '';
-    document.getElementById('ijazahTingkatanNow').textContent = k.tingkatan || '-';
+    if(!tingkatanKey(k.tingkatan)){
+      notSupported.innerHTML = `Tingkatan kelas aktif ini (<strong>${escapeHtml(k.tingkatan||'-')}</strong>) belum punya template Ijazah. Template tersedia untuk: TPQ, Ibtidaiyah, Tsanawiyah.`;
+    } else if(!k.kelasAkhir){
+      notSupported.innerHTML = `Tab Ijazah hanya aktif untuk kelas yang ditandai sebagai <strong>Kelas / Tingkat Akhir</strong>. Kelas aktif saat ini (<strong>${escapeHtml(k.tingkatan||'')} ${escapeHtml(k.kelasNama||'')}</strong>) belum ditandai demikian — buka tab Kelas → "Ubah" kelas ini → centang "Kelas / Tingkat Akhir (kelulusan)" jika kelas ini memang kelas kelulusan.`;
+    } else {
+      notSupported.textContent = 'Kelas aktif ini belum mendukung Ijazah.';
+    }
     body.style.display = 'none';
     return;
   }
@@ -3163,7 +3430,7 @@ function buildIjazahHTML(studentId){
         <div class="ijazahMadrasah"${elAttr('madrasah')}>${escapeHtml(tpl.namaMadrasah||'')}</div>
         <div class="ijazahAddr"${elAttr('addr')}>${escapeHtml(tpl.alamat||'')}</div>
         ${tpl.showTingkatLine ? `<div class="ijazahTingkat"${elAttr('tingkat')}>${escapeHtml(tpl.tingkatLabel||'')}</div>` : ''}
-        <div class="ijazahTahun"${elAttr('tahun')}>TAHUN PELAJARAN : ${escapeHtml(m.tahun||'')}</div>
+        <div class="ijazahTahun"${elAttr('tahun')}>TAHUN PELAJARAN : ${escapeHtml(m.tahun||'')}${m.tahunMasehi?(' / '+escapeHtml(m.tahunMasehi)):''}</div>
         ${tpl.showSesudahLine ? `<div${elAttr('sesudah')}>
         <div class="ijazahTahun">Sesudah diadakan Evaluasi Belajar Tahap Akhir (EBTA)</div>
         <div class="ijazahTahun">Dari tanggal ${escapeHtml(u.dariH||'')} H sampai tanggal ${escapeHtml(u.sampaiH||'')} H<br>atau tanggal ${escapeHtml(u.dariM||'')} M sampai tanggal ${escapeHtml(u.sampaiM||'')} M</div>
@@ -3213,7 +3480,7 @@ function buildIjazahHTML(studentId){
         <div class="ijazahBackTitle">${escapeHtml(tpl.judulBelakang||'EVALUASI BELAJAR TAHAP AKHIR')}</div>
         <div class="ijazahBackSub">${escapeHtml(tpl.namaMadrasah||'')}</div>
         <div class="ijazahBackAddr">${escapeHtml(tpl.alamat||'')}${tpl.showTingkatLine? (' — '+escapeHtml(tpl.tingkatLabel||'')):''}</div>
-        <div class="ijazahBackMeta">TAHUN PELAJARAN : ${escapeHtml(m.tahun||'')}</div>
+        <div class="ijazahBackMeta">TAHUN PELAJARAN : ${escapeHtml(m.tahun||'')}${m.tahunMasehi?(' / '+escapeHtml(m.tahunMasehi)):''}</div>
         <div class="ijazahBackDaftar">DAFTAR NILAI DARI : <strong>${escapeHtml(st.nama||'')}</strong></div>
         <table class="ijazahTbl">
           <thead><tr><th>No</th><th>Mata Pelajaran</th><th>Angka</th><th>Huruf</th></tr></thead>
@@ -3490,7 +3757,7 @@ document.getElementById('btnJpgIjazahBelakang').addEventListener('click', ()=>{
 document.getElementById('btnPdfIjazahSemua').addEventListener('click', async ()=>{
   if(!activeKelasId){ toast('Pilih kelas dulu'); return; }
   const key = currentTingkatanKey();
-  if(!key){ toast('Tingkatan kelas ini belum punya template ijazah'); return; }
+  if(!key){ toast('Kelas ini tidak mendukung Ijazah (tingkatan tidak didukung atau bukan kelas akhir)'); return; }
   const students = orderedStudents();
   if(!students.length){ toast('Belum ada siswa di kelas ini'); return; }
   try{
