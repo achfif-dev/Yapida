@@ -268,13 +268,17 @@
   </div>
   <div class="row2">
     <div class="badge"><span class="dot off" id="connDot"></span><span id="connText">Menghubungkan…</span></div>
+    <div class="badge" id="activeKelasBadge" style="display:none; background:rgba(184,134,58,.22); border-color:rgba(184,134,58,.4);">
+      <span class="dot" style="background:var(--gold); box-shadow:0 0 0 3px rgba(184,134,58,.28);"></span>
+      <span id="activeKelasText"></span>
+    </div>
     <span id="userChipWrap" class="noprint"></span>
   </div>
 </div>
 
 <div class="tabs noprint" id="tabsBar" style="display:none;">
-  <div class="tab" data-tab="siswa">Siswa</div>
   <div class="tab active" data-tab="kelas">Kelas</div>
+  <div class="tab" data-tab="siswa">Siswa</div>
   <div class="tab" data-tab="absensi">Absensi</div>
   <div class="tab" data-tab="input">Input Nilai</div>
   <div class="tab" data-tab="rekap">Rekap &amp; Cetak</div>
@@ -350,6 +354,11 @@
 
   <!-- ================= KELAS ================= -->
   <section id="tab-kelas" style="display:none;">
+
+    <div class="card noprint" style="background:var(--danger); border-color:var(--danger); color:var(--white); text-align:center; padding:14px 16px;">
+      <h2 style="margin:0; color:var(--white); letter-spacing:.02em;">⚠️ Pilih Kelas Terlebih Dahulu!!!</h2>
+      <p style="margin:6px 0 0; font-size:12.5px; opacity:.92;">Pastikan <strong>Kelas</strong> (dan Catur Wulan) yang dipilih di bawah ini sudah benar sebelum menambah/mengubah data — semua tab lain (Siswa, Absensi, Input Nilai, Rekap, Ijazah) akan mengikuti kelas yang aktif di sini. Kelas &amp; tahun ajaran yang sedang aktif akan tampil di bagian atas halaman.</p>
+    </div>
 
     <div class="card">
       <h2>Kelas Aktif</h2>
@@ -1584,6 +1593,8 @@ function renderKelasTable(){
     });
   });
 
+  updateHeaderLine();
+
   tbody.querySelectorAll('button[data-act="switch"]').forEach(b=>{
     b.addEventListener('click', ()=> setActiveKelas(b.dataset.id));
   });
@@ -1712,6 +1723,7 @@ function setActiveKelas(id){
   caturMetaCard.style.display = '';
   subjectsCard.style.display = '';
   tieBreakCard.style.display = '';
+  updateHeaderLine();
   attachDataListeners();
   attachCaturListeners();
   checkLegacyScores();
@@ -1854,9 +1866,20 @@ function switchCatur(catur){
 
 
 function updateHeaderLine(){
-  // Header dibuat umum (tidak menampilkan kelas/catur wulan yang sedang dibuka).
-  // Kelas yang aktif ditampilkan & dipilih di tab "Kelas".
+  // Header dibuat umum (tidak menampilkan detail nilai/absensi).
+  // Kelas & tahun ajaran yang sedang aktif ditampilkan sebagai badge di header, dan bisa diganti di tab "Kelas".
   document.getElementById('schoolLine').textContent = 'Yayasan Pendidikan Islam Al-Hidayah — Yapida — realtime';
+  const badge = document.getElementById('activeKelasBadge');
+  const text = document.getElementById('activeKelasText');
+  if(!badge || !text) return;
+  const k = activeKelasId ? state.kelasList[activeKelasId] : null;
+  if(k){
+    const tahunLabel = kelasGroupLabel(k);
+    text.textContent = `Kelas Aktif: ${k.tingkatan||''} ${k.kelasNama||''}${tahunLabel!=='Tanpa Tahun Ajaran' ? (' — '+tahunLabel) : ''}`;
+    badge.style.display = '';
+  } else {
+    badge.style.display = 'none';
+  }
 }
 
 /* ===================== Identitas / Meta ===================== */
