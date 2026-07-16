@@ -2010,7 +2010,7 @@ document.getElementById('btnBackupExcel').addEventListener('click', async ()=>{
     // --- Sheet: Template Ijazah (ringkasan, bukan detail visual) ---
     const ijzRows = [['Kunci Tingkatan','Nama Madrasah di Template','Ada Bingkai Kustom?','Jumlah Field Materi Tambahan']];
     Object.entries(ijazahTemplates).forEach(([key,t])=>{
-      ijzRows.push([key, t.namaMadrasah||t.lembaga||'', t.customBorder?'Ya':'Tidak', (t.materiTambahan? t.materiTambahan.split(',').length : 0)]);
+      ijzRows.push([key, t.namaMadrasah||t.lembaga||'', t.customBorder?'Ya':'Tidak', (Array.isArray(t.materiTambahan) ? t.materiTambahan.length : (t.materiTambahan ? String(t.materiTambahan).split(',').length : 0))]);
     });
     XLSX.utils.book_append_sheet(wb, sheetFromAOA(ijzRows, [18,30,18,26]), 'Template Ijazah (ringkasan)');
 
