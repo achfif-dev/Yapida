@@ -1238,13 +1238,37 @@ function userChip(user){
   return `<span class="userchip">${photo}<span>${escapeHtml(user.displayName||user.email||'')}</span><button type="button" id="btnLogoutChip">Keluar</button></span>`;
 }
 
-auth.onAuthStateChanged(user=>{
+// Cek apakah akun yang baru login benar-benar diizinkan oleh Database Rules
+// (rules membatasi berdasarkan email — "auth != null" saja tidak cukup, jadi di sini
+// dicoba baca data ringan; kalau ditolak (PERMISSION_DENIED) berarti email belum terdaftar).
+async function cekAksesDiizinkan(){
+  try{
+    await firebase.database().ref('rapor/kelasList').limitToFirst(1).once('value');
+    return true;
+  }catch(e){
+    console.error('Cek akses gagal:', e);
+    return false;
+  }
+}
+
+auth.onAuthStateChanged(async user=>{
   const loginGate = document.getElementById('loginGate');
   const appContent = document.getElementById('appContent');
   const tabsBar = document.getElementById('tabsBar');
   const chipWrap = document.getElementById('userChipWrap');
+  const loginErr = document.getElementById('loginErr');
 
   if(user){
+    // Jangan langsung tampilkan konten — pastikan dulu akun ini lolos Database Rules,
+    // supaya akun Google yang tidak terdaftar tidak sempat melihat data sama sekali.
+    loginErr.textContent = 'Memeriksa akses akun…';
+    const diizinkan = await cekAksesDiizinkan();
+    if(!diizinkan){
+      loginErr.textContent = `Akun "${user.email||''}" belum terdaftar sebagai pengguna aplikasi ini. Hubungi admin database untuk didaftarkan, lalu coba masuk lagi.`;
+      await auth.signOut();
+      return; // onAuthStateChanged akan terpanggil ulang dengan user=null dan membersihkan tampilan
+    }
+    loginErr.textContent = '';
     loginGate.style.display = 'none';
     appContent.style.display = '';
     tabsBar.style.display = '';
