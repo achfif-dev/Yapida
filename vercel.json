@@ -1,4 +1,7 @@
 {
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/__/auth/:path*", "destination": "https://database-yapida-app.firebaseapp.com/__/auth/:path*" }
+  ]
 }
