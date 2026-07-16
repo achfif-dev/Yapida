@@ -149,8 +149,11 @@
   .certframe .addr{text-align:center; font-size:12px; color:#6b6656;}
   .certframe .meta{display:flex; justify-content:center; gap:18px; font-size:12px; margin-top:8px; flex-wrap:wrap;}
   .nilaiMerah{color:var(--danger); font-weight:700;}
+  .rankPrint{display:none;}
 
   @media print{
+    .rankInput{display:none !important;}
+    .rankPrint{display:inline !important;}
     @page{ size: A4 landscape; margin: 8mm; }
     .topbar,.tabs,.noprint{display:none !important;}
     body{background:#fff;}
@@ -542,7 +545,7 @@
 
     <div class="card" id="tieBreakCard" style="display:none;">
       <h2>Mapel Prioritas untuk Peringkat Sama</h2>
-      <p class="hint">Jika ada dua siswa dengan nilai bersih yang sama, aplikasi akan membandingkan nilai asli mapel di bawah ini secara berurutan (mapel pertama dicek dulu) untuk menentukan siapa peringkat lebih tinggi. Contoh: dua siswa sama-sama peringkat 5 → dibandingkan mapel prioritas pertama, siapa lebih tinggi jadi peringkat 5, satunya peringkat 6.</p>
+      <p class="hint">Jika ada dua siswa dengan nilai bersih yang sama, aplikasi akan membandingkan nilai asli mapel di bawah ini secara berurutan (mapel pertama dicek dulu) untuk menentukan siapa peringkat lebih tinggi. Contoh: dua siswa sama-sama peringkat 5 → dibandingkan mapel prioritas pertama, siapa lebih tinggi jadi peringkat 5, satunya peringkat 6. Guru tetap bisa mengedit langsung angka Peringkat di tabel Rekap (kolom Rank) untuk siswa yang peringkatnya sama — nilai yang diedit manual akan dipakai apa adanya, tanpa memandang urutan Mapel Prioritas di atas. Kosongkan lagi kolom tersebut untuk kembali ke perhitungan otomatis.</p>
       <div class="row">
         <div class="field">
           <label>Tambah mapel prioritas</label>
@@ -758,7 +761,11 @@
           <div class="field"><label>Sakit</label><input id="absSakit" type="number" min="0"></div>
           <div class="field"><label>Ijin</label><input id="absIjin" type="number" min="0"></div>
           <div class="field"><label>Alpa</label><input id="absAlpa" type="number" min="0"></div>
-          <div class="field"><label>Pengurangan Nilai karena Absen</label><input id="absPotongan" type="number" min="0"></div>
+        </div>
+        <p class="hint">Pengurangan nilai dihitung otomatis: Nilai Asli −10 tiap kelipatan 3 Alpa &amp; −10 tiap kelipatan 5 Ijin. Nilai Raport −1 tiap kelipatan 3 Alpa &amp; −1 tiap kelipatan 5 Ijin. Sakit tidak mengurangi nilai apapun.</p>
+        <div class="row">
+          <div class="field"><label>Pengurangan Nilai Asli (otomatis)</label><input id="absPotongan" type="number" min="0" readonly disabled></div>
+          <div class="field"><label>Pengurangan Nilai Raport (otomatis)</label><input id="absPotonganRaport" type="number" min="0" readonly disabled></div>
         </div>
 
         <h3>Sikap</h3>
@@ -1121,7 +1128,9 @@ let state = {
   subjects: DEFAULT_SUBJECTS.slice(),
   students: {},   // id -> {no}  (enrollment/urutan siswa DI KELAS AKTIF SAJA)
   studentsMaster: {}, // id -> {nama, nisn, nis, jk, ..., kelasAktifId, riwayatKelas:{kelasId:{no,tingkatan,kelasNama,tahun,tanggal}}} — database murid, tidak terikat satu kelas
-  scores: {},     // id -> {mapel:{...}, absen:{sakit,ijin,alpa}, potongan, sikap:{...}} — HANYA utk Catur Wulan aktif (dataRoot('scores/'+activeCatur))
+  scores: {},     // id -> {mapel:{...}, absen:{sakit,ijin,alpa}, potongan, potonganRaport, peringkatManual, sikap:{...}} — HANYA utk Catur Wulan aktif (dataRoot('scores/'+activeCatur))
+                   // potongan & potonganRaport dihitung otomatis dari absen (lihat hitungPotonganAbsen), disimpan hanya sebagai arsip.
+                   // peringkatManual: override peringkat oleh guru untuk kasus nilai bersih sama (null = pakai perhitungan otomatis).
   absensi: {},     // tanggal -> { studentId -> 'H'|'S'|'I'|'A' } — menyatu sepanjang tahun ajaran
   tieBreak: [],    // array mapel, urutan prioritas untuk memecah peringkat yang sama
   ijazahUmum: {},  // data umum ijazah kelas aktif: {noAwal, dariH, dariM, sampaiH, sampaiM, tempat, terbitH, terbitM}
@@ -3001,25 +3010,42 @@ function renderInputForm(){
   document.getElementById('absSakit').value = sc.absen?.sakit ?? '';
   document.getElementById('absIjin').value = sc.absen?.ijin ?? '';
   document.getElementById('absAlpa').value = sc.absen?.alpa ?? '';
-  document.getElementById('absPotongan').value = sc.potongan ?? '';
   document.getElementById('sikapKelakuan').value = sc.sikap?.kelakuan ?? '';
   document.getElementById('sikapKerajinan').value = sc.sikap?.kerajinan ?? '';
   document.getElementById('sikapKebersihan').value = sc.sikap?.kebersihan ?? '';
 
   updateLiveCalc();
   wrap.querySelectorAll('input').forEach(inp=> inp.addEventListener('input', updateLiveCalc));
-  document.getElementById('absPotongan').addEventListener('input', updateLiveCalc);
+  ['absSakit','absIjin','absAlpa'].forEach(fid=> document.getElementById(fid).addEventListener('input', updateLiveCalc));
+}
+
+// Rumus pengurangan nilai karena absensi (Sakit tidak mengurangi apapun):
+//  - Nilai Asli   : −10 tiap kelipatan 3 Alpa, −10 tiap kelipatan 5 Ijin
+//  - Nilai Raport : −1  tiap kelipatan 3 Alpa, −1  tiap kelipatan 5 Ijin
+function hitungPotonganAbsen(absen){
+  const alpa = Number(absen?.alpa||0);
+  const ijin = Number(absen?.ijin||0);
+  const asli = Math.floor(alpa/3)*10 + Math.floor(ijin/5)*10;
+  const raport = Math.floor(alpa/3)*1 + Math.floor(ijin/5)*1;
+  return { asli, raport };
 }
 
 function updateLiveCalc(){
   const wrap = document.getElementById('subjectInputs');
   let total = 0;
   wrap.querySelectorAll('input').forEach(inp=> total += Number(inp.value||0));
-  const potongan = Number(document.getElementById('absPotongan').value||0);
-  const bersih = total - potongan;
+  const absen = {
+    sakit: Number(document.getElementById('absSakit').value||0),
+    ijin: Number(document.getElementById('absIjin').value||0),
+    alpa: Number(document.getElementById('absAlpa').value||0),
+  };
+  const pot = hitungPotonganAbsen(absen);
+  document.getElementById('absPotongan').value = pot.asli;
+  document.getElementById('absPotonganRaport').value = pot.raport;
+  const bersih = total - pot.asli;
   const rata = state.subjects.length ? (bersih / state.subjects.length) : 0;
   document.getElementById('liveCalc').textContent =
-    `Jumlah: ${total} · Dikurangi absen: ${potongan} · Bersih: ${bersih} · Rata-rata: ${rata.toFixed(2)}`;
+    `Jumlah: ${total} · Dikurangi absen (Asli): ${pot.asli} · Bersih: ${bersih} · Rata-rata: ${rata.toFixed(2)} · Dikurangi absen (Raport): ${pot.raport}`;
 }
 
 document.getElementById('btnSaveScore').addEventListener('click', ()=>{
@@ -3029,14 +3055,19 @@ document.getElementById('btnSaveScore').addEventListener('click', ()=>{
   document.querySelectorAll('#subjectInputs input').forEach(inp=>{
     mapel[inp.dataset.subj] = Number(inp.value||0);
   });
+  const absen = {
+    sakit: Number(document.getElementById('absSakit').value||0),
+    ijin: Number(document.getElementById('absIjin').value||0),
+    alpa: Number(document.getElementById('absAlpa').value||0),
+  };
+  const pot = hitungPotonganAbsen(absen);
+  const existing = state.scores[id] || {};
   const payload = {
     mapel,
-    absen: {
-      sakit: Number(document.getElementById('absSakit').value||0),
-      ijin: Number(document.getElementById('absIjin').value||0),
-      alpa: Number(document.getElementById('absAlpa').value||0),
-    },
-    potongan: Number(document.getElementById('absPotongan').value||0),
+    absen,
+    potongan: pot.asli,
+    potonganRaport: pot.raport,
+    peringkatManual: (existing.peringkatManual!=null) ? existing.peringkatManual : null,
     sikap: {
       kelakuan: document.getElementById('sikapKelakuan').value.trim(),
       kerajinan: document.getElementById('sikapKerajinan').value.trim(),
@@ -3554,12 +3585,24 @@ function rankRows(rows, subjects){
   }
   const sorted = rows.slice().sort(compareRows);
   sorted.forEach((r,i)=>{
-    if(i===0){ r.peringkat = 1; r.peringkatTie = false; }
+    if(i===0){ r.peringkatAuto = 1; r.peringkatTie = false; }
     else {
       const prev = sorted[i-1];
       const cmp = compareRows(prev, r);
-      r.peringkat = (cmp===0) ? prev.peringkat : (i+1);
+      r.peringkatAuto = (cmp===0) ? prev.peringkatAuto : (i+1);
       r.peringkatTie = (cmp===0) && (prev.bersih===r.bersih);
+    }
+  });
+  // Guru bisa mengedit peringkat sendiri untuk kasus nilai bersih sama (atau kasus lain),
+  // tanpa memandang urutan Mapel Prioritas — override ini dipakai apa adanya jika terisi.
+  rows.forEach(r=>{
+    const manual = r.peringkatManual;
+    if(manual!=null && manual!=='' && !isNaN(manual)){
+      r.peringkat = Number(manual);
+      r.peringkatOverride = true;
+    } else {
+      r.peringkat = r.peringkatAuto;
+      r.peringkatOverride = false;
     }
   });
   return rows;
@@ -3575,14 +3618,21 @@ function computeAll(scoresMap){
     const mapel = sc.mapel || {};
     const nilaiAsli = state.subjects.map(s=> Number(mapel[s]||0));
     const jumlah = nilaiAsli.reduce((a,b)=>a+b,0);            // U
-    const potongan = Number(sc.potongan||0);                   // V
+    const pot = hitungPotonganAbsen(sc.absen||{});
+    const potongan = pot.asli;                                  // V — otomatis dari absen
     const bersih = jumlah - potongan;                           // W
     const rata = state.subjects.length ? bersih/state.subjects.length : 0; // X
     const raport = nilaiAsli.map(toRaportValue);
+    const raportJumlah = raport.reduce((a,b)=>a+b,0);
+    const potonganRaport = pot.raport;                          // otomatis dari absen
+    const raportBersih = raportJumlah - potonganRaport;
+    const raportRata = state.subjects.length ? raportBersih/state.subjects.length : 0;
     return {
       id: st.id, no: st.no, nama: st.nama,
       nilaiAsli, raport, jumlah, potongan, bersih, rata,
-      absen: sc.absen||{}, sikap: sc.sikap||{}
+      raportJumlah, potonganRaport, raportBersih, raportRata,
+      absen: sc.absen||{}, sikap: sc.sikap||{},
+      peringkatManual: (sc.peringkatManual!=null && sc.peringkatManual!=='') ? Number(sc.peringkatManual) : null
     };
   });
   return rankRows(rows, state.subjects);
@@ -3590,7 +3640,9 @@ function computeAll(scoresMap){
 
 // Menggabungkan nilai 3 Catur Wulan jadi satu nilai akhir per siswa per mapel (rata-rata dari
 // catur wulan yang punya data), lalu diranking ulang — untuk rekap akhir tahun.
-function computeCombined(scoresByC){
+// overrideMap opsional: {studentId -> peringkat manual} khusus rekap gabungan (dataRoot('rankOverrideGabungan')).
+function computeCombined(scoresByC, overrideMap){
+  const ov = overrideMap || {};
   const subjects = state.subjects;
   const students = orderedStudents();
   const rows = students.map(st=>{
@@ -3603,20 +3655,27 @@ function computeCombined(scoresByC){
     });
     const nilaiAsli = subjects.map(s=> mapel[s]);
     const jumlah = nilaiAsli.reduce((a,b)=>a+b,0);
-    const potongan = layers.reduce((a,l)=> a+Number(l.potongan||0), 0);
+    const potongan = layers.reduce((a,l)=> a + hitungPotonganAbsen(l.absen||{}).asli, 0);
     const bersih = jumlah - potongan;
     const rata = subjects.length ? bersih/subjects.length : 0;
     const raport = nilaiAsli.map(toRaportValue);
+    const raportJumlah = raport.reduce((a,b)=>a+b,0);
+    const potonganRaport = layers.reduce((a,l)=> a + hitungPotonganAbsen(l.absen||{}).raport, 0);
+    const raportBersih = raportJumlah - potonganRaport;
+    const raportRata = subjects.length ? raportBersih/subjects.length : 0;
     const absen = {
       sakit: layers.reduce((a,l)=>a+Number((l.absen||{}).sakit||0),0),
       ijin: layers.reduce((a,l)=>a+Number((l.absen||{}).ijin||0),0),
       alpa: layers.reduce((a,l)=>a+Number((l.absen||{}).alpa||0),0),
     };
     const sikapSrc = (scoresByC.cw3||{})[st.id]?.sikap || (scoresByC.cw2||{})[st.id]?.sikap || (scoresByC.cw1||{})[st.id]?.sikap || {};
+    const manual = ov[st.id];
     return {
       id: st.id, no: st.no, nama: st.nama,
       nilaiAsli, raport, jumlah, potongan, bersih, rata,
-      absen, sikap: sikapSrc, caturTerisi: layers.length
+      raportJumlah, potonganRaport, raportBersih, raportRata,
+      absen, sikap: sikapSrc, caturTerisi: layers.length,
+      peringkatManual: (manual!=null && manual!=='') ? Number(manual) : null
     };
   });
   return rankRows(rows, subjects);
@@ -3646,16 +3705,31 @@ function renderRekap(){
   tAsli.querySelector('tbody').innerHTML = rows.length ? rows.map(r=>
     `<tr><td>${r.no}</td><td class="name">${escapeHtml(r.nama)}</td>` +
     r.nilaiAsli.map(v=>`<td class="num${Number(v)<=54?' nilaiMerah':''}">${v}</td>`).join('') +
-    `<td class="num">${r.jumlah}</td><td class="num">${r.potongan}</td><td class="num">${r.bersih}</td><td class="num">${r.rata.toFixed(2)}</td><td class="num">${r.peringkat}${r.peringkatTie?' <span class="hint" title="Nilai bersih sama, belum ada mapel prioritas yang membedakan">*</span>':''}</td></tr>`
+    `<td class="num">${r.jumlah}</td><td class="num">${r.potongan}</td><td class="num">${r.bersih}</td><td class="num">${r.rata.toFixed(2)}</td>` +
+    `<td class="num">` +
+      `<input type="number" class="rankInput noprint" data-id="${r.id}" value="${r.peringkat}" style="width:48px;text-align:center;padding:3px;">` +
+      `<span class="rankPrint">${r.peringkat}${r.peringkatOverride?' ✎':(r.peringkatTie?' *':'')}</span>` +
+      `${r.peringkatOverride?' <span class="hint noprint" title="Peringkat diedit manual oleh guru">✎</span>':(r.peringkatTie?' <span class="hint noprint" title="Nilai bersih sama, belum ada mapel prioritas yang membedakan">*</span>':'')}` +
+    `</td></tr>`
   ).join('') : '';
+  tAsli.querySelectorAll('input.rankInput').forEach(inp=>{
+    inp.addEventListener('change', ()=>{
+      const id = inp.dataset.id;
+      const v = inp.value.trim();
+      dataRoot('scores/'+activeCatur+'/'+id).update({ peringkatManual: (v===''? null : Number(v)) })
+        .then(()=> toast(v===''?'Peringkat dikembalikan ke otomatis':'Peringkat manual disimpan'));
+    });
+  });
 
   const tRap = document.getElementById('tblRaport');
   tRap.querySelector('thead').innerHTML = '<tr><th>No</th><th style="text-align:left;">Nama</th>' +
     subjects.map(s=>`<th>${escapeHtml(s)}</th>`).join('') +
+    '<th>Jml</th><th>Absen</th><th>Bersih</th>' +
     '<th>Kelakuan</th><th>Kerajinan</th><th>Kebersihan</th><th>Sakit</th><th>Ijin</th><th>Alpa</th></tr>';
   tRap.querySelector('tbody').innerHTML = rows.length ? rows.map(r=>
     `<tr><td>${r.no}</td><td class="name">${escapeHtml(r.nama)}</td>` +
     r.raport.map(v=>`<td class="num${Number(v)<=5?' nilaiMerah':''}">${v}</td>`).join('') +
+    `<td class="num">${r.raportJumlah}</td><td class="num">${r.potonganRaport}</td><td class="num">${r.raportBersih}</td>` +
     `<td>${escapeHtml(r.sikap.kelakuan||'')}</td><td>${escapeHtml(r.sikap.kerajinan||'')}</td><td>${escapeHtml(r.sikap.kebersihan||'')}</td>` +
     `<td class="num">${r.absen.sakit||0}</td><td class="num">${r.absen.ijin||0}</td><td class="num">${r.absen.alpa||0}</td></tr>`
   ).join('') : '';
@@ -3698,9 +3772,9 @@ document.getElementById('btnExportRekap').addEventListener('click', ()=>{
   rows.forEach(r=> asliRows.push([r.no, r.nama, ...r.nilaiAsli, r.jumlah, r.potongan, r.bersih, Number(r.rata.toFixed(2)), r.peringkat]));
   XLSX.utils.book_append_sheet(wb, sheetFromAOA(asliRows, [4,22,...subjects.map(()=>10),8,8,8,8,10]), 'Nilai Asli');
 
-  const rapRows = [['No','Nama', ...subjects, 'Kelakuan','Kerajinan','Kebersihan','Sakit','Ijin','Alpa']];
-  rows.forEach(r=> rapRows.push([r.no, r.nama, ...r.raport, r.sikap.kelakuan||'', r.sikap.kerajinan||'', r.sikap.kebersihan||'', r.absen.sakit||0, r.absen.ijin||0, r.absen.alpa||0]));
-  XLSX.utils.book_append_sheet(wb, sheetFromAOA(rapRows, [4,22,...subjects.map(()=>8),10,10,10,8,8,8]), 'Nilai Raport');
+  const rapRows = [['No','Nama', ...subjects, 'Jml','Absen','Bersih', 'Kelakuan','Kerajinan','Kebersihan','Sakit','Ijin','Alpa']];
+  rows.forEach(r=> rapRows.push([r.no, r.nama, ...r.raport, r.raportJumlah, r.potonganRaport, r.raportBersih, r.sikap.kelakuan||'', r.sikap.kerajinan||'', r.sikap.kebersihan||'', r.absen.sakit||0, r.absen.ijin||0, r.absen.alpa||0]));
+  XLSX.utils.book_append_sheet(wb, sheetFromAOA(rapRows, [4,22,...subjects.map(()=>8),8,8,8,10,10,10,8,8,8]), 'Nilai Raport');
 
   const sums = subjects.map((_,i)=> rows.reduce((a,r)=>a+r.nilaiAsli[i],0));
   const avgs = sums.map(s=> Number((s/rows.length).toFixed(2)));
@@ -3713,15 +3787,22 @@ document.getElementById('btnExportRekap').addEventListener('click', ()=>{
 
 /* ===================== Rekap Akhir Tahun (Gabungan CW1+CW2+CW3) ===================== */
 let rekapGabunganRows = null;
+let gabunganScoresByC = null;
+let gabunganOverride = {};
 document.getElementById('btnMuatRekapGabungan').addEventListener('click', async ()=>{
   if(!activeKelasId){ toast('Pilih/buat kelas dulu'); return; }
   const area = document.getElementById('rekapGabunganArea');
   area.innerHTML = '<div class="hint">Memuat nilai 3 catur wulan…</div>';
   try{
-    const snaps = await Promise.all(CATUR_KEYS.map(cw=> dataRoot('scores/'+cw).get()));
+    const [snaps, ovSnap] = await Promise.all([
+      Promise.all(CATUR_KEYS.map(cw=> dataRoot('scores/'+cw).get())),
+      dataRoot('rankOverrideGabungan').get()
+    ]);
     const scoresByC = {};
     CATUR_KEYS.forEach((cw,i)=> scoresByC[cw] = snaps[i].val() || {});
-    rekapGabunganRows = computeCombined(scoresByC);
+    gabunganScoresByC = scoresByC;
+    gabunganOverride = ovSnap.val() || {};
+    rekapGabunganRows = computeCombined(scoresByC, gabunganOverride);
     renderRekapGabungan(rekapGabunganRows, scoresByC);
     document.getElementById('btnExportRekapGabungan').style.display = '';
     document.getElementById('btnPrintRekapGabungan').style.display = '';
@@ -3747,7 +3828,13 @@ function renderRekapGabungan(rows, scoresByC){
   const body = rows.map(r=>
     `<tr><td>${r.no}</td><td class="name">${escapeHtml(r.nama)}</td>` +
     r.nilaiAsli.map(v=>`<td class="num${Number(v)<=54?' nilaiMerah':''}">${v.toFixed(1)}</td>`).join('') +
-    `<td class="num">${r.jumlah.toFixed(1)}</td><td class="num">${r.potongan}</td><td class="num">${r.bersih.toFixed(1)}</td><td class="num">${r.rata.toFixed(2)}</td><td class="num">${r.peringkat}${r.peringkatTie?' <span class="hint" title="Nilai bersih sama, belum ada mapel prioritas yang membedakan">*</span>':''}</td><td class="num">${r.caturTerisi}/3</td></tr>`
+    `<td class="num">${r.jumlah.toFixed(1)}</td><td class="num">${r.potongan}</td><td class="num">${r.bersih.toFixed(1)}</td><td class="num">${r.rata.toFixed(2)}</td>` +
+    `<td class="num">` +
+      `<input type="number" class="rankInputGab noprint" data-id="${r.id}" value="${r.peringkat}" style="width:48px;text-align:center;padding:3px;">` +
+      `<span class="rankPrint">${r.peringkat}${r.peringkatOverride?' ✎':(r.peringkatTie?' *':'')}</span>` +
+      `${r.peringkatOverride?' <span class="hint noprint" title="Peringkat diedit manual oleh guru">✎</span>':(r.peringkatTie?' <span class="hint noprint" title="Nilai bersih sama, belum ada mapel prioritas yang membedakan">*</span>':'')}` +
+    `</td>` +
+    `<td class="num">${r.caturTerisi}/3</td></tr>`
   ).join('');
   area.innerHTML = `
     <div class="certframe">
@@ -3763,8 +3850,20 @@ function renderRekapGabungan(rows, scoresByC){
       </div>
     </div>
     <div class="tablewrap"><table><thead>${head}</thead><tbody>${body}</tbody></table></div>
-    <p class="hint">Kolom "CW Terisi" menunjukkan dari berapa catur wulan nilai siswa tsb dirata-rata — kalau belum 3/3, rekap ini masih sementara.</p>
+    <p class="hint">Kolom "CW Terisi" menunjukkan dari berapa catur wulan nilai siswa tsb dirata-rata — kalau belum 3/3, rekap ini masih sementara. Kolom "Rank" bisa diedit langsung oleh guru untuk siswa yang nilai bersihnya sama; kosongkan untuk kembali ke perhitungan otomatis.</p>
   `;
+  area.querySelectorAll('input.rankInputGab').forEach(inp=>{
+    inp.addEventListener('change', ()=>{
+      const id = inp.dataset.id;
+      const v = inp.value.trim();
+      gabunganOverride[id] = (v===''? null : Number(v));
+      dataRoot('rankOverrideGabungan/'+id).set(v===''?null:Number(v)).then(()=>{
+        rekapGabunganRows = computeCombined(gabunganScoresByC, gabunganOverride);
+        renderRekapGabungan(rekapGabunganRows, gabunganScoresByC);
+        toast(v===''?'Peringkat gabungan dikembalikan ke otomatis':'Peringkat gabungan manual disimpan');
+      });
+    });
+  });
 }
 
 document.getElementById('btnExportRekapGabungan').addEventListener('click', ()=>{
@@ -3772,9 +3871,9 @@ document.getElementById('btnExportRekapGabungan').addEventListener('click', ()=>
   const subjects = state.subjects;
   const rows = rekapGabunganRows;
   const wb = XLSX.utils.book_new();
-  const asliRows = [['No','Nama', ...subjects, 'Jml','Absen','Bersih','Rata²','Peringkat','CW Terisi']];
-  rows.forEach(r=> asliRows.push([r.no, r.nama, ...r.nilaiAsli.map(v=>Number(v.toFixed(2))), Number(r.jumlah.toFixed(2)), r.potongan, Number(r.bersih.toFixed(2)), Number(r.rata.toFixed(2)), r.peringkat, r.caturTerisi+'/3']));
-  XLSX.utils.book_append_sheet(wb, sheetFromAOA(asliRows, [4,22,...subjects.map(()=>10),8,8,8,8,10,8]), 'Rekap Gabungan');
+  const asliRows = [['No','Nama', ...subjects, 'Jml','Absen','Bersih','Rata²','Peringkat','CW Terisi','Raport Jml','Raport Absen','Raport Bersih']];
+  rows.forEach(r=> asliRows.push([r.no, r.nama, ...r.nilaiAsli.map(v=>Number(v.toFixed(2))), Number(r.jumlah.toFixed(2)), r.potongan, Number(r.bersih.toFixed(2)), Number(r.rata.toFixed(2)), r.peringkat, r.caturTerisi+'/3', r.raportJumlah, r.potonganRaport, r.raportBersih]));
+  XLSX.utils.book_append_sheet(wb, sheetFromAOA(asliRows, [4,22,...subjects.map(()=>10),8,8,8,8,10,8,10,10,10]), 'Rekap Gabungan');
   downloadWorkbook(wb, `rekap-akhir-tahun-${kelasFileTag()}.xlsx`);
 });
 
@@ -3822,11 +3921,16 @@ document.getElementById('btnBuildCard').addEventListener('click', ()=>{
         </table>
       </div>
       <div class="row" style="margin-top:12px;">
-        <div class="field"><label>Jumlah Nilai</label><div class="num">${r.jumlah}</div></div>
-        <div class="field"><label>Dikurangi Absen</label><div class="num">${r.potongan}</div></div>
+        <div class="field"><label>Jumlah Nilai Asli</label><div class="num">${r.jumlah}</div></div>
+        <div class="field"><label>Dikurangi Absen (Asli)</label><div class="num">${r.potongan}</div></div>
         <div class="field"><label>Jumlah Bersih</label><div class="num">${r.bersih}</div></div>
         <div class="field"><label>Rata-rata</label><div class="num">${r.rata.toFixed(2)}</div></div>
-        <div class="field"><label>Peringkat</label><div class="num">${r.peringkat}</div></div>
+        <div class="field"><label>Peringkat</label><div class="num">${r.peringkat}${r.peringkatOverride?' ✎':''}</div></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Jumlah Nilai Raport</label><div class="num">${r.raportJumlah}</div></div>
+        <div class="field"><label>Dikurangi Absen (Raport)</label><div class="num">${r.potonganRaport}</div></div>
+        <div class="field"><label>Raport Bersih</label><div class="num">${r.raportBersih}</div></div>
       </div>
       <div class="row">
         <div class="field"><label>Kelakuan</label><div>${escapeHtml(r.sikap.kelakuan||'-')}</div></div>
