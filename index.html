@@ -2320,6 +2320,8 @@ function renderSubjectList(){
   });
   wrap.querySelectorAll('button.danger').forEach(btn=>{
     btn.addEventListener('click', ()=>{
+      const namaMapel = state.subjects[Number(btn.dataset.idx)] || '';
+      if(!confirm(`Hapus mapel "${namaMapel}" dari daftar? Nilai mapel ini yang sudah tersimpan untuk siswa TIDAK otomatis terhapus, tapi kolomnya tidak akan tampil lagi sampai mapel ditambahkan ulang. Jangan lupa klik "Simpan Daftar Mapel" setelah ini.`)) return;
       state.subjects.splice(Number(btn.dataset.idx), 1);
       renderSubjectList();
     });
@@ -2375,7 +2377,10 @@ function renderTieBreakList(){
       const i = Number(btn.dataset.idx);
       if(btn.dataset.act==='up' && i>0){ [state.tieBreak[i-1],state.tieBreak[i]]=[state.tieBreak[i],state.tieBreak[i-1]]; }
       if(btn.dataset.act==='down' && i<state.tieBreak.length-1){ [state.tieBreak[i+1],state.tieBreak[i]]=[state.tieBreak[i],state.tieBreak[i+1]]; }
-      if(btn.dataset.act==='rm'){ state.tieBreak.splice(i,1); }
+      if(btn.dataset.act==='rm'){
+        if(!confirm(`Hapus "${escapeHtml(state.tieBreak[i]||'')}" dari urutan mapel prioritas? Jangan lupa klik "Simpan Urutan Prioritas" setelah ini.`)) return;
+        state.tieBreak.splice(i,1);
+      }
       renderTieBreakList();
     });
   });
@@ -3934,6 +3939,7 @@ document.getElementById('tplBorderFile').addEventListener('change', async (e)=>{
   catch(err){ console.error(err); toast('Gagal membaca gambar bingkai'); }
 });
 document.getElementById('btnClearBorder').addEventListener('click', ()=>{
+  if(!confirm('Hapus bingkai kustom dari template ini? Jangan lupa klik "Simpan Template" setelah ini agar perubahan tersimpan.')) return;
   ijzPendingBorder = '';
   toast('Bingkai akan dihapus — klik "Simpan Template"');
 });
