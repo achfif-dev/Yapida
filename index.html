@@ -468,7 +468,7 @@
         <div class="field" style="flex:2;">
           <label>Copy Format dari Kelas Tahun Sebelumnya (opsional)</label>
           <select id="copySubjectsFrom"><option value="">— jangan salin, isi manual —</option></select>
-          <p class="hint" style="margin:4px 0 0;">Otomatis mengisi Tingkatan &amp; Nama/Nomor Kelas dari kelas yang dipilih (tinggal ganti Tahun Ajaran ke yang baru), dan menyalin daftar mapelnya. Cocok dipakai saat membuat kelas untuk tahun pelajaran berikutnya dengan format yang sama.</p>
+          <p class="hint" style="margin:4px 0 0;">Otomatis mengisi Tingkatan, Nama/Nomor Kelas, dan <strong>Tahun Ajaran (dimajukan +1 tahun otomatis)</strong> dari kelas yang dipilih, dan menyalin daftar mapelnya. Cocok dipakai saat membuat kelas untuk tahun pelajaran berikutnya dengan format yang sama — tetap cek dulu Tahun Ajarannya sebelum simpan.</p>
         </div>
       </div>
       <div class="btnrow">
@@ -636,6 +636,7 @@
       <h2>Kenaikan / Pindah Kelas</h2>
       <p class="hint">Saat naik tahun ajaran / naik kelas, gunakan ini untuk memindahkan siswa dari kelas aktif ke kelas tujuan — bukan hapus &amp; input ulang. Biodata dan semua nilai di kelas-kelas sebelumnya tetap tersimpan dan bisa dilihat lewat "Riwayat Kelas &amp; Nilai" di bawah.</p>
       <p class="hint">Secara default <strong>semua siswa tercentang</strong> (migrasi otomatis semua ke kelas baru). Hilangkan centang pada siswa yang <strong>tidak naik / tinggal kelas</strong> supaya tetap berada di kelas ini.</p>
+      <p class="hint">Daftar "Pindah ke Kelas" di bawah hanya menampilkan kelas dari <strong>tahun ajaran yang sama atau lebih baru</strong> dari kelas aktif — kelas dari tahun ajaran yang sudah lewat otomatis disembunyikan supaya tidak salah pindah ke kelas yang sudah "selesai".</p>
       <div class="row">
         <div class="field"><label>Pindah ke Kelas</label><select id="pindahKelasTujuan"></select></div>
         <div class="field" style="flex:0 0 160px;"><label>No. Urut Mulai Dari</label><input id="pindahNoBaru" type="number" min="1" value="1"></div>
@@ -1800,6 +1801,17 @@ function attachKelasListListener(){
     populateCopySubjectsFrom();
     populatePindahRiwayatSelects();
 
+    // Kelas pertama kali di database ini (belum ada kelas sama sekali): isi bawaan Tahun
+    // Ajaran dengan 1447-1448 H / 2026-2027 M supaya admin tidak perlu ngetik dari nol.
+    // Untuk kelas-kelas selanjutnya, Tahun Ajaran otomatis maju +1 lewat "Copy Format dari
+    // Kelas Tahun Sebelumnya" (lihat nextTahunAjaranString), bukan lewat kode ini lagi.
+    if(!Object.keys(state.kelasList).length && !kelasEditId){
+      const tH = document.getElementById('newTahun');
+      const tM = document.getElementById('newTahunMasehi');
+      if(tH && !tH.value) tH.value = '1447-1448 H';
+      if(tM && !tM.value) tM.value = '2026-2027 M';
+    }
+
     const keys = accessibleKelasIds();
     if(kelasEditId && !state.kelasList[kelasEditId]) resetKelasForm();
     if(activeKelasId && !state.kelasList[activeKelasId]){
@@ -1878,8 +1890,27 @@ document.getElementById('copySubjectsFrom').addEventListener('change', (e)=>{
   if(!k) return;
   document.getElementById('newTingkatan').value = k.tingkatan || 'TPQ';
   document.getElementById('newKelasNama').value = k.kelasNama || '';
-  toast('Nama & mapel disalin — sesuaikan Tahun Ajaran ke tahun yang baru');
+  // Tahun Ajaran otomatis dimajukan +1 dari kelas yang disalin (H & M sama-sama), supaya
+  // tidak perlu ngetik manual tiap bikin kelas untuk tahun ajaran berikutnya.
+  const nextH = nextTahunAjaranString(k.tahun||'');
+  const nextM = nextTahunAjaranString(k.tahunMasehi||'');
+  if(nextH) document.getElementById('newTahun').value = nextH;
+  if(nextM) document.getElementById('newTahunMasehi').value = nextM;
+  toast('Nama, mapel & Tahun Ajaran (otomatis +1 tahun) disalin — cek dulu sebelum simpan');
 });
+
+// Menaikkan 1 tahun dari string Tahun Ajaran, mempertahankan format aslinya apa adanya
+// (pemisah, spasi, akhiran "H"/"M", dsb) — hanya dua angka tahunnya yang ditambah 1.
+// Contoh: "1447-1448 H" -> "1448-1449 H", "2026-2027 M" -> "2027-2028 M".
+function nextTahunAjaranString(s){
+  s = (s||'').trim();
+  if(!s) return '';
+  const m = s.match(/(\d{3,4})(\D+)(\d{3,4})/);
+  if(!m) return s; // format tidak dikenali, biarkan apa adanya supaya tidak merusak isian
+  const a = parseInt(m[1],10) + 1;
+  const b = parseInt(m[3],10) + 1;
+  return s.slice(0, m.index) + a + m[2] + b + s.slice(m.index + m[0].length);
+}
 
 /* ---- Pengelompokan kelas per Tahun Ajaran (untuk grouping & filter) ---- */
 function kelasGroupKey(k){
@@ -2652,9 +2683,16 @@ function populatePindahRiwayatSelects(){
   if(selTujuan){
     const curT = selTujuan.value;
     selTujuan.innerHTML = '<option value="">— pilih kelas tujuan —</option>';
+    // Sembunyikan kelas dari Tahun Ajaran yang LEBIH LAMA dari kelas aktif — kelas tahun lalu
+    // sudah "lulus/selesai" dan tidak masuk akal jadi tujuan pindah/kenaikan kelas. Kelas di
+    // tahun ajaran yang SAMA (mis. pindah ke kelas paralel) atau tahun ajaran BARU (kenaikan
+    // kelas ke tahun depan) tetap muncul seperti biasa.
+    const kelasAktif = state.kelasList[activeKelasId] || {};
+    const tahunAktifNum = kelasGroupYearNum(kelasGroupKey(kelasAktif));
+    const semuaLain = Object.entries(state.kelasList).filter(([id])=> id!==activeKelasId);
+    const kandidat = tahunAktifNum===-1 ? semuaLain : semuaLain.filter(([,k])=> kelasGroupYearNum(kelasGroupKey(k)) >= tahunAktifNum);
     let curGroup = null, groupEl = selTujuan;
-    sortKelasEntries(Object.entries(state.kelasList)).forEach(([id,k])=>{
-      if(id===activeKelasId) return;
+    sortKelasEntries(kandidat).forEach(([id,k])=>{
       const tLabel = k.tingkatan || 'Lainnya';
       if(tLabel !== curGroup){
         curGroup = tLabel;
@@ -2666,7 +2704,10 @@ function populatePindahRiwayatSelects(){
       opt.value = id; opt.textContent = `${k.tingkatan||''} ${k.kelasNama||''}${kelasGroupLabel(k)!=='Tanpa Tahun Ajaran' ? (' — '+kelasGroupLabel(k)) : ''}`;
       groupEl.appendChild(opt);
     });
-    if(curT) selTujuan.value = curT;
+    if(!kandidat.length && semuaLain.length){
+      selTujuan.innerHTML = '<option value="">— tidak ada kelas di tahun ajaran ini/berikutnya —</option>';
+    }
+    if(curT && kandidat.some(([id])=>id===curT)) selTujuan.value = curT;
   }
 
   renderRiwayatKelas();
