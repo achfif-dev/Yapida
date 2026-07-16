@@ -768,7 +768,7 @@
 
     <div class="card" id="cardDaftarUjian">
       <h2 class="noprint">Cetak Daftar Hadir &amp; Nilai Ujian</h2>
-      <p class="hint noprint">Membuat lembar "Daftar Hadir dan Nilai Ujian" per Mata Pelajaran untuk diserahkan ke Mumtahin/penguji saat ujian — No &amp; Nama Murid terisi otomatis dari data siswa kelas ini, kolom Tanda Tangan, Hasil Nilai Ujian, dan Keterangan dikosongkan untuk diisi tangan.</p>
+      <p class="hint noprint">Membuat lembar "Daftar Hadir dan Nilai Ujian" per Mata Pelajaran untuk diserahkan ke Mumtahin/penguji saat ujian — No &amp; Nama Murid terisi otomatis dari data siswa kelas ini, kolom Tanda Tangan, Hasil Nilai Ujian, dan Keterangan dikosongkan untuk diisi tangan. Pilih "— Tanpa Mata Pelajaran —" untuk mencetak lembar kosong (baris Bidang Studi jadi titik-titik) yang bisa difotokopi lalu diisi manual mata pelajarannya oleh Mumtahin.</p>
       <div class="row noprint">
         <div class="field"><label>Mata Pelajaran (Bidang Studi)</label><select id="ujianMapel"></select></div>
         <div class="field"><label>Judul Ujian (Arab)</label><input id="ujianJudulArab" placeholder="cth. الإمتحان الثاني"></div>
@@ -1373,17 +1373,21 @@ function toast(msg){
 }
 
 /* ===================== Tabs ===================== */
+// Simpan tab terakhir yang dibuka supaya saat halaman di-refresh, tampilan tetap
+// berada di tab tsb (tidak balik ke tab "Kelas") — lihat restoreLastTab().
+function saveActiveTab(name){
+  try{ localStorage.setItem('rapor_active_tab', name); }catch(e){}
+}
+function runTabSideEffects(name){
+  if(name==='rekap') renderRekap();
+  if(name==='input'){ renderStudentPicker(); renderTabelMassal(); }
+  if(name==='absensi') renderAbsensiTable();
+  if(name==='ijazah') renderIjazahTab();
+}
 document.querySelectorAll('.tab').forEach(tab=>{
   tab.addEventListener('click', ()=>{
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-    tab.classList.add('active');
-    ['kelas','siswa','absensi','input','rekap','ijazah','akun','pengguna'].forEach(name=>{
-      document.getElementById('tab-'+name).style.display = (name===tab.dataset.tab) ? '' : 'none';
-    });
-    if(tab.dataset.tab==='rekap') renderRekap();
-    if(tab.dataset.tab==='input'){ renderStudentPicker(); renderTabelMassal(); }
-    if(tab.dataset.tab==='absensi') renderAbsensiTable();
-    if(tab.dataset.tab==='ijazah') renderIjazahTab();
+    setTab(tab.dataset.tab);
+    runTabSideEffects(tab.dataset.tab);
   });
 });
 
@@ -1393,6 +1397,36 @@ function setTab(name){
   ['kelas','siswa','absensi','input','rekap','ijazah','akun','pengguna'].forEach(n=>{
     document.getElementById('tab-'+n).style.display = (n===name) ? '' : 'none';
   });
+  saveActiveTab(name);
+}
+// Dipanggil sesudah login (termasuk auto-login sesudah refresh halaman) untuk
+// mengembalikan tampilan ke tab terakhir yang dibuka user, bukan selalu ke tab "Kelas".
+function restoreLastTab(){
+  const validTabs = ['kelas','siswa','absensi','input','rekap','ijazah','akun','pengguna'];
+
+  // Bedakan "baru masuk/login" vs "refresh halaman saat sesi masih berjalan":
+  // - sessionStorage bertahan saat halaman di-refresh (F5 / tombol Refresh header),
+  //   tapi otomatis kosong lagi kalau tab/browser ditutup atau baru logout.
+  // - Kalau flag belum ada -> ini login baru -> paksa ke tab "Kelas" dulu supaya
+  //   kelas yang mau diupdate dipastikan benar sebelum ke tab lain.
+  // - Kalau flag sudah ada -> ini refresh dari sesi yang sama -> kembalikan ke tab terakhir.
+  let isFreshLogin = true;
+  try{ isFreshLogin = sessionStorage.getItem('rapor_session_active') !== '1'; }catch(e){}
+
+  let target = 'kelas';
+  if(!isFreshLogin){
+    try{
+      const saved = localStorage.getItem('rapor_active_tab');
+      if(saved && validTabs.includes(saved)) target = saved;
+    }catch(e){}
+  }
+  // Tab "Pengguna" hanya untuk yang berwenang kelola akun — kalau tidak berhak, jangan
+  // macet di tab ini (mis. akun Guru biasa yang terakhir kali dipakai oleh Admin).
+  if(target==='pengguna' && !canManageUsers()) target = 'kelas';
+  setTab(target);
+  runTabSideEffects(target);
+
+  try{ sessionStorage.setItem('rapor_session_active', '1'); }catch(e){}
 }
 
 document.getElementById('btnGoogleLogin').addEventListener('click', ()=>{
@@ -1606,9 +1640,9 @@ auth.onAuthStateChanged(async user=>{
     }
     attachPresence(user);
     attachPresenceListener();
-    setTab('kelas');
     initFirebase();
     applyRoleUI();
+    restoreLastTab();
   } else {
     loginGate.style.display = '';
     viewerWait.style.display = 'none';
@@ -1628,6 +1662,7 @@ auth.onAuthStateChanged(async user=>{
     currentUserProfile = null;
     state.studentsMaster = {};
     db = null; activeKelasId = null;
+    try{ sessionStorage.removeItem('rapor_session_active'); }catch(e){}
     document.getElementById('connDot').classList.add('off');
     document.getElementById('connText').textContent = 'Belum masuk';
   }
@@ -2432,7 +2467,7 @@ function setActiveKelas(id){
     state.meta = {}; state.caturMeta = {}; state.subjects = DEFAULT_SUBJECTS.slice(); state.students = {}; state.scores = {}; state.absensi = {}; state.tieBreak = []; state.ujianMeta = {};
     state.ijazahUmum = {}; state.ijazah = {};
     updateHeaderLine();
-    renderStudentTable(); renderStudentPicker(); renderRekap(); renderSubjectList(); renderAbsensiTable(); renderTieBreakList(); renderIjazahTab();
+    renderStudentTable(); renderStudentPicker(); renderInputForm(); renderRekap(); renderSubjectList(); renderAbsensiTable(); renderTieBreakList(); renderTabelMassal(); renderIjazahTab();
     document.getElementById('legacyScoreBanner').style.display = 'none';
     return;
   }
@@ -2444,6 +2479,21 @@ function setActiveKelas(id){
   attachDataListeners();
   attachCaturListeners();
   checkLegacyScores();
+  // Render ulang SEMUA tab (bukan cuma tab yang sedang aktif) segera setelah state
+  // di-reset ke kelas baru, supaya tab Siswa/Absensi/Input Nilai/Rekap/Ijazah langsung
+  // tersinkron ke kelas yang baru dipilih tanpa perlu refresh halaman. Data Firebase
+  // yang datang belakangan (child_added dst) akan tetap merender ulang seperti biasa;
+  // panggilan di sini hanya memastikan tampilan tidak "nyangkut" menampilkan sisa data
+  // kelas sebelumnya selama menunggu data kelas baru datang (mis. kelas baru kosong).
+  renderStudentTable();
+  renderStudentPicker();
+  renderInputForm(); // penting: pilihan siswa lama sudah tidak valid di kelas baru, form nilai perlu ikut direset
+  renderRekap();
+  renderSubjectList();
+  renderAbsensiTable();
+  renderTieBreakList();
+  renderTabelMassal();
+  renderIjazahTab();
 }
 
 function attachDataListeners(){
@@ -3679,7 +3729,8 @@ function populateUjianMapelSelect(){
   const sel = document.getElementById('ujianMapel');
   if(!sel) return;
   const cur = sel.value;
-  sel.innerHTML = state.subjects.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+  sel.innerHTML = '<option value="">— Tanpa Mata Pelajaran (kosong, isi manual) —</option>' +
+    state.subjects.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
   if(cur && state.subjects.includes(cur)) sel.value = cur;
 }
 
@@ -3730,7 +3781,7 @@ function buildDaftarUjianHTML(mapel){
       </div>
     </div>
     <div class="row" style="margin:10px 0 4px;">
-      <div class="field" style="flex:0 0 auto;"><strong>Bidang Studi</strong> : ${escapeHtml(mapel)}</div>
+      <div class="field" style="flex:0 0 auto;"><strong>Bidang Studi</strong> : ${mapel ? escapeHtml(mapel) : '.........................................'}</div>
     </div>
     <div class="row" style="margin-bottom:10px;">
       <div class="field" style="flex:0 0 auto;"><strong>Kelas</strong> : ${escapeHtml(m.kelas||'')}</div>
@@ -3757,7 +3808,6 @@ document.getElementById('btnTampilkanDaftarUjian').addEventListener('click', ()=
   if(!activeKelasId){ toast('Pilih/buat kelas dulu'); return; }
   const sel = document.getElementById('ujianMapel');
   const mapel = sel.value;
-  if(!mapel){ toast('Belum ada mata pelajaran di kelas ini'); return; }
   document.getElementById('daftarUjianArea').innerHTML = buildDaftarUjianHTML(mapel);
   document.getElementById('daftarUjianActions').style.display = '';
 });
@@ -3772,14 +3822,14 @@ document.getElementById('btnPrintDaftarUjian').addEventListener('click', ()=>{
 document.getElementById('btnExportDaftarUjian').addEventListener('click', ()=>{
   if(!activeKelasId){ toast('Pilih/buat kelas dulu'); return; }
   const mapel = document.getElementById('ujianMapel').value;
-  if(!mapel){ toast('Belum ada mata pelajaran di kelas ini'); return; }
   const students = orderedStudents();
   if(!students.length){ toast('Belum ada siswa di kelas ini'); return; }
   const rows = [['No','Nama Murid','Tanda Tangan','Hasil Nilai Ujian','Keterangan']];
   students.forEach(st=> rows.push([st.no, st.nama, '', '', '']));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, sheetFromAOA(rows, [4,26,14,16,16]), 'Daftar Ujian');
-  downloadWorkbook(wb, `daftar-hadir-nilai-ujian-${mapel.replace(/\s+/g,'_')}-${kelasFileTag()}.xlsx`);
+  const tagMapel = mapel ? mapel.replace(/\s+/g,'_') : 'kosong';
+  downloadWorkbook(wb, `daftar-hadir-nilai-ujian-${tagMapel}-${kelasFileTag()}.xlsx`);
 });
 
 /* -- Template Impor Absensi: 1 Pekan / 1 Bulan Penuh -- */
