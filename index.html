@@ -284,6 +284,7 @@
   <div class="tab" data-tab="rekap">Rekap &amp; Cetak</div>
   <div class="tab" data-tab="ijazah">Ijazah</div>
   <div class="tab" data-tab="akun">Akun</div>
+  <div class="tab" data-tab="pengguna" id="tabBtnPengguna" style="display:none;">Pengguna</div>
 </div>
 
 <main>
@@ -307,6 +308,18 @@
     </div>
   </div>
 
+  <!-- ================= VIEWER WAITING SCREEN ================= -->
+  <div class="loginwrap noprint" id="viewerWait" style="display:none;">
+    <div class="card logincard">
+      <img src="" id="viewerWaitLogo" alt="Logo Yayasan" style="width:72px;height:72px;object-fit:contain;margin:0 auto 10px;display:block;">
+      <h2 style="margin-top:0;">Menunggu Persetujuan</h2>
+      <p class="hint">Akun Google <strong id="viewerWaitEmail"></strong> berhasil masuk, tapi belum ditetapkan sebagai Staf atau Guru oleh Admin. Anda belum bisa melihat maupun mengubah data apa pun sampai role Anda ditetapkan.</p>
+      <div class="btnrow" style="justify-content:center;">
+        <button class="danger" id="btnLogoutViewer" type="button">Keluar</button>
+      </div>
+    </div>
+  </div>
+
   <div id="appContent" style="display:none;">
 
   <!-- ================= AKUN ================= -->
@@ -321,7 +334,7 @@
       <div class="btnrow"><button class="danger" id="btnLogoutAkun" type="button">Keluar</button></div>
     </div>
 
-    <div class="card">
+    <div class="card" id="cardBackupRestore">
       <h2>Backup &amp; Restore Database</h2>
       <p class="hint">Backup mengunduh SELURUH data (semua kelas, siswa, nilai, absensi, template ijazah, dst) sebagai satu file JSON. Restore akan MENIMPA seluruh data yang ada saat ini dengan isi file backup — pastikan file backup benar sebelum memulihkan.</p>
       <div class="btnrow">
@@ -350,6 +363,21 @@
       </div>
     </div>
 
+  </section>
+
+  <!-- ================= PENGGUNA ================= -->
+  <section id="tab-pengguna" style="display:none;">
+    <div class="card">
+      <h2>Kelola Pengguna</h2>
+      <p class="hint">Akun Google baru otomatis masuk sebagai <strong>Viewer</strong> (tidak bisa baca/tulis apa pun) sampai ditetapkan sebagai Staf atau Guru di sini. <strong>Guru</strong> hanya bisa mengakses kelas yang dicentang pada kolom "Kelas Diampu". Akun <strong>Super Admin</strong> (<span id="penggunaSuperAdminEmail"></span>) tertanam di kode dan tidak bisa diubah/diturunkan oleh siapa pun.</p>
+      <div class="tablewrap">
+        <table id="penggunaTable">
+          <thead><tr><th style="text-align:left;">Akun</th><th>Role</th><th style="text-align:left;">Kelas Diampu (khusus Guru)</th><th class="noprint">Aksi</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="empty" id="penggunaEmpty" style="display:none;">Belum ada akun lain yang pernah login.</div>
+    </div>
   </section>
 
   <!-- ================= KELAS ================= -->
@@ -383,7 +411,7 @@
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="cardBuatKelas">
       <h2 id="kelasFormTitle">Buat Kelas / Tingkatan Baru</h2>
       <p class="hint">Setiap kelas punya data siswa, nilai, dan daftar mapel sendiri-sendiri — semua tersimpan dalam Firebase project yang sama.</p>
       <div class="row">
@@ -997,9 +1025,38 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
+/* ===================== Role & Multi-User (tertanam) =====================
+   SUPER_ADMIN_EMAIL tertanam di kode: akun ini SELALU dipaksa jadi 'superadmin'
+   dan tidak bisa diturunkan oleh siapa pun lewat aplikasi ini (juga dikunci di
+   Firebase Security Rules — lihat dokumen rules terpisah). Akun Google baru
+   yang login otomatis dibuatkan profil dengan role 'viewer' (tidak bisa baca/tulis
+   data apa pun) sampai ditetapkan oleh Admin/Super Admin sebagai Staf atau Guru. */
+const SUPER_ADMIN_EMAIL = 'achfif@gmail.com';
+const ROLE_LABELS = { superadmin:'Super Admin', admin:'Admin', staf:'Staf', guru:'Guru', viewer:'Viewer (belum disetujui)' };
+let currentUserProfile = null; // {uid,email,displayName,role,assignedKelas}
+let usersRef = null;
+let ownProfileRef = null;
+let allUsers = {};
+
+function myRole(){ return currentUserProfile ? currentUserProfile.role : null; }
+function isSuperAdmin(){ return myRole()==='superadmin'; }
+function isAdmin(){ return myRole()==='admin' || isSuperAdmin(); }
+function isStaf(){ return myRole()==='staf'; }
+function isGuru(){ return myRole()==='guru'; }
+function canManageUsers(){ return isAdmin(); }
+// Staf & Admin/Super Admin: akses penuh SEMUA kelas. Guru: hanya kelas yang ditugaskan padanya.
+function canEditStrukturKelas(){ return isStaf() || isAdmin(); } // buat/hapus kelas baru, backup-restore, dst
+function canAccessKelas(kelasId){
+  if(!kelasId) return false;
+  if(isStaf() || isAdmin()) return true;
+  if(isGuru()) return !!(currentUserProfile.assignedKelas && currentUserProfile.assignedKelas[kelasId]);
+  return false;
+}
+
 document.getElementById('loginLogo').src = LOGO_DATA_URI;
 document.getElementById('headerLogo').src = LOGO_DATA_URI;
 document.getElementById('rekapLogo').src = LOGO_DATA_URI;
+document.getElementById('viewerWaitLogo').src = LOGO_DATA_URI;
 
 /* ===================== State ===================== */
 const DEFAULT_SUBJECTS = ["Tauhid","Fiqih","Tafsir","Hadits","Nahwu","Shorrof","Qoidah Fiqh","Ushul Fiqh",
@@ -1201,7 +1258,7 @@ document.querySelectorAll('.tab').forEach(tab=>{
   tab.addEventListener('click', ()=>{
     document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
     tab.classList.add('active');
-    ['kelas','siswa','absensi','input','rekap','ijazah','akun'].forEach(name=>{
+    ['kelas','siswa','absensi','input','rekap','ijazah','akun','pengguna'].forEach(name=>{
       document.getElementById('tab-'+name).style.display = (name===tab.dataset.tab) ? '' : 'none';
     });
     if(tab.dataset.tab==='rekap') renderRekap();
@@ -1214,7 +1271,7 @@ document.querySelectorAll('.tab').forEach(tab=>{
 /* ===================== Auth (Google Sign-In) ===================== */
 function setTab(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
-  ['kelas','siswa','absensi','input','rekap','ijazah','akun'].forEach(n=>{
+  ['kelas','siswa','absensi','input','rekap','ijazah','akun','pengguna'].forEach(n=>{
     document.getElementById('tab-'+n).style.display = (n===name) ? '' : 'none';
   });
 }
@@ -1229,25 +1286,91 @@ document.getElementById('btnGoogleLogin').addEventListener('click', ()=>{
 });
 
 function doLogout(){
+  if(ownProfileRef) ownProfileRef.off();
+  ownProfileRef = null;
+  if(usersRef) usersRef.off();
+  usersRef = null;
+  currentUserProfile = null;
   auth.signOut();
 }
 document.getElementById('btnLogoutAkun').addEventListener('click', doLogout);
+document.getElementById('btnLogoutViewer').addEventListener('click', doLogout);
 
 function userChip(user){
   const photo = user.photoURL ? `<img src="${user.photoURL}" referrerpolicy="no-referrer">` : '';
-  return `<span class="userchip">${photo}<span>${escapeHtml(user.displayName||user.email||'')}</span><button type="button" id="btnLogoutChip">Keluar</button></span>`;
+  const role = myRole();
+  const roleTxt = role ? ` · ${escapeHtml(ROLE_LABELS[role]||role)}` : '';
+  return `<span class="userchip">${photo}<span>${escapeHtml(user.displayName||user.email||'')}${roleTxt}</span><button type="button" id="btnLogoutChip">Keluar</button></span>`;
 }
 
-// Cek apakah akun yang baru login benar-benar diizinkan oleh Database Rules
-// (rules membatasi berdasarkan email — "auth != null" saja tidak cukup, jadi di sini
-// dicoba baca data ringan; kalau ditolak (PERMISSION_DENIED) berarti email belum terdaftar).
-async function cekAksesDiizinkan(){
-  try{
-    await firebase.database().ref('rapor/kelasList').limitToFirst(1).once('value');
-    return true;
-  }catch(e){
-    console.error('Cek akses gagal:', e);
-    return false;
+/* Membuat/memuat profil pengguna di users/{uid}. Akun SUPER_ADMIN_EMAIL SELALU
+   dipaksa jadi 'superadmin' (self-heal); akun lain yang baru login otomatis
+   dibuatkan profil dengan role 'viewer'. Keamanan sesungguhnya ada di Firebase
+   Security Rules (lihat dokumen rules terpisah) — kode ini hanya mengikuti rules itu. */
+async function ensureUserProfileAndLoadRole(user){
+  const uid = user.uid;
+  const ref = firebase.database().ref('users/'+uid);
+  const snap = await ref.once('value');
+  let profile = snap.val();
+  const isSuper = (user.email||'').toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
+  if(!profile){
+    profile = {
+      email: user.email||'', displayName: user.displayName||'',
+      role: isSuper ? 'superadmin' : 'viewer',
+      assignedKelas: {},
+      createdAt: firebase.database.ServerValue.TIMESTAMP
+    };
+    await ref.set(profile);
+  } else if(isSuper && profile.role !== 'superadmin'){
+    await ref.update({role:'superadmin', email:user.email||profile.email||''});
+    profile.role = 'superadmin';
+  } else if(!isSuper && profile.role === 'superadmin'){
+    // Jaga-jaga: hanya SUPER_ADMIN_EMAIL yang boleh punya role superadmin.
+    // Firebase Rules yang benar akan MENOLAK ini juga (tidak seharusnya pernah terjadi) —
+    // dibungkus try/catch supaya tidak memblokir login jika rules menolak.
+    try{ await ref.update({role:'viewer'}); profile.role = 'viewer'; }catch(e){ console.warn('Gagal downgrade anomali role:', e); }
+  }
+  if(profile.email !== (user.email||'') || profile.displayName !== (user.displayName||'')){
+    ref.update({email:user.email||'', displayName:user.displayName||''}).catch(()=>{});
+  }
+  currentUserProfile = Object.assign({uid}, profile, {assignedKelas: profile.assignedKelas||{}});
+}
+
+// Dengarkan perubahan role diri sendiri secara realtime (misal saat Admin baru saja
+// mengangkat akun ini jadi Staf/Guru selagi aplikasi terbuka).
+function attachOwnProfileListener(uid){
+  if(ownProfileRef) ownProfileRef.off();
+  ownProfileRef = firebase.database().ref('users/'+uid);
+  ownProfileRef.on('value', snap=>{
+    const v = snap.val();
+    if(!v || !currentUserProfile) return;
+    const wasViewer = currentUserProfile.role === 'viewer';
+    currentUserProfile = Object.assign({}, currentUserProfile, v, {assignedKelas: v.assignedKelas||{}});
+    renderRoleGate();
+    if(!wasViewer && currentUserProfile.role === 'viewer'){
+      // role dicabut selagi sedang dipakai -> paksa keluar dari data
+      toast('Akses Anda telah dicabut oleh Admin');
+    }
+    applyRoleUI();
+  });
+}
+
+function renderRoleGate(){
+  const appContent = document.getElementById('appContent');
+  const tabsBar = document.getElementById('tabsBar');
+  const viewerWait = document.getElementById('viewerWait');
+  const loginGate = document.getElementById('loginGate');
+  if(!currentUserProfile){ return; }
+  loginGate.style.display = 'none';
+  if(currentUserProfile.role === 'viewer'){
+    document.getElementById('viewerWaitEmail').textContent = currentUserProfile.email || '';
+    viewerWait.style.display = '';
+    appContent.style.display = 'none';
+    tabsBar.style.display = 'none';
+  } else {
+    viewerWait.style.display = 'none';
+    appContent.style.display = '';
+    tabsBar.style.display = '';
   }
 }
 
@@ -1255,30 +1378,36 @@ auth.onAuthStateChanged(async user=>{
   const loginGate = document.getElementById('loginGate');
   const appContent = document.getElementById('appContent');
   const tabsBar = document.getElementById('tabsBar');
+  const viewerWait = document.getElementById('viewerWait');
   const chipWrap = document.getElementById('userChipWrap');
   const loginErr = document.getElementById('loginErr');
 
   if(user){
-    // Jangan langsung tampilkan konten — pastikan dulu akun ini lolos Database Rules,
-    // supaya akun Google yang tidak terdaftar tidak sempat melihat data sama sekali.
     loginErr.textContent = 'Memeriksa akses akun…';
-    const diizinkan = await cekAksesDiizinkan();
-    if(!diizinkan){
-      loginErr.textContent = `Akun "${user.email||''}" belum terdaftar sebagai pengguna aplikasi ini. Hubungi admin database untuk didaftarkan, lalu coba masuk lagi.`;
+    try{
+      await ensureUserProfileAndLoadRole(user);
+    }catch(e){
+      console.error('Gagal memuat profil pengguna:', e);
+      loginErr.textContent = `Gagal memuat profil akun "${user.email||''}": ${e.message||e.code||e}`;
       await auth.signOut();
-      return; // onAuthStateChanged akan terpanggil ulang dengan user=null dan membersihkan tampilan
+      return;
     }
     loginErr.textContent = '';
-    loginGate.style.display = 'none';
-    appContent.style.display = '';
-    tabsBar.style.display = '';
     chipWrap.innerHTML = userChip(user);
     document.getElementById('btnLogoutChip').addEventListener('click', doLogout);
     document.getElementById('akunEmail').textContent = user.email || user.displayName || '—';
+    document.getElementById('penggunaSuperAdminEmail').textContent = SUPER_ADMIN_EMAIL;
+    attachOwnProfileListener(user.uid);
+    renderRoleGate();
+    if(currentUserProfile.role === 'viewer'){
+      return; // tidak inisialisasi Firebase data / tab apa pun untuk viewer
+    }
     setTab('kelas');
     initFirebase();
+    applyRoleUI();
   } else {
     loginGate.style.display = '';
+    viewerWait.style.display = 'none';
     appContent.style.display = 'none';
     tabsBar.style.display = 'none';
     chipWrap.innerHTML = '';
@@ -1286,12 +1415,132 @@ auth.onAuthStateChanged(async user=>{
     currentDataRefs = [];
     if(studentsMasterRef) studentsMasterRef.off();
     studentsMasterRef = null;
+    if(ownProfileRef) ownProfileRef.off();
+    ownProfileRef = null;
+    if(usersRef) usersRef.off();
+    usersRef = null;
+    currentUserProfile = null;
     state.studentsMaster = {};
     db = null; activeKelasId = null;
     document.getElementById('connDot').classList.add('off');
     document.getElementById('connText').textContent = 'Belum masuk';
   }
 });
+
+/* ===================== Kontrol tampilan berdasarkan Role ===================== */
+function applyRoleUI(){
+  if(!currentUserProfile) return;
+  const canManage = canManageUsers();
+  const canStruktur = canEditStrukturKelas();
+  document.getElementById('tabBtnPengguna').style.display = canManage ? '' : 'none';
+  const cardBuatKelas = document.getElementById('cardBuatKelas');
+  if(cardBuatKelas) cardBuatKelas.style.display = canStruktur ? '' : 'none';
+  const cardBackupRestore = document.getElementById('cardBackupRestore');
+  if(cardBackupRestore) cardBackupRestore.style.display = isAdmin() ? '' : 'none';
+  if(canManage) attachUsersListener(); else detachUsersListener();
+  populateKelasSwitcher();
+  renderKelasTable();
+}
+
+/* ===================== Kelola Pengguna (khusus Admin & Super Admin) ===================== */
+function detachUsersListener(){
+  if(usersRef){ usersRef.off(); usersRef = null; }
+  allUsers = {};
+}
+function attachUsersListener(){
+  if(usersRef) return;
+  usersRef = firebase.database().ref('users');
+  usersRef.on('value', snap=>{
+    allUsers = snap.val() || {};
+    renderPenggunaTable();
+  });
+}
+function renderPenggunaTable(){
+  if(!canManageUsers()) return;
+  const tbody = document.querySelector('#penggunaTable tbody');
+  if(!tbody) return;
+  tbody.innerHTML = '';
+  const entries = Object.entries(allUsers).sort((a,b)=> (a[1].email||'').localeCompare(b[1].email||''));
+  document.getElementById('penggunaEmpty').style.display = entries.length ? 'none' : '';
+  const kelasEntries = sortKelasEntries(Object.entries(state.kelasList||{}));
+  entries.forEach(([uid, u])=>{
+    const isSuper = u.role === 'superadmin';
+    const tr = document.createElement('tr');
+    const namaLabel = escapeHtml(u.displayName||u.email||uid);
+    const emailLabel = escapeHtml(u.email||'');
+    if(isSuper){
+      tr.innerHTML = `
+        <td class="name">${namaLabel}<div class="hint">${emailLabel}</div></td>
+        <td><span class="pill active">Super Admin</span></td>
+        <td class="hint">Semua kelas</td>
+        <td class="noprint hint">Tidak dapat diubah</td>`;
+      tbody.appendChild(tr);
+      return;
+    }
+    const roleSelId = 'roleSel_'+uid;
+    const roleOpts = ['viewer','guru','staf','admin'].map(r=>
+      `<option value="${r}" ${u.role===r?'selected':''}>${ROLE_LABELS[r]}</option>`).join('');
+    let kelasBoxes = '<span class="hint">— (bukan Guru)</span>';
+    if(u.role === 'guru'){
+      kelasBoxes = `<div class="grid17" id="kelasBox_${uid}" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr));">` +
+        kelasEntries.map(([kid,k])=>{
+          const checked = (u.assignedKelas && u.assignedKelas[kid]) ? 'checked' : '';
+          const label = `${k.tingkatan||''} ${k.kelasNama||''}`;
+          return `<label style="font-size:11.5px; font-weight:500; display:flex; gap:4px; align-items:center;">
+            <input type="checkbox" style="width:auto;" data-kelas-check="${uid}" value="${kid}" ${checked}> ${escapeHtml(label)}</label>`;
+        }).join('') + '</div>';
+      if(!kelasEntries.length) kelasBoxes = '<span class="hint">Belum ada kelas dibuat</span>';
+    }
+    tr.innerHTML = `
+      <td class="name">${namaLabel}<div class="hint">${emailLabel}</div></td>
+      <td><select id="${roleSelId}" data-uid="${uid}" class="roleSelInput">${roleOpts}</select></td>
+      <td style="text-align:left;">${kelasBoxes}</td>
+      <td class="noprint"><button class="secondary" data-act="simpanRole" data-uid="${uid}" type="button">Simpan</button></td>`;
+    tbody.appendChild(tr);
+  });
+
+  // Tampilkan/sembunyikan kotak kelas saat role diganti ke/dari 'guru' (sebelum disimpan)
+  tbody.querySelectorAll('select.roleSelInput').forEach(sel=>{
+    sel.addEventListener('change', ()=>{
+      const uid = sel.dataset.uid;
+      const u = allUsers[uid] || {};
+      renderPenggunaTable(); // sederhana: render ulang; role sementara belum tersimpan jadi kotak kelas ikut role di DB
+      const selAfter = document.getElementById('roleSel_'+uid);
+      if(selAfter) selAfter.value = sel.value;
+      const td = selAfter ? selAfter.closest('tr').children[2] : null;
+      if(td && sel.value === 'guru'){
+        const kEntries = sortKelasEntries(Object.entries(state.kelasList||{}));
+        td.innerHTML = kEntries.length ? `<div class="grid17" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr));">` +
+          kEntries.map(([kid,k])=>{
+            const checked = (u.assignedKelas && u.assignedKelas[kid]) ? 'checked' : '';
+            return `<label style="font-size:11.5px; font-weight:500; display:flex; gap:4px; align-items:center;">
+              <input type="checkbox" style="width:auto;" data-kelas-check="${uid}" value="${kid}" ${checked}> ${escapeHtml((k.tingkatan||'')+' '+(k.kelasNama||''))}</label>`;
+          }).join('') + '</div>' : '<span class="hint">Belum ada kelas dibuat</span>';
+      } else if(td){
+        td.innerHTML = '<span class="hint">— (bukan Guru)</span>';
+      }
+    });
+  });
+
+  tbody.querySelectorAll('button[data-act="simpanRole"]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const uid = btn.dataset.uid;
+      const sel = document.getElementById('roleSel_'+uid);
+      const newRole = sel.value;
+      const assignedKelas = {};
+      if(newRole === 'guru'){
+        document.querySelectorAll('input[data-kelas-check="'+uid+'"]:checked').forEach(cb=>{ assignedKelas[cb.value] = true; });
+      }
+      try{
+        await firebase.database().ref('users/'+uid).update({ role:newRole, assignedKelas });
+        toast('Role pengguna diperbarui');
+      }catch(e){
+        console.error(e);
+        toast('Gagal menyimpan role: '+(e.message||e.code||e));
+      }
+    });
+  });
+}
 
 function debounce(fn, wait){
   let t;
@@ -1324,6 +1573,7 @@ function initFirebase(){
 let restoreDbPendingData = null;
 
 document.getElementById('btnBackupDb').addEventListener('click', async ()=>{
+  if(!isAdmin()){ toast('Hanya Admin/Super Admin yang boleh backup database'); return; }
   if(!db){ toast('Hubungkan Firebase dulu (masuk akun)'); return; }
   try{
     toast('Menyiapkan backup…');
@@ -1375,6 +1625,7 @@ document.getElementById('restoreDbFile').addEventListener('change', async (e)=>{
 });
 
 document.getElementById('btnRestoreDb').addEventListener('click', async ()=>{
+  if(!isAdmin()){ toast('Hanya Admin/Super Admin yang boleh memulihkan database'); return; }
   if(!db){ toast('Hubungkan Firebase dulu (masuk akun)'); return; }
   if(!restoreDbPendingData){ toast('Pilih file backup dulu'); return; }
   const ok1 = confirm('PERINGATAN: Memulihkan backup akan MENIMPA / MENGHAPUS seluruh data yang ada saat ini (semua kelas, siswa, nilai, absensi, ijazah) dan menggantinya dengan isi file backup. Tindakan ini TIDAK BISA DIBATALKAN. Lanjutkan?');
@@ -1446,6 +1697,12 @@ function migrateLegacyStudentIfNeeded(kelasId, studentId, v){
   db.ref('rapor/data/'+kelasId+'/students/'+studentId).set({no: v.no||0});
 }
 
+// Untuk role Guru, hanya kelas yang ditugaskan padanya yang boleh muncul/dipilih.
+// Staf, Admin, Super Admin melihat semua kelas.
+function accessibleKelasIds(){
+  return Object.keys(state.kelasList||{}).filter(id=> canAccessKelas(id));
+}
+
 function attachKelasListListener(){
   kelasListRef().on('value', snap=>{
     state.kelasList = snap.val() || {};
@@ -1455,14 +1712,17 @@ function attachKelasListListener(){
     populateCopySubjectsFrom();
     populatePindahRiwayatSelects();
 
-    const keys = Object.keys(state.kelasList);
+    const keys = accessibleKelasIds();
     if(kelasEditId && !state.kelasList[kelasEditId]) resetKelasForm();
     if(activeKelasId && !state.kelasList[activeKelasId]){
       // active kelas was deleted elsewhere
       setActiveKelas(keys[0] || null);
+    } else if(activeKelasId && !canAccessKelas(activeKelasId)){
+      // kelas aktif sudah tidak lagi diizinkan untuk role ini (mis. Guru dicabut dari kelas)
+      setActiveKelas(keys[0] || null);
     } else if(!activeKelasId){
       const saved = localStorage.getItem('rapor_active_kelas');
-      if(saved && state.kelasList[saved]) setActiveKelas(saved);
+      if(saved && state.kelasList[saved] && canAccessKelas(saved)) setActiveKelas(saved);
       else if(keys.length) setActiveKelas(keys[0]);
     }
   });
@@ -1470,13 +1730,14 @@ function attachKelasListListener(){
 
 function populateKelasSwitcher(){
   const cur = activeKelasId;
-  const entries = sortKelasEntries(Object.entries(state.kelasList));
+  const allowed = new Set(accessibleKelasIds());
+  const entries = sortKelasEntries(Object.entries(state.kelasList)).filter(([id])=> allowed.has(id));
   ['kelasSwitcher','studentFilterKelas'].forEach(selId=>{
     const sel = document.getElementById(selId);
     if(!sel) return;
     sel.innerHTML = '';
     if(!entries.length){
-      sel.innerHTML = '<option value="">— belum ada kelas —</option>';
+      sel.innerHTML = isGuru() ? '<option value="">— belum ada kelas ditugaskan ke Anda —</option>' : '<option value="">— belum ada kelas —</option>';
       return;
     }
     let curGroup = null, groupEl = sel;
@@ -1569,7 +1830,8 @@ document.getElementById('kelasFilterTahun')?.addEventListener('change', renderKe
 function renderKelasTable(){
   const tbody = document.querySelector('#kelasTable tbody');
   tbody.innerHTML = '';
-  const allEntries = Object.entries(state.kelasList);
+  const allowedIds = new Set(accessibleKelasIds());
+  const allEntries = Object.entries(state.kelasList).filter(([id])=> allowedIds.has(id));
   document.getElementById('kelasEmpty').style.display = allEntries.length ? 'none' : '';
 
   const filterVal = document.getElementById('kelasFilterTahun')?.value || '';
@@ -1670,6 +1932,7 @@ function fillKelasForm(id){
 document.getElementById('btnCancelKelasEdit').addEventListener('click', resetKelasForm);
 
 document.getElementById('btnCreateKelas').addEventListener('click', async ()=>{
+  if(!canEditStrukturKelas()){ toast('Anda tidak punya izin membuat/mengubah kelas'); return; }
   if(!db){ toast('Hubungkan Firebase dulu di tab Firebase'); return; }
   const tingkatan = document.getElementById('newTingkatan').value;
   const kelasNama = document.getElementById('newKelasNama').value.trim();
