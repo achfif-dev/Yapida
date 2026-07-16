@@ -1277,12 +1277,24 @@ function setTab(name){
 }
 
 document.getElementById('btnGoogleLogin').addEventListener('click', ()=>{
-  document.getElementById('loginErr').textContent = '';
+  document.getElementById('loginErr').textContent = 'Mengalihkan ke halaman masuk Google…';
   const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider).catch(err=>{
+  // Pakai redirect (bukan popup) — popup sering gagal diam-diam di hosting seperti
+  // Vercel/Netlify karena browser memblokir penyimpanan pihak ketiga antara jendela
+  // popup (xxx.firebaseapp.com) dan halaman utama (xxx.vercel.app).
+  auth.signInWithRedirect(provider).catch(err=>{
     console.error(err);
-    document.getElementById('loginErr').textContent = 'Gagal masuk: ' + (err.message || err.code);
+    document.getElementById('loginErr').textContent = 'Gagal mengalihkan ke Google: ' + (err.message || err.code);
   });
+});
+
+// Tangani hasil setelah kembali dari redirect Google. Kalau gagal (domain belum
+// diizinkan, provider Google belum aktif, dsb), tampilkan pesan errornya di sini —
+// tanpa ini, kegagalan redirect akan "diam" dan pengguna cuma melihat balik ke halaman login.
+auth.getRedirectResult().catch(err=>{
+  console.error('Gagal masuk (redirect):', err);
+  const loginErr = document.getElementById('loginErr');
+  if(loginErr) loginErr.textContent = 'Gagal masuk: ' + (err.message || err.code || err);
 });
 
 function doLogout(){
