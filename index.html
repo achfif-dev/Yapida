@@ -227,6 +227,9 @@
     body.printingRekapGabungan .card:not(#rekapGabunganCard){display:none !important;}
     body.printingRekapGabungan #rekapGabunganCard{display:block !important; box-shadow:none; border:none;}
     body.printingRekapGabungan #rekapGabunganCard .noprint{display:none !important;}
+    body.printingDaftarUjian .card:not(#cardDaftarUjian){display:none !important;}
+    body.printingDaftarUjian #cardDaftarUjian{display:block !important; box-shadow:none; border:none;}
+    body.printingDaftarUjian #cardDaftarUjian .noprint{display:none !important;}
   }
   @media (max-width:640px){
     .topbar h1{font-size:19px;}
@@ -733,6 +736,32 @@
       <div class="btnrow noprint"><button class="gold" id="btnExportAbsensi" type="button">⬇️ Ekspor Excel</button></div>
       <p class="hint">Tombol "Isi ke Nilai" akan menyalin jumlah Sakit/Izin/Alpa siswa tersebut ke form Input Nilai (perlu disimpan manual di sana).</p>
     </div>
+
+    <div class="card" id="cardDaftarUjian">
+      <h2 class="noprint">Cetak Daftar Hadir &amp; Nilai Ujian</h2>
+      <p class="hint noprint">Membuat lembar "Daftar Hadir dan Nilai Ujian" per Mata Pelajaran untuk diserahkan ke Mumtahin/penguji saat ujian — No &amp; Nama Murid terisi otomatis dari data siswa kelas ini, kolom Tanda Tangan, Hasil Nilai Ujian, dan Keterangan dikosongkan untuk diisi tangan.</p>
+      <div class="row noprint">
+        <div class="field"><label>Mata Pelajaran (Bidang Studi)</label><select id="ujianMapel"></select></div>
+        <div class="field"><label>Judul Ujian (Arab)</label><input id="ujianJudulArab" placeholder="cth. الإمتحان الثاني"></div>
+      </div>
+      <div class="row noprint">
+        <div class="field"><label>Nama Madrasah (Arab)</label><input id="ujianNamaArab" placeholder="cth. للمدرسة الإبتدائية الهداية"></div>
+        <div class="field"><label>Sanah Dirasah / Tahun Ajaran (Arab)</label><input id="ujianTahunArab" placeholder="cth. ١٤٤٧ – ١٤٤٨هـ / ٢٠٢٦ – ٢٠٢٧م"></div>
+      </div>
+      <div class="row noprint">
+        <div class="field"><label>Tempat</label><input id="ujianTempat" placeholder="cth. Bangkalan"></div>
+        <div class="field"><label>Tahun (di footer tanda tangan)</label><input id="ujianTahunFooter" placeholder="cth. 2026"></div>
+      </div>
+      <div class="btnrow noprint">
+        <button class="secondary" id="btnSimpanUjianMeta" type="button">Simpan Pengaturan</button>
+        <button class="gold" id="btnTampilkanDaftarUjian" type="button">Tampilkan</button>
+      </div>
+      <div id="daftarUjianArea" style="margin-top:14px;"></div>
+      <div class="btnrow noprint" id="daftarUjianActions" style="display:none;">
+        <button class="gold" id="btnPrintDaftarUjian" type="button">🖨️ Cetak</button>
+        <button class="secondary" id="btnExportDaftarUjian" type="button">⬇️ Ekspor Excel</button>
+      </div>
+    </div>
   </section>
 
   <!-- ================= INPUT NILAI ================= -->
@@ -1134,7 +1163,8 @@ let state = {
   absensi: {},     // tanggal -> { studentId -> 'H'|'S'|'I'|'A' } — menyatu sepanjang tahun ajaran
   tieBreak: [],    // array mapel, urutan prioritas untuk memecah peringkat yang sama
   ijazahUmum: {},  // data umum ijazah kelas aktif: {noAwal, dariH, dariM, sampaiH, sampaiM, tempat, terbitH, terbitM}
-  ijazah: {}       // studentId -> {noIjazah, noInduk, foto}
+  ijazah: {},      // studentId -> {noIjazah, noInduk, foto}
+  ujianMeta: {}    // pengaturan cetak "Daftar Hadir & Nilai Ujian": {judulArab, namaArab, tahunArab, tempat, tahunFooter}
 };
 
 let ijazahTemplates = {}; // tingkatanKey -> template config (global, lintas kelas)
@@ -2127,7 +2157,7 @@ function setActiveKelas(id){
     caturMetaCard.style.display = 'none';
     subjectsCard.style.display = 'none';
     tieBreakCard.style.display = 'none';
-    state.meta = {}; state.caturMeta = {}; state.subjects = DEFAULT_SUBJECTS.slice(); state.students = {}; state.scores = {}; state.absensi = {}; state.tieBreak = [];
+    state.meta = {}; state.caturMeta = {}; state.subjects = DEFAULT_SUBJECTS.slice(); state.students = {}; state.scores = {}; state.absensi = {}; state.tieBreak = []; state.ujianMeta = {};
     state.ijazahUmum = {}; state.ijazah = {};
     updateHeaderLine();
     renderStudentTable(); renderStudentPicker(); renderRekap(); renderSubjectList(); renderAbsensiTable(); renderTieBreakList(); renderIjazahTab();
@@ -2194,6 +2224,9 @@ function attachDataListeners(){
   const ijUmumRef = dataRoot('ijazahUmum');
   ijUmumRef.on('value', snap=>{ state.ijazahUmum = snap.val() || {}; renderIjazahTab(); });
 
+  const ujRef = dataRoot('ujianMeta');
+  ujRef.on('value', snap=>{ state.ujianMeta = snap.val() || {}; fillUjianMetaForm(); });
+
   const ijRef = dataRoot('ijazah');
   state.ijazah = {};
   const renderIjz = debounce(()=>{ renderIjazahTab(); }, 80);
@@ -2201,7 +2234,7 @@ function attachDataListeners(){
   ijRef.on('child_changed', snap=>{ state.ijazah[snap.key] = snap.val(); renderIjz(); });
   ijRef.on('child_removed', snap=>{ delete state.ijazah[snap.key]; renderIjz(); });
 
-  currentDataRefs = [mRef, sRef, stRef, abRef, tbRef, ijUmumRef, ijRef];
+  currentDataRefs = [mRef, sRef, stRef, abRef, tbRef, ijUmumRef, ijRef, ujRef];
 }
 
 // Nilai (scores) & identitas per-Catur Wulan dipasang terpisah dari attachDataListeners()
@@ -2366,6 +2399,7 @@ function renderSubjectList(){
       renderSubjectList();
     });
   });
+  populateUjianMapelSelect();
 }
 document.getElementById('btnAddSubject').addEventListener('click', ()=>{
   const inp = document.getElementById('newSubject');
@@ -3323,6 +3357,114 @@ document.getElementById('btnExportAbsensi')?.addEventListener('click', ()=>{
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, sheetFromAOA(rows,[4,22,8,8,8,8]), 'Rekap Absensi');
   downloadWorkbook(wb, `absensi-${kelasFileTag()}.xlsx`);
+});
+
+/* ===================== Cetak Daftar Hadir & Nilai Ujian ===================== */
+function populateUjianMapelSelect(){
+  const sel = document.getElementById('ujianMapel');
+  if(!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = state.subjects.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+  if(cur && state.subjects.includes(cur)) sel.value = cur;
+}
+
+function fillUjianMetaForm(){
+  const uj = state.ujianMeta || {};
+  document.getElementById('ujianJudulArab').value = uj.judulArab ?? 'الإمتحان الثاني';
+  document.getElementById('ujianNamaArab').value = uj.namaArab ?? 'للمدرسة الإبتدائية الهداية';
+  document.getElementById('ujianTahunArab').value = uj.tahunArab ?? '';
+  document.getElementById('ujianTempat').value = uj.tempat ?? (state.meta?.tempat || '');
+  document.getElementById('ujianTahunFooter').value = uj.tahunFooter ?? '';
+}
+
+document.getElementById('btnSimpanUjianMeta').addEventListener('click', ()=>{
+  if(!activeKelasId){ toast('Pilih/buat kelas dulu'); return; }
+  const payload = {
+    judulArab: document.getElementById('ujianJudulArab').value.trim(),
+    namaArab: document.getElementById('ujianNamaArab').value.trim(),
+    tahunArab: document.getElementById('ujianTahunArab').value.trim(),
+    tempat: document.getElementById('ujianTempat').value.trim(),
+    tahunFooter: document.getElementById('ujianTahunFooter').value.trim(),
+  };
+  dataRoot('ujianMeta').set(payload).then(()=> toast('Pengaturan Daftar Ujian disimpan'));
+});
+
+function buildDaftarUjianHTML(mapel){
+  const m = state.meta || {};
+  const uj = state.ujianMeta || {};
+  const students = orderedStudents();
+  const judulArab = uj.judulArab || document.getElementById('ujianJudulArab').value.trim() || 'الإمتحان';
+  const namaArab = uj.namaArab || document.getElementById('ujianNamaArab').value.trim() || '';
+  const tahunArab = uj.tahunArab || document.getElementById('ujianTahunArab').value.trim() || '';
+  const tempat = uj.tempat || document.getElementById('ujianTempat').value.trim() || m.tempat || '';
+  const tahunFooter = uj.tahunFooter || document.getElementById('ujianTahunFooter').value.trim() || '';
+
+  const rowsHtml = students.length ? students.map(st=>
+    `<tr><td>${st.no}</td><td class="name" style="white-space:normal;">${escapeHtml(st.nama)}</td><td></td><td></td><td></td></tr>`
+  ).join('') :
+    `<tr><td colspan="5" class="empty">Belum ada siswa di kelas ini.</td></tr>`;
+
+  return `
+    <div class="certframe">
+      <div class="certHead">
+        <img src="${LOGO_DATA_URI}" class="certLogo" alt="Logo Madrasah">
+        <div class="certHeadText">
+          <div class="school" style="font-size:20px; direction:rtl;">${escapeHtml(judulArab)} ${escapeHtml(namaArab)}</div>
+          ${tahunArab ? `<div class="addr" style="direction:rtl;">سنة الدراسة : ${escapeHtml(tahunArab)}</div>` : ''}
+        </div>
+      </div>
+    </div>
+    <div class="row" style="margin:10px 0 4px;">
+      <div class="field" style="flex:0 0 auto;"><strong>Bidang Studi</strong> : ${escapeHtml(mapel)}</div>
+    </div>
+    <div class="row" style="margin-bottom:10px;">
+      <div class="field" style="flex:0 0 auto;"><strong>Kelas</strong> : ${escapeHtml(m.kelas||'')}</div>
+    </div>
+    <h3 style="text-align:center; text-decoration:underline;">DAFTAR HADIR DAN NILAI UJIAN</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th style="width:6%;">No.</th><th style="text-align:left;">Nama Murid</th><th>Tanda Tangan</th><th>Hasil Nilai Ujian</th><th>Keterangan</th></tr></thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+    </div>
+    <div class="row" style="margin-top:34px; justify-content:flex-end;">
+      <div class="field" style="text-align:center; flex:0 0 260px;">
+        ${escapeHtml(tempat)}, ................................. ${escapeHtml(tahunFooter)}<br>
+        <strong>MUMTAHIN</strong>
+        <br><br><br>
+        ( ......................................... )
+      </div>
+    </div>
+  `;
+}
+
+document.getElementById('btnTampilkanDaftarUjian').addEventListener('click', ()=>{
+  if(!activeKelasId){ toast('Pilih/buat kelas dulu'); return; }
+  const sel = document.getElementById('ujianMapel');
+  const mapel = sel.value;
+  if(!mapel){ toast('Belum ada mata pelajaran di kelas ini'); return; }
+  document.getElementById('daftarUjianArea').innerHTML = buildDaftarUjianHTML(mapel);
+  document.getElementById('daftarUjianActions').style.display = '';
+});
+
+document.getElementById('btnPrintDaftarUjian').addEventListener('click', ()=>{
+  if(!document.getElementById('daftarUjianArea').innerHTML.trim()){ toast('Tampilkan daftar ujian dulu'); return; }
+  document.body.classList.add('printingDaftarUjian');
+  window.print();
+  setTimeout(()=> document.body.classList.remove('printingDaftarUjian'), 500);
+});
+
+document.getElementById('btnExportDaftarUjian').addEventListener('click', ()=>{
+  if(!activeKelasId){ toast('Pilih/buat kelas dulu'); return; }
+  const mapel = document.getElementById('ujianMapel').value;
+  if(!mapel){ toast('Belum ada mata pelajaran di kelas ini'); return; }
+  const students = orderedStudents();
+  if(!students.length){ toast('Belum ada siswa di kelas ini'); return; }
+  const rows = [['No','Nama Murid','Tanda Tangan','Hasil Nilai Ujian','Keterangan']];
+  students.forEach(st=> rows.push([st.no, st.nama, '', '', '']));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, sheetFromAOA(rows, [4,26,14,16,16]), 'Daftar Ujian');
+  downloadWorkbook(wb, `daftar-hadir-nilai-ujian-${mapel.replace(/\s+/g,'_')}-${kelasFileTag()}.xlsx`);
 });
 
 /* -- Template Impor Absensi: 1 Pekan / 1 Bulan Penuh -- */
