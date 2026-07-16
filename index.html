@@ -2553,13 +2553,27 @@ document.getElementById('btnSaveStudent').addEventListener('click', ()=>{
   };
 
   if(studentEditId){
-    // Ubah biodata: berlaku global (ikut siswa ke kelas manapun), no urut hanya berlaku di kelas aktif
-    Promise.all([
-      studentsRootRef(studentEditId).update(biodata),
-      dataRoot('students/'+studentEditId).update({no})
-    ]).then(()=>{
+    // Ubah biodata: berlaku global (ikut siswa ke kelas manapun), no urut hanya berlaku di kelas aktif.
+    // Ditulis atomik (satu multi-path update) supaya biodata & no urut selalu konsisten bersamaan.
+    db.ref('rapor').update({
+      ['students/'+studentEditId+'/nama']: biodata.nama,
+      ['students/'+studentEditId+'/jk']: biodata.jk,
+      ['students/'+studentEditId+'/nisn']: biodata.nisn,
+      ['students/'+studentEditId+'/nis']: biodata.nis,
+      ['students/'+studentEditId+'/tempatLahir']: biodata.tempatLahir,
+      ['students/'+studentEditId+'/tglLahir']: biodata.tglLahir,
+      ['students/'+studentEditId+'/alamat']: biodata.alamat,
+      ['students/'+studentEditId+'/ayah']: biodata.ayah,
+      ['students/'+studentEditId+'/ibu']: biodata.ibu,
+      ['students/'+studentEditId+'/wali']: biodata.wali,
+      ['students/'+studentEditId+'/telp']: biodata.telp,
+      ['data/'+activeKelasId+'/students/'+studentEditId+'/no']: no,
+    }).then(()=>{
       toast('Data siswa diperbarui');
       resetStudentForm();
+    }).catch(e=>{
+      console.error(e);
+      toast('Gagal memperbarui data siswa: '+(e.message||e.code||e));
     });
     return;
   }
@@ -2572,9 +2586,19 @@ document.getElementById('btnSaveStudent').addEventListener('click', ()=>{
     kelasAktifId: activeKelasId,
     riwayatKelas: { [activeKelasId]: { no, tingkatan:k.tingkatan||'', kelasNama:k.kelasNama||'', catur:k.catur||'', tahun:k.tahun||'', tahunMasehi:k.tahunMasehi||'', tanggal: todayISO() } }
   };
-  newRef.set(master).then(()=> dataRoot('students/'+id).set({no})).then(()=>{
+  // Ditulis sebagai SATU operasi atomik (multi-path update dari root 'rapor') supaya biodata
+  // global (rapor/students) dan keanggotaan roster kelas (rapor/data/{kelas}/students) selalu
+  // tersimpan BARENGAN — kalau koneksi putus di tengah jalan, TIDAK ADA yang tersimpan sama
+  // sekali (bukan "nyangkut" separuh: siswa ada secara global tapi hilang dari semua kelas).
+  db.ref('rapor').update({
+    ['students/'+id]: master,
+    ['data/'+activeKelasId+'/students/'+id]: {no}
+  }).then(()=>{
     toast('Siswa ditambahkan');
     resetStudentForm();
+  }).catch(e=>{
+    console.error(e);
+    toast('Gagal menyimpan siswa: '+(e.message||e.code||e));
   });
 });
 
@@ -2682,13 +2706,20 @@ document.getElementById('btnPindahKelas').addEventListener('click', async ()=>{
   try{
     for(const st of selected){
       try{
-        await db.ref('rapor/data/'+tujuanId+'/students/'+st.id).set({no: noBaru});
-        await studentsRootRef(st.id+'/riwayatKelas/'+tujuanId).set({
-          no: noBaru, tingkatan: kt.tingkatan||'', kelasNama: kt.kelasNama||'', catur: kt.catur||'', tahun: kt.tahun||'', tahunMasehi: kt.tahunMasehi||'',
-          tanggal: todayISO()
+        // Digabung jadi SATU multi-path update per siswa (bukan 4 .set()/.remove() terpisah).
+        // Sebelumnya kalau koneksi putus di tengah 4 langkah itu, siswa bisa nyangkut TERDAFTAR
+        // DI 2 KELAS SEKALIGUS (sudah masuk roster kelas tujuan tapi belum terhapus dari kelas
+        // asal). Dengan update atomik, satu siswa pasti "pindah utuh" atau "tidak pindah sama
+        // sekali" — tidak ada kondisi setengah-jalan untuk siswa itu.
+        await db.ref('rapor').update({
+          ['data/'+tujuanId+'/students/'+st.id]: {no: noBaru},
+          ['students/'+st.id+'/riwayatKelas/'+tujuanId]: {
+            no: noBaru, tingkatan: kt.tingkatan||'', kelasNama: kt.kelasNama||'', catur: kt.catur||'', tahun: kt.tahun||'', tahunMasehi: kt.tahunMasehi||'',
+            tanggal: todayISO()
+          },
+          ['students/'+st.id+'/kelasAktifId']: tujuanId,
+          ['data/'+activeKelasId+'/students/'+st.id]: null, // keluar dari roster kelas lama; nilai & riwayat kelas lama tetap tersimpan
         });
-        await studentsRootRef(st.id+'/kelasAktifId').set(tujuanId);
-        await dataRoot('students/'+st.id).remove(); // keluar dari roster kelas lama; nilai & riwayat kelas lama tetap tersimpan
         pindahSelectedIds.delete(st.id);
         sukses++;
         noBaru++;
