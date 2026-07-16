@@ -21,7 +21,7 @@
     --shadow: 0 1px 2px rgba(28,35,32,.06), 0 6px 20px rgba(28,35,32,.08);
   }
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0; overflow-x:hidden; max-width:100vw;}
+  html,body{margin:0;padding:0;}
   body{
     background:var(--paper);
     color:var(--ink);
@@ -29,8 +29,10 @@
     -webkit-font-smoothing:antialiased;
     -webkit-tap-highlight-color:transparent;
   }
-  /* Cegah elemen manapun (gambar, tabel, dsb) mendorong lebar halaman melebihi layar */
-  img, table, .card, .tablewrap{ max-width:100%; }
+  /* Cegah elemen manapun (gambar, tabel, dsb) mendorong lebar halaman melebihi layar.
+     (overflow-x:hidden di html/body SENGAJA tidak dipakai — itu mematahkan
+     position:sticky di banyak browser. Cukup dibatasi lewat max-width per elemen.) */
+  img, table, .card, .tablewrap, .field, .row{ max-width:100%; }
   input, select, textarea, button{ touch-action:manipulation; }
   /* Target sentuh minimal ~40px supaya nyaman ditekan jari di HP */
   button, .tab{ min-height:40px; }
@@ -41,6 +43,11 @@
     letter-spacing:-0.01em;
   }
   .mono{font-family:'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums;}
+
+  /* ---------- Sticky header (topbar + tabs tetap terlihat saat discroll) ---------- */
+  #stickyHeader{
+    position:sticky; top:0; z-index:60;
+  }
 
   /* ---------- Shell ---------- */
   .topbar{
@@ -275,6 +282,7 @@
 </head>
 <body>
 
+<div id="stickyHeader">
 <div class="topbar">
   <div style="display:flex; align-items:center; gap:12px;">
     <img src="" id="headerLogo" alt="Logo Yayasan" style="width:44px;height:44px;object-fit:contain;flex:0 0 auto;">
@@ -303,6 +311,9 @@
   <div class="tab" data-tab="akun">Akun</div>
   <div class="tab" data-tab="pengguna" id="tabBtnPengguna" style="display:none;">Pengguna</div>
 </div>
+</div>
+<!-- /#stickyHeader -->
+
 
 <main>
 
@@ -1306,20 +1317,37 @@ function setTab(name){
 }
 
 document.getElementById('btnGoogleLogin').addEventListener('click', ()=>{
-  document.getElementById('loginErr').textContent = 'Mengalihkan ke halaman masuk Google…';
+  const loginErr = document.getElementById('loginErr');
+  loginErr.textContent = 'Membuka jendela masuk Google…';
   const provider = new firebase.auth.GoogleAuthProvider();
-  // Pakai redirect (bukan popup) — popup sering gagal diam-diam di hosting seperti
-  // Vercel/Netlify karena browser memblokir penyimpanan pihak ketiga antara jendela
-  // popup (xxx.firebaseapp.com) dan halaman utama (xxx.vercel.app).
-  auth.signInWithRedirect(provider).catch(err=>{
+  // Pakai POPUP sebagai metode utama. Ini aman sekarang karena authDomain sudah
+  // dibuat satu origin dengan domain app (lihat firebaseConfig di atas + rewrite
+  // proxy di vercel.json/netlify.toml) — jadi popup dan halaman utama berbagi origin
+  // yang sama, tidak butuh sessionStorage lintas-navigasi seperti metode redirect.
+  // Redirect (signInWithRedirect) rawan gagal dengan error "auth/missing-initial-state"
+  // di banyak browser Android karena sessionStorage-nya suka hilang saat berpindah
+  // tab ke Google lalu balik lagi. Popup tidak punya masalah ini.
+  auth.signInWithPopup(provider).catch(err=>{
     console.error(err);
-    document.getElementById('loginErr').textContent = 'Gagal mengalihkan ke Google: ' + (err.message || err.code);
+    // Kalau popup diblokir/gagal dibuka (jarang, tapi ada browser yang strict),
+    // fallback otomatis ke redirect supaya user tetap bisa masuk.
+    if(err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request' || err.code === 'auth/popup-closed-by-user'){
+      if(err.code === 'auth/popup-blocked'){
+        loginErr.textContent = 'Popup diblokir browser, mengalihkan ke halaman Google…';
+        auth.signInWithRedirect(provider).catch(err2=>{
+          console.error(err2);
+          loginErr.textContent = 'Gagal masuk: ' + (err2.message || err2.code);
+        });
+      } else {
+        loginErr.textContent = ''; // user membatalkan sendiri, tidak perlu tampilkan error
+      }
+    } else {
+      loginErr.textContent = 'Gagal masuk: ' + (err.message || err.code || err);
+    }
   });
 });
 
-// Tangani hasil setelah kembali dari redirect Google. Kalau gagal (domain belum
-// diizinkan, provider Google belum aktif, dsb), tampilkan pesan errornya di sini —
-// tanpa ini, kegagalan redirect akan "diam" dan pengguna cuma melihat balik ke halaman login.
+// Tangani hasil kalau ternyata fallback redirect di atas terpakai (popup diblokir).
 auth.getRedirectResult().catch(err=>{
   console.error('Gagal masuk (redirect):', err);
   const loginErr = document.getElementById('loginErr');
