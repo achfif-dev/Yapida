@@ -1491,11 +1491,15 @@ function renderPenggunaTable(){
         }).join('') + '</div>';
       if(!kelasEntries.length) kelasBoxes = '<span class="hint">Belum ada kelas dibuat</span>';
     }
+    const isSelf = uid === (currentUserProfile && currentUserProfile.uid);
+    const hapusBtn = isSelf
+      ? `<button class="secondary" type="button" disabled title="Tidak bisa menghapus akun sendiri">Hapus</button>`
+      : `<button class="danger" data-act="hapusUser" data-uid="${uid}" data-nama="${namaLabel.replace(/"/g,'&quot;')}" type="button">Hapus</button>`;
     tr.innerHTML = `
       <td class="name">${namaLabel}<div class="hint">${emailLabel}</div></td>
       <td><select id="${roleSelId}" data-uid="${uid}" class="roleSelInput">${roleOpts}</select></td>
       <td style="text-align:left;">${kelasBoxes}</td>
-      <td class="noprint"><button class="secondary" data-act="simpanRole" data-uid="${uid}" type="button">Simpan</button></td>`;
+      <td class="noprint"><div class="btnrow" style="margin-top:0;"><button class="secondary" data-act="simpanRole" data-uid="${uid}" type="button">Simpan</button>${hapusBtn}</div></td>`;
     tbody.appendChild(tr);
   });
 
@@ -1537,6 +1541,21 @@ function renderPenggunaTable(){
       }catch(e){
         console.error(e);
         toast('Gagal menyimpan role: '+(e.message||e.code||e));
+      }
+    });
+  });
+
+  tbody.querySelectorAll('button[data-act="hapusUser"]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const uid = btn.dataset.uid;
+      const nama = btn.dataset.nama || 'akun ini';
+      if(!confirm(`Hapus akun "${nama}" dari daftar pengguna? Orang tsb tidak akan bisa lagi mengakses data (kembali jadi Viewer) sampai login ulang dan ditetapkan lagi oleh Admin. Tindakan ini tidak menghapus akun Google-nya, hanya profil role di aplikasi ini.`)) return;
+      try{
+        await firebase.database().ref('users/'+uid).remove();
+        toast('Pengguna dihapus dari daftar');
+      }catch(e){
+        console.error(e);
+        toast('Gagal menghapus pengguna: '+(e.message||e.code||e));
       }
     });
   });
