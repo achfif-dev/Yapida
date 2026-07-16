@@ -75,6 +75,18 @@
   .dot{width:7px;height:7px;border-radius:50%;background:#7fd99a;box-shadow:0 0 0 3px rgba(127,217,154,.25);}
   .dot.off{background:#d97757;box-shadow:0 0 0 3px rgba(217,119,87,.25);}
   #kelasSwitcher{ max-width:420px; }
+  .btnRefresh{
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:11px; letter-spacing:.04em; text-transform:uppercase;
+    background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18);
+    padding:4px 10px; border-radius:100px; color:var(--white); cursor:pointer;
+    font-family:inherit; font-weight:600; transition:background .15s, transform .05s;
+  }
+  .btnRefresh:hover{ background:rgba(255,255,255,.2); }
+  .btnRefresh:active{ transform:scale(.96); }
+  .btnRefresh svg{ width:13px; height:13px; flex:0 0 auto; }
+  .btnRefresh.spinning svg{ animation:spinRefresh .6s linear; }
+  @keyframes spinRefresh{ from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
 
   .tabs{
     display:flex; gap:4px; margin:-30px 12px 0; position:relative; z-index:2;
@@ -129,6 +141,7 @@
     text-align:center; padding:30px 10px; color:#8a856f; font-size:13.5px;
   }
   .hint{font-size:12px; color:#8a856f; margin-top:4px;}
+  .subjInput[readonly]{ background:var(--paper-2); color:#6b6656; cursor:default; }
   .studentpick{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px;}
   .studentpick select{flex:1; min-width:220px;}
   .grid17{display:grid; grid-template-columns:repeat(auto-fill, minmax(140px,1fr)); gap:8px;}
@@ -230,6 +243,14 @@
     body.printingDaftarUjian .card:not(#cardDaftarUjian){display:none !important;}
     body.printingDaftarUjian #cardDaftarUjian{display:block !important; box-shadow:none; border:none;}
     body.printingDaftarUjian #cardDaftarUjian .noprint{display:none !important;}
+    /* Cetak Rekap Ini: hanya tabel rekap kelas, sembunyikan Kartu Raport per Siswa
+       supaya keduanya tidak nyambung jadi satu kertas cetak. */
+    body.printingRekapOnly .card:not(#rekapPrintArea){display:none !important;}
+    body.printingRekapOnly #cardArea{display:none !important;}
+    /* Cetak Kartu Ini: hanya kartu raport siswa yang aktif, sembunyikan tabel rekap
+       kelas & kartu lain supaya tidak ikut tercetak di kertas yang sama. */
+    body.printingKartuSiswa .card{display:none !important;}
+    body.printingKartuSiswa #cardArea{display:block !important;}
   }
   @media (max-width:640px){
     .topbar h1{font-size:19px;}
@@ -303,6 +324,13 @@
       <span class="dot" style="background:var(--gold); box-shadow:0 0 0 3px rgba(184,134,58,.28);"></span>
       <span id="activeKelasText"></span>
     </div>
+    <div class="badge noprint" id="onlineBadge" style="display:none;" title="">
+      <span class="dot"></span><span id="onlineCountText"></span>
+    </div>
+    <button class="btnRefresh noprint" id="btnRefreshHeader" type="button" title="Muat ulang halaman">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      Refresh
+    </button>
     <span id="userChipWrap" class="noprint"></span>
   </div>
 </div>
@@ -403,7 +431,7 @@
   <section id="tab-pengguna" style="display:none;">
     <div class="card">
       <h2>Kelola Pengguna</h2>
-      <p class="hint">Akun Google baru otomatis masuk sebagai <strong>Viewer</strong> (tidak bisa baca/tulis apa pun) sampai ditetapkan sebagai Staf atau Guru di sini. <strong>Guru</strong> hanya bisa mengakses kelas yang dicentang pada kolom "Kelas Diampu". Akun <strong>Super Admin</strong> (<span id="penggunaSuperAdminEmail"></span>) tertanam di kode dan tidak bisa diubah/diturunkan oleh siapa pun.</p>
+      <p class="hint">Akun Google baru otomatis masuk sebagai <strong>Viewer</strong> (tidak bisa baca/tulis apa pun) sampai ditetapkan sebagai Staf atau Guru di sini. <strong>Guru</strong> hanya bisa mengakses kelas yang dicentang pada kolom "Kelas Diampu". Akun <strong>Super Admin</strong> (<span id="penggunaSuperAdminEmail"></span>) tertanam di kode dan tidak bisa diubah/diturunkan oleh siapa pun. Label <span class="pill active">● Aktif</span> menandakan akun tsb sedang membuka aplikasi ini sekarang (realtime).</p>
       <div class="tablewrap">
         <table id="penggunaTable">
           <thead><tr><th style="text-align:left;">Akun</th><th>Role</th><th style="text-align:left;">Kelas Diampu (khusus Guru)</th><th class="noprint">Aksi</th></tr></thead>
@@ -537,7 +565,7 @@
 
     <div class="card" id="subjectsCard" style="display:none;">
       <h2>Daftar Mata Pelajaran — Kelas Aktif</h2>
-      <p class="hint">Urutan ini menentukan urutan kolom di seluruh aplikasi untuk kelas yang sedang aktif.</p>
+      <p class="hint">Urutan ini menentukan urutan kolom di seluruh aplikasi untuk kelas yang sedang aktif. Klik "Edit" pada mapel untuk mengubah namanya (langsung tersimpan), atau tambahkan mapel baru lalu klik "Simpan Daftar Mapel" untuk menyimpan urutan/penambahan sekaligus.</p>
       <div id="subjectList"></div>
       <div class="btnrow">
         <input id="newSubject" placeholder="Nama mapel baru" style="flex:1;min-width:160px;">
@@ -834,7 +862,7 @@
     <div class="card noprint">
       <h2>Cetak</h2>
       <div class="btnrow">
-        <button class="gold" onclick="window.print()">🖨️ Cetak Rekap Ini</button>
+        <button class="gold" onclick="printRekapOnly()">🖨️ Cetak Rekap Ini</button>
         <button class="secondary" id="btnExportRekap" type="button">⬇️ Ekspor Excel (semua tabel)</button>
       </div>
     </div>
@@ -1114,6 +1142,10 @@ let currentUserProfile = null; // {uid,email,displayName,role,assignedKelas}
 let usersRef = null;
 let ownProfileRef = null;
 let allUsers = {};
+let presenceRef = null;      // ref presence/{uid} milik akun sendiri
+let presenceListRef = null;  // ref presence (semua akun) untuk didengarkan
+let connectedInfoRef = null; // ref .info/connected
+let allPresence = {};        // {uid: {email, displayName, lastActive}} — akun yang sedang online
 
 function myRole(){ return currentUserProfile ? currentUserProfile.role : null; }
 function isSuperAdmin(){ return myRole()==='superadmin'; }
@@ -1130,8 +1162,14 @@ function canAccessKelas(kelasId){
   return false;
 }
 
-document.getElementById('loginLogo').src = LOGO_DATA_URI;
 document.getElementById('headerLogo').src = LOGO_DATA_URI;
+document.getElementById('loginLogo').src = LOGO_DATA_URI;
+document.getElementById('btnRefreshHeader').addEventListener('click', ()=>{
+  const btn = document.getElementById('btnRefreshHeader');
+  btn.classList.add('spinning');
+  btn.disabled = true;
+  location.reload();
+});
 document.getElementById('rekapLogo').src = LOGO_DATA_URI;
 document.getElementById('viewerWaitLogo').src = LOGO_DATA_URI;
 
@@ -1399,6 +1437,8 @@ function doLogout(){
   ownProfileRef = null;
   if(usersRef) usersRef.off();
   usersRef = null;
+  detachPresence();
+  detachPresenceListener();
   currentUserProfile = null;
   auth.signOut();
 }
@@ -1483,6 +1523,58 @@ function renderRoleGate(){
   }
 }
 
+/* ===================== Presence ("siapa saja yang sedang aktif") =====================
+   Menandai akun sendiri sebagai online di presence/{uid} selama tab ini terbuka & terhubung.
+   Memakai .info/connected + onDisconnect() supaya otomatis terhapus begitu tab ditutup /
+   koneksi putus, tanpa perlu tombol "logout" ditekan. CATATAN: path 'presence' baru ini
+   perlu diizinkan (read utk akun login, write hanya ke node uid sendiri) di Firebase
+   Realtime Database Rules, kalau belum ada aturannya presence tidak akan tersimpan. */
+function attachPresence(user){
+  if(presenceRef) return; // sudah terpasang
+  presenceRef = firebase.database().ref('presence/'+user.uid);
+  connectedInfoRef = firebase.database().ref('.info/connected');
+  connectedInfoRef.on('value', snap=>{
+    if(snap.val() !== true) return;
+    presenceRef.onDisconnect().remove();
+    presenceRef.set({
+      email: user.email||'',
+      displayName: user.displayName||'',
+      lastActive: firebase.database.ServerValue.TIMESTAMP
+    }).catch(e=> console.warn('Gagal menandai presence aktif:', e));
+  });
+}
+function detachPresence(){
+  if(connectedInfoRef){ connectedInfoRef.off(); connectedInfoRef = null; }
+  if(presenceRef){ presenceRef.onDisconnect().cancel().catch(()=>{}); presenceRef.remove().catch(()=>{}); presenceRef = null; }
+}
+function attachPresenceListener(){
+  if(presenceListRef) return;
+  presenceListRef = firebase.database().ref('presence');
+  presenceListRef.on('value', snap=>{
+    allPresence = snap.val() || {};
+    renderOnlineBadge();
+    if(canManageUsers()) renderPenggunaTable();
+  });
+}
+function detachPresenceListener(){
+  if(presenceListRef){ presenceListRef.off(); presenceListRef = null; }
+  allPresence = {};
+  renderOnlineBadge();
+}
+function renderOnlineBadge(){
+  const badge = document.getElementById('onlineBadge');
+  const txt = document.getElementById('onlineCountText');
+  if(!badge || !txt) return;
+  const list = Object.values(allPresence);
+  if(!currentUserProfile || currentUserProfile.role === 'viewer' || !list.length){
+    badge.style.display = 'none';
+    return;
+  }
+  badge.style.display = '';
+  txt.textContent = list.length===1 ? '1 aktif' : `${list.length} aktif`;
+  badge.title = 'Sedang aktif sekarang:\n' + list.map(p=> p.displayName || p.email || '(tanpa nama)').join('\n');
+}
+
 auth.onAuthStateChanged(async user=>{
   const loginGate = document.getElementById('loginGate');
   const appContent = document.getElementById('appContent');
@@ -1511,6 +1603,8 @@ auth.onAuthStateChanged(async user=>{
     if(currentUserProfile.role === 'viewer'){
       return; // tidak inisialisasi Firebase data / tab apa pun untuk viewer
     }
+    attachPresence(user);
+    attachPresenceListener();
     setTab('kelas');
     initFirebase();
     applyRoleUI();
@@ -1528,6 +1622,8 @@ auth.onAuthStateChanged(async user=>{
     ownProfileRef = null;
     if(usersRef) usersRef.off();
     usersRef = null;
+    detachPresence();
+    detachPresenceListener();
     currentUserProfile = null;
     state.studentsMaster = {};
     db = null; activeKelasId = null;
@@ -1575,11 +1671,13 @@ function renderPenggunaTable(){
   entries.forEach(([uid, u])=>{
     const isSuper = u.role === 'superadmin';
     const tr = document.createElement('tr');
+    const isOnline = !!allPresence[uid];
+    const statusDot = isOnline ? '<span class="pill active" style="margin-left:6px;" title="Sedang aktif sekarang">● Aktif</span>' : '';
     const namaLabel = escapeHtml(u.displayName||u.email||uid);
     const emailLabel = escapeHtml(u.email||'');
     if(isSuper){
       tr.innerHTML = `
-        <td class="name">${namaLabel}<div class="hint">${emailLabel}</div></td>
+        <td class="name">${namaLabel}${statusDot}<div class="hint">${emailLabel}</div></td>
         <td><span class="pill active">Super Admin</span></td>
         <td class="hint">Semua kelas</td>
         <td class="noprint hint">Tidak dapat diubah</td>`;
@@ -1605,7 +1703,7 @@ function renderPenggunaTable(){
       ? `<button class="secondary" type="button" disabled title="Tidak bisa menghapus akun sendiri">Hapus</button>`
       : `<button class="danger" data-act="hapusUser" data-uid="${uid}" data-nama="${namaLabel.replace(/"/g,'&quot;')}" type="button">Hapus</button>`;
     tr.innerHTML = `
-      <td class="name">${namaLabel}<div class="hint">${emailLabel}</div></td>
+      <td class="name">${namaLabel}${statusDot}<div class="hint">${emailLabel}</div></td>
       <td><select id="${roleSelId}" data-uid="${uid}" class="roleSelInput">${roleOpts}</select></td>
       <td style="text-align:left;">${kelasBoxes}</td>
       <td class="noprint"><div class="btnrow" style="margin-top:0;"><button class="secondary" data-act="simpanRole" data-uid="${uid}" type="button">Simpan</button>${hapusBtn}</div></td>`;
@@ -2386,12 +2484,55 @@ function renderSubjectList(){
     row.style.marginBottom = '6px';
     row.innerHTML = `
       <div class="field" style="flex:0 0 40px;"><span class="pill">${i+1}</span></div>
-      <div class="field" style="flex:3;"><input data-idx="${i}" class="subjInput" value="${escapeHtml(s)}"></div>
-      <div class="field" style="flex:0 0 auto;align-self:center;"><button class="danger" data-idx="${i}" type="button">Hapus</button></div>
+      <div class="field" style="flex:3;"><input data-idx="${i}" class="subjInput" value="${escapeHtml(s)}" readonly></div>
+      <div class="field" style="flex:0 0 auto;align-self:center;display:flex;gap:6px;">
+        <button class="secondary btnEditSubj" data-idx="${i}" type="button">Edit</button>
+        <button class="danger btnDeleteSubj" data-idx="${i}" type="button">Hapus</button>
+      </div>
     `;
     wrap.appendChild(row);
   });
-  wrap.querySelectorAll('button.danger').forEach(btn=>{
+  wrap.querySelectorAll('.subjInput').forEach(input=>{
+    input.addEventListener('keydown', (e)=>{
+      if(e.key==='Enter' && !input.readOnly){
+        e.preventDefault();
+        const idx = input.dataset.idx;
+        const btn = wrap.querySelector(`button.btnEditSubj[data-idx="${idx}"]`);
+        if(btn) btn.click();
+      }
+    });
+  });
+  wrap.querySelectorAll('button.btnEditSubj').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const idx = Number(btn.dataset.idx);
+      const input = wrap.querySelector(`.subjInput[data-idx="${idx}"]`);
+      const editing = btn.dataset.editing === '1';
+      if(!editing){
+        // Masuk mode edit
+        input.removeAttribute('readonly');
+        input.focus();
+        input.select();
+        btn.textContent = 'Simpan';
+        btn.dataset.editing = '1';
+        btn.classList.remove('secondary');
+        btn.classList.add('gold');
+      } else {
+        // Simpan perubahan nama mapel ini
+        if(!activeKelasId){ toast('Pilih/buat kelas dulu'); return; }
+        const newVal = input.value.trim();
+        if(!newVal){ toast('Nama mapel tidak boleh kosong'); input.focus(); return; }
+        const dup = state.subjects.some((sub, j)=> j!==idx && sub.trim().toLowerCase()===newVal.toLowerCase());
+        if(dup){ toast('Nama mapel tersebut sudah ada di daftar'); input.focus(); return; }
+        const namaLama = state.subjects[idx];
+        state.subjects[idx] = newVal;
+        dataRoot('subjects').set(state.subjects).then(()=>{
+          toast(namaLama===newVal ? 'Nama mapel disimpan' : `Mapel "${namaLama}" diubah menjadi "${newVal}"`);
+          renderSubjectList();
+        });
+      }
+    });
+  });
+  wrap.querySelectorAll('button.btnDeleteSubj').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const namaMapel = state.subjects[Number(btn.dataset.idx)] || '';
       if(!confirm(`Hapus mapel "${namaMapel}" dari daftar? Nilai mapel ini yang sudah tersimpan untuk siswa TIDAK otomatis terhapus, tapi kolomnya tidak akan tampil lagi sampai mapel ditambahkan ulang. Jangan lupa klik "Simpan Daftar Mapel" setelah ini.`)) return;
@@ -4026,6 +4167,21 @@ document.getElementById('btnPrintRekapGabungan').addEventListener('click', ()=>{
   setTimeout(()=> document.body.classList.remove('printingRekapGabungan'), 500);
 });
 
+/* Cetak Rekap Ini & Cetak Kartu Ini dipisah supaya tidak nyambung jadi satu kertas:
+   masing-masing menyembunyikan bagian lain sebelum window.print() dipanggil. */
+function printRekapOnly(){
+  document.body.classList.add('printingRekapOnly');
+  window.print();
+  setTimeout(()=> document.body.classList.remove('printingRekapOnly'), 500);
+}
+function printKartuSiswa(){
+  const area = document.getElementById('cardArea');
+  if(!area || !area.innerHTML.trim()){ toast('Tampilkan kartu siswa dulu'); return; }
+  document.body.classList.add('printingKartuSiswa');
+  window.print();
+  setTimeout(()=> document.body.classList.remove('printingKartuSiswa'), 500);
+}
+
 /* ===================== Kartu Raport per siswa ===================== */
 document.getElementById('btnBuildCard').addEventListener('click', ()=>{
   const id = document.getElementById('pickPrintStudent').value;
@@ -4085,7 +4241,7 @@ document.getElementById('btnBuildCard').addEventListener('click', ()=>{
         <div class="field" style="text-align:center;">${escapeHtml(m.tempat||'')}, ${m.tanggal||'...................................'}<br>Wali Kelas<br><br><br><strong>${escapeHtml(m.wali||'..............................')}</strong></div>
       </div>
     </div>
-    <div class="btnrow noprint"><button class="gold" onclick="window.print()">🖨️ Cetak Kartu Ini</button></div>
+    <div class="btnrow noprint"><button class="gold" onclick="printKartuSiswa()">🖨️ Cetak Kartu Ini</button></div>
   `;
 });
 
