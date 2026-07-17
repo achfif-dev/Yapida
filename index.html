@@ -343,6 +343,7 @@
   <div class="tab" data-tab="rekap">Rekap &amp; Cetak</div>
   <div class="tab" data-tab="ijazah">Ijazah</div>
   <div class="tab" data-tab="akun">Akun</div>
+  <div class="tab" data-tab="surat" id="tabBtnSurat" style="display:none;">Surat Menyurat</div>
   <div class="tab" data-tab="pengguna" id="tabBtnPengguna" style="display:none;">Pengguna</div>
 </div>
 </div>
@@ -440,6 +441,59 @@
         </table>
       </div>
       <div class="empty" id="penggunaEmpty" style="display:none;">Belum ada akun lain yang pernah login.</div>
+    </div>
+  </section>
+
+  <!-- ================= SURAT MENYURAT ================= -->
+  <section id="tab-surat" style="display:none;">
+    <div class="card">
+      <h2 id="suratFormTitle">Tambah Surat</h2>
+      <p class="hint">Arsip surat masuk &amp; keluar madrasah, tidak terikat kelas tertentu. Khusus <strong>Super Admin, Admin &amp; Staf</strong>.</p>
+      <div class="row">
+        <div class="field" style="flex:0 0 160px;"><label>Jenis Surat</label>
+          <select id="stJenis"><option value="masuk">Surat Masuk</option><option value="keluar">Surat Keluar</option></select>
+        </div>
+        <div class="field"><label>Nomor Surat</label><input id="stNomor" placeholder="No. surat"></div>
+        <div class="field" style="flex:0 0 160px;"><label>Tanggal Surat</label><input id="stTanggal" type="date"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Dari / Kepada</label><input id="stPihak" placeholder="Nama instansi / orang"></div>
+        <div class="field" style="flex:2;"><label>Perihal</label><input id="stPerihal" placeholder="Perihal surat"></div>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:2;"><label>Keterangan</label><input id="stKeterangan" placeholder="Catatan tambahan (opsional)"></div>
+      </div>
+      <div class="btnrow">
+        <button id="btnSaveSurat">+ Simpan Surat</button>
+        <button class="secondary" id="btnCancelSuratEdit" type="button" style="display:none;">Batal Ubah</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Daftar Surat</h2>
+      <div class="btnrow noprint">
+        <button class="gold" id="btnExportSurat" type="button">⬇️ Ekspor Excel</button>
+      </div>
+      <div class="row noprint" style="margin-bottom:10px;">
+        <div class="field" style="flex:2 1 220px;">
+          <label>Cari Surat</label>
+          <input id="suratSearch" type="text" placeholder="Cari nomor, perihal, dari/kepada, keterangan…">
+        </div>
+        <div class="field" style="flex:0 0 160px;">
+          <label>Jenis</label>
+          <select id="suratFilterJenis">
+            <option value="">Semua</option>
+            <option value="masuk">Surat Masuk</option>
+            <option value="keluar">Surat Keluar</option>
+          </select>
+        </div>
+      </div>
+      <div class="tablewrap">
+        <table id="suratTable">
+          <thead><tr><th>Tanggal</th><th>Jenis</th><th style="text-align:left;">Nomor</th><th style="text-align:left;">Dari/Kepada</th><th style="text-align:left;">Perihal</th><th class="noprint">Aksi</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="empty" id="suratEmpty" style="display:none;">Belum ada surat tercatat.</div>
     </div>
   </section>
 
@@ -697,6 +751,31 @@
         <div class="field"><label>Pilih Siswa</label><select id="riwayatSiswaPick"></select></div>
       </div>
       <div id="riwayatKelasList" class="tablewrap" style="margin-top:10px;"></div>
+    </div>
+
+    <div class="card" id="cardDatabaseSiswaGlobal" style="display:none;">
+      <h2>Database Siswa Keseluruhan</h2>
+      <p class="hint">Seluruh murid madrasah lintas kelas &amp; tahun ajaran (termasuk yang sudah pindah/lulus dari kelas aktif saat ini). Khusus <strong>Super Admin, Admin &amp; Staf</strong>.</p>
+      <div class="row noprint" style="margin-bottom:10px;">
+        <div class="field" style="flex:2 1 220px;">
+          <label>Cari Siswa (seluruh kelas)</label>
+          <input id="globalSiswaSearch" type="text" placeholder="Cari nama, NISN, NIS, alamat, ayah/ibu/wali…">
+        </div>
+      </div>
+      <div class="btnrow noprint">
+        <button class="gold" id="btnExportSiswaGlobal" type="button">⬇️ Ekspor Excel (Seluruh Siswa)</button>
+      </div>
+      <div class="tablewrap" style="margin-top:8px;">
+        <table id="globalSiswaTable">
+          <thead><tr><th style="text-align:left;">Nama</th><th>NISN</th><th>JK</th><th style="text-align:left;">Kelas Aktif Saat Ini</th><th>Kelas Ditempuh</th><th class="noprint">Aksi</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="empty" id="globalSiswaEmpty" style="display:none;">Belum ada data siswa sama sekali.</div>
+      <div id="globalRiwayatWrap" style="display:none;margin-top:16px;">
+        <h3 id="globalRiwayatTitle" style="margin:0 0 8px;"></h3>
+        <div id="globalRiwayatBox" class="tablewrap"></div>
+      </div>
     </div>
   </section>
 
@@ -1196,6 +1275,7 @@ let state = {
   subjects: DEFAULT_SUBJECTS.slice(),
   students: {},   // id -> {no}  (enrollment/urutan siswa DI KELAS AKTIF SAJA)
   studentsMaster: {}, // id -> {nama, nisn, nis, jk, ..., kelasAktifId, riwayatKelas:{kelasId:{no,tingkatan,kelasNama,tahun,tanggal}}} — database murid, tidak terikat satu kelas
+  surat: {},      // id -> {jenis:'masuk'|'keluar', nomor, tanggal, pihak, perihal, keterangan} — arsip surat menyurat, global (tidak terikat kelas)
   scores: {},     // id -> {mapel:{...}, absen:{sakit,ijin,alpa}, potongan, potonganRaport, peringkatManual, sikap:{...}} — HANYA utk Catur Wulan aktif (dataRoot('scores/'+activeCatur))
                    // potongan & potonganRaport dihitung otomatis dari absen (lihat hitungPotonganAbsen), disimpan hanya sebagai arsip.
                    // peringkatManual: override peringkat oleh guru untuk kasus nilai bersih sama (null = pakai perhitungan otomatis).
@@ -1383,6 +1463,8 @@ function runTabSideEffects(name){
   if(name==='input'){ renderStudentPicker(); renderTabelMassal(); }
   if(name==='absensi') renderAbsensiTable();
   if(name==='ijazah') renderIjazahTab();
+  if(name==='siswa') renderDatabaseSiswaGlobal();
+  if(name==='surat') renderSuratTable();
 }
 document.querySelectorAll('.tab').forEach(tab=>{
   tab.addEventListener('click', ()=>{
@@ -1394,7 +1476,7 @@ document.querySelectorAll('.tab').forEach(tab=>{
 /* ===================== Auth (Google Sign-In) ===================== */
 function setTab(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
-  ['kelas','siswa','absensi','input','rekap','ijazah','akun','pengguna'].forEach(n=>{
+  ['kelas','siswa','absensi','input','rekap','ijazah','akun','surat','pengguna'].forEach(n=>{
     document.getElementById('tab-'+n).style.display = (n===name) ? '' : 'none';
   });
   saveActiveTab(name);
@@ -1402,7 +1484,7 @@ function setTab(name){
 // Dipanggil sesudah login (termasuk auto-login sesudah refresh halaman) untuk
 // mengembalikan tampilan ke tab terakhir yang dibuka user, bukan selalu ke tab "Kelas".
 function restoreLastTab(){
-  const validTabs = ['kelas','siswa','absensi','input','rekap','ijazah','akun','pengguna'];
+  const validTabs = ['kelas','siswa','absensi','input','rekap','ijazah','akun','surat','pengguna'];
 
   // Bedakan "baru masuk/login" vs "refresh halaman saat sesi masih berjalan":
   // - sessionStorage bertahan saat halaman di-refresh (F5 / tombol Refresh header),
@@ -1423,6 +1505,7 @@ function restoreLastTab(){
   // Tab "Pengguna" hanya untuk yang berwenang kelola akun — kalau tidak berhak, jangan
   // macet di tab ini (mis. akun Guru biasa yang terakhir kali dipakai oleh Admin).
   if(target==='pengguna' && !canManageUsers()) target = 'kelas';
+  if(target==='surat' && !(isStaf()||isAdmin())) target = 'kelas';
   setTab(target);
   runTabSideEffects(target);
 
@@ -1653,6 +1736,9 @@ auth.onAuthStateChanged(async user=>{
     currentDataRefs = [];
     if(studentsMasterRef) studentsMasterRef.off();
     studentsMasterRef = null;
+    if(suratRef) suratRef.off();
+    suratRef = null;
+    state.surat = {};
     if(ownProfileRef) ownProfileRef.off();
     ownProfileRef = null;
     if(usersRef) usersRef.off();
@@ -1673,12 +1759,23 @@ function applyRoleUI(){
   if(!currentUserProfile) return;
   const canManage = canManageUsers();
   const canStruktur = canEditStrukturKelas();
+  const canAdminExtra = isStaf() || isAdmin(); // Staf, Admin, Super Admin — fitur "Surat Menyurat" & "Database Siswa Keseluruhan"
   document.getElementById('tabBtnPengguna').style.display = canManage ? '' : 'none';
+  document.getElementById('tabBtnSurat').style.display = canAdminExtra ? '' : 'none';
+  const cardDatabaseSiswaGlobal = document.getElementById('cardDatabaseSiswaGlobal');
+  if(cardDatabaseSiswaGlobal) cardDatabaseSiswaGlobal.style.display = canAdminExtra ? '' : 'none';
   const cardBuatKelas = document.getElementById('cardBuatKelas');
   if(cardBuatKelas) cardBuatKelas.style.display = canStruktur ? '' : 'none';
   const cardBackupRestore = document.getElementById('cardBackupRestore');
   if(cardBackupRestore) cardBackupRestore.style.display = isAdmin() ? '' : 'none';
   if(canManage) attachUsersListener(); else detachUsersListener();
+  if(canAdminExtra){ attachSuratListener(); renderDatabaseSiswaGlobal(); renderSuratTable(); }
+  else {
+    detachSuratListener();
+    // Kalau role dicabut sewaktu sedang membuka tab "Surat Menyurat", jangan macet di tab itu.
+    const activeTabEl = document.querySelector('.tab.active');
+    if(activeTabEl && activeTabEl.dataset.tab==='surat'){ setTab('kelas'); runTabSideEffects('kelas'); }
+  }
   populateKelasSwitcher();
   renderKelasTable();
 }
@@ -1833,17 +1930,19 @@ function initFirebase(){
    Restore: membaca file JSON tsb dan MENIMPA seluruh node 'rapor' saat ini (db.ref('rapor').set(...)).
    Ini operasi berat & merusak-jika-salah, jadi selalu minta konfirmasi eksplisit dari pengguna. */
 let restoreDbPendingData = null;
+let restoreSuratPendingData = null;
 
 document.getElementById('btnBackupDb').addEventListener('click', async ()=>{
   if(!isAdmin()){ toast('Hanya Admin/Super Admin yang boleh backup database'); return; }
   if(!db){ toast('Hubungkan Firebase dulu (masuk akun)'); return; }
   try{
     toast('Menyiapkan backup…');
-    const snap = await db.ref('rapor').get();
+    const [snap, suratSnap] = await Promise.all([ db.ref('rapor').get(), db.ref('surat').get() ]);
     const data = snap.val() || {};
     const payload = {
       _backupInfo: { app: 'Buku Nilai Raport — Madrasah', dibuatPada: new Date().toISOString() },
-      rapor: data
+      rapor: data,
+      surat: suratSnap.val() || {}
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
     const url = URL.createObjectURL(blob);
@@ -2037,6 +2136,7 @@ document.getElementById('restoreDbFile').addEventListener('change', async (e)=>{
   const btn = document.getElementById('btnRestoreDb');
   const info = document.getElementById('restoreDbInfo');
   restoreDbPendingData = null;
+  restoreSuratPendingData = null;
   btn.disabled = true;
   info.textContent = '';
   if(!file) return;
@@ -2048,6 +2148,7 @@ document.getElementById('restoreDbFile').addEventListener('change', async (e)=>{
     const raporData = (parsed && typeof parsed==='object' && 'rapor' in parsed) ? parsed.rapor : parsed;
     if(!raporData || typeof raporData!=='object'){ throw new Error('Format file tidak dikenali'); }
     restoreDbPendingData = raporData;
+    restoreSuratPendingData = (parsed && typeof parsed==='object' && parsed.surat && typeof parsed.surat==='object') ? parsed.surat : null;
     const jumlahKelas = Object.keys(raporData.kelasList||{}).length;
     const jumlahSiswa = Object.keys(raporData.students||{}).length;
     info.textContent = `File terbaca: ${jumlahKelas} kelas, ${jumlahSiswa} siswa (global). Klik "Pulihkan Database" untuk melanjutkan.`;
@@ -2070,6 +2171,7 @@ document.getElementById('btnRestoreDb').addEventListener('click', async ()=>{
   try{
     toast('Memulihkan database… mohon tunggu, jangan tutup halaman ini');
     await db.ref('rapor').set(restoreDbPendingData);
+    if(restoreSuratPendingData) await db.ref('surat').set(restoreSuratPendingData);
     toast('Database berhasil dipulihkan. Memuat ulang halaman…');
     setTimeout(()=> location.reload(), 1200);
   }catch(e){
@@ -2110,10 +2212,37 @@ function attachStudentsMasterListener(){
   state.studentsMaster = {};
   // Sama seperti students/scores/absensi per kelas: pakai child_* (bukan 'value') supaya saat
   // SATU siswa berubah, Firebase tidak mengirim ULANG seluruh database murid dari semua kelas.
-  const renderMaster = debounce(()=>{ renderStudentTable(); renderStudentPicker(); renderRekap(); populatePindahRiwayatSelects(); }, 80);
+  const renderMaster = debounce(()=>{ renderStudentTable(); renderStudentPicker(); renderRekap(); populatePindahRiwayatSelects(); renderDatabaseSiswaGlobal(); }, 80);
   studentsMasterRef.on('child_added', snap=>{ state.studentsMaster[snap.key] = snap.val(); renderMaster(); });
   studentsMasterRef.on('child_changed', snap=>{ state.studentsMaster[snap.key] = snap.val(); renderMaster(); });
   studentsMasterRef.on('child_removed', snap=>{ delete state.studentsMaster[snap.key]; renderMaster(); });
+}
+
+/* ===================== Surat Menyurat (khusus Staf/Admin/Super Admin, global lintas kelas) =====================
+   Disimpan di node level-atas 'surat/{id}' — SENGAJA DI LUAR 'rapor/...' (bukan 'rapor/surat'), karena
+   'rapor' punya .read:true untuk SEMUA role non-viewer (termasuk Guru) di Security Rules, dan aturan anak
+   tidak bisa mempersempit izin baca yang sudah diberikan induknya (cascading). Supaya Guru benar-benar
+   tidak bisa membaca arsip surat (bukan cuma disembunyikan di UI), node ini dipisah — sama seperti 'backup'
+   yang juga dipisah dari 'rapor' untuk alasan yang sama. Listener hanya dipasang untuk role yang berhak
+   (lihat applyRoleUI) supaya tidak memboroskan kuota baca Firebase Spark plan untuk role Guru. CATATAN:
+   path 'surat' ini perlu diizinkan (read/write hanya utk staf/admin/superadmin) di Firebase Realtime
+   Database Rules — lihat blok "surat" di rules.json, sejajar dengan "rapor" dan "backup". */
+let suratRef = null;
+function suratRootRef(path){ return db.ref('surat' + (path?('/'+path):'')); }
+function attachSuratListener(){
+  if(suratRef) return; // sudah terpasang
+  suratRef = suratRootRef();
+  state.surat = {};
+  const renderSurat = debounce(()=>{ renderSuratTable(); }, 80);
+  suratRef.on('child_added', snap=>{ state.surat[snap.key] = snap.val(); renderSurat(); });
+  suratRef.on('child_changed', snap=>{ state.surat[snap.key] = snap.val(); renderSurat(); });
+  suratRef.on('child_removed', snap=>{ delete state.surat[snap.key]; renderSurat(); });
+}
+function detachSuratListener(){
+  if(suratRef){ suratRef.off(); suratRef = null; }
+  state.surat = {};
+  const tbody = document.querySelector('#suratTable tbody');
+  if(tbody) tbody.innerHTML = '';
 }
 
 // Migrasi otomatis: kelas lama menyimpan biodata lengkap langsung di rapor/data/{kelasId}/students/{id}.
@@ -2146,6 +2275,7 @@ function attachKelasListListener(){
     populateKelasSwitcher();
     populateCopySubjectsFrom();
     populatePindahRiwayatSelects();
+    renderDatabaseSiswaGlobal();
 
     // Kelas pertama kali di database ini (belum ada kelas sama sekali): isi bawaan Tahun
     // Ajaran dengan 1447-1448 H / 2026-2027 M supaya admin tidak perlu ngetik dari nol.
@@ -3183,18 +3313,19 @@ document.getElementById('btnPindahKelas').addEventListener('click', async ()=>{
   }
 });
 
-async function renderRiwayatKelas(){
-  const sel = document.getElementById('riwayatSiswaPick');
-  const box = document.getElementById('riwayatKelasList');
-  if(!sel || !box) return;
-  const id = sel.value;
+async function renderRiwayatKelasInto(id, box){
+  if(!box) return;
   if(!id){ box.innerHTML = ''; return; }
   const m = state.studentsMaster[id];
   const riwayat = (m && m.riwayatKelas) || {};
   const entries = Object.entries(riwayat).sort((a,b)=> (a[1].tahun||'').localeCompare(b[1].tahun||''));
   if(!entries.length){ box.innerHTML = '<div class="empty">Belum ada riwayat kelas untuk siswa ini.</div>'; return; }
 
-  const myRequestId = (renderRiwayatKelas._reqId = (renderRiwayatKelas._reqId||0) + 1);
+  // Request id disimpan DI ELEMEN box itu sendiri (bukan properti statis fungsi) supaya dua box
+  // berbeda (mis. box di kartu "Riwayat Kelas & Nilai Siswa" & box di kartu "Database Siswa
+  // Keseluruhan") masing-masing punya penanda "permintaan terbaru" sendiri tanpa saling menimpa.
+  box._reqId = (box._reqId || 0) + 1;
+  const myRequestId = box._reqId;
   box.innerHTML = '<div class="hint">Memuat riwayat nilai…</div>';
   const rowsHtml = [];
   for(const [kelasId, r] of entries){
@@ -3202,7 +3333,7 @@ async function renderRiwayatKelas(){
       db.ref('rapor/data/'+kelasId+'/subjects').get(),
       ...CATUR_KEYS.map(cw=> db.ref('rapor/data/'+kelasId+'/scores/'+cw+'/'+id).get())
     ]);
-    if(myRequestId !== renderRiwayatKelas._reqId) return; // sudah ganti siswa/kelas, batalkan render lama
+    if(myRequestId !== box._reqId) return; // sudah ganti siswa/kelas, batalkan render lama
     const subjects = subjSnap.val() || [];
     const aktif = m.kelasAktifId===kelasId ? ' <span class="pill active">aktif</span>' : '';
     CATUR_KEYS.forEach((cw,i)=>{
@@ -3219,12 +3350,220 @@ async function renderRiwayatKelas(){
       </tr>`);
     });
   }
-  if(myRequestId !== renderRiwayatKelas._reqId) return;
+  if(myRequestId !== box._reqId) return;
   box.innerHTML = rowsHtml.length
     ? `<table><thead><tr><th style="text-align:left;">Kelas</th><th>Catur Wulan</th><th>Tahun</th><th style="text-align:left;">Nilai per Mapel</th></tr></thead><tbody>${rowsHtml.join('')}</tbody></table>`
     : '<div class="empty">Belum ada nilai tersimpan di kelas manapun untuk siswa ini.</div>';
 }
+async function renderRiwayatKelas(){
+  const sel = document.getElementById('riwayatSiswaPick');
+  const box = document.getElementById('riwayatKelasList');
+  if(!sel || !box) return;
+  await renderRiwayatKelasInto(sel.value, box);
+}
 document.getElementById('riwayatSiswaPick').addEventListener('change', renderRiwayatKelas);
+
+/* ===================== Database Siswa Keseluruhan (khusus Staf/Admin/Super Admin) =====================
+   Berbeda dari "Daftar Siswa" (studentTable) yang hanya menampilkan siswa DI KELAS AKTIF, tabel ini
+   memakai state.studentsMaster APA ADANYA (sudah global lintas kelas — lihat attachStudentsMasterListener),
+   sehingga siswa yang sudah pindah/lulus dari kelas aktif tetap terlihat di sini. */
+function renderDatabaseSiswaGlobal(){
+  const canAdminExtra = isStaf() || isAdmin();
+  const tbody = document.querySelector('#globalSiswaTable tbody');
+  if(!tbody || !canAdminExtra) return; // tidak dirender kalau tidak berhak (kartu juga disembunyikan di applyRoleUI)
+  const searchInput = document.getElementById('globalSiswaSearch');
+  const q = (searchInput && searchInput.value || '').trim().toLowerCase();
+  const all = Object.entries(state.studentsMaster);
+  const list = all.filter(([id,m])=>{
+    if(!q) return true;
+    const hay = [m.nama,m.nisn,m.nis,m.alamat,m.ayah,m.ibu,m.wali].map(v=>(v||'').toLowerCase()).join(' ');
+    return hay.includes(q);
+  }).sort((a,b)=> String(a[1].nama||'').localeCompare(String(b[1].nama||'')));
+  tbody.innerHTML = '';
+  document.getElementById('globalSiswaEmpty').style.display = all.length ? 'none' : '';
+  list.forEach(([id,m])=>{
+    const ak = state.kelasList[m.kelasAktifId];
+    const kelasAktifTxt = ak ? escapeHtml(`${ak.tingkatan||''} ${ak.kelasNama||''} · ${ak.tahun||''}`.trim()) : '<span class="hint">tidak ada kelas aktif</span>';
+    const jumlahRiwayat = Object.keys(m.riwayatKelas||{}).length;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="name">${escapeHtml(m.nama||'-')}</td>
+      <td class="num">${escapeHtml(m.nisn||'-')}</td>
+      <td>${escapeHtml(m.jk||'-')}</td>
+      <td style="text-align:left;">${kelasAktifTxt}</td>
+      <td>${jumlahRiwayat} kelas</td>
+      <td class="noprint"><button class="secondary" data-act="riwayat" data-id="${id}" type="button">Lihat Riwayat</button></td>`;
+    tbody.appendChild(tr);
+  });
+  if(all.length && !list.length){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td colspan="6" class="empty" style="padding:16px;">Tidak ada siswa yang cocok dengan pencarian.</td>`;
+    tbody.appendChild(tr);
+  }
+  tbody.querySelectorAll('button[data-act="riwayat"]').forEach(b=>{
+    b.addEventListener('click', ()=> showGlobalRiwayat(b.dataset.id));
+  });
+}
+document.getElementById('globalSiswaSearch')?.addEventListener('input', renderDatabaseSiswaGlobal);
+
+async function showGlobalRiwayat(id){
+  const m = state.studentsMaster[id];
+  if(!m) return;
+  const wrap = document.getElementById('globalRiwayatWrap');
+  const title = document.getElementById('globalRiwayatTitle');
+  const box = document.getElementById('globalRiwayatBox');
+  if(!wrap || !title || !box) return;
+  wrap.style.display = '';
+  title.textContent = `Riwayat Kelas — ${m.nama||''}`;
+  await renderRiwayatKelasInto(id, box);
+  wrap.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+document.getElementById('btnExportSiswaGlobal')?.addEventListener('click', ()=>{
+  const rows = [['Nama','NISN','NIS','JK','Alamat','Ayah','Ibu','Wali','No. HP Wali/Ortu','Kelas Aktif Saat Ini','Tahun Ajaran Aktif','Jumlah Kelas Ditempuh','Riwayat Kelas (ringkas)']];
+  Object.values(state.studentsMaster).sort((a,b)=> String(a.nama||'').localeCompare(String(b.nama||''))).forEach(m=>{
+    const ak = state.kelasList[m.kelasAktifId] || {};
+    const riwayatTxt = Object.values(m.riwayatKelas||{})
+      .sort((a,b)=> String(a.tahun||'').localeCompare(String(b.tahun||'')))
+      .map(r=> `${r.tingkatan||''} ${r.kelasNama||''} (${r.tahun||''})`.trim()).join('; ');
+    rows.push([
+      m.nama||'', m.nisn||'', m.nis||'', m.jk||'', m.alamat||'', m.ayah||'', m.ibu||'', m.wali||'', m.telp||'',
+      ak.kelasNama ? `${ak.tingkatan||''} ${ak.kelasNama||''}`.trim() : '', ak.tahun||'',
+      Object.keys(m.riwayatKelas||{}).length, riwayatTxt
+    ]);
+  });
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, sheetFromAOA(rows,[22,14,12,4,24,18,18,18,16,20,14,10,40]), 'Database Siswa Keseluruhan');
+  downloadWorkbook(wb, `database-siswa-keseluruhan-${todayISO()}.xlsx`);
+});
+
+/* ===================== Surat Menyurat (khusus Staf/Admin/Super Admin) ===================== */
+let suratEditId = null; // null = mode tambah, terisi = mode ubah
+function resetSuratForm(){
+  suratEditId = null;
+  const t = document.getElementById('suratFormTitle'); if(t) t.textContent = 'Tambah Surat';
+  const jenis = document.getElementById('stJenis'); if(jenis) jenis.value = 'masuk';
+  const nomor = document.getElementById('stNomor'); if(nomor) nomor.value = '';
+  const tgl = document.getElementById('stTanggal'); if(tgl) tgl.value = todayISO();
+  const pihak = document.getElementById('stPihak'); if(pihak) pihak.value = '';
+  const perihal = document.getElementById('stPerihal'); if(perihal) perihal.value = '';
+  const ket = document.getElementById('stKeterangan'); if(ket) ket.value = '';
+  const btn = document.getElementById('btnSaveSurat'); if(btn) btn.textContent = '+ Simpan Surat';
+  const cancel = document.getElementById('btnCancelSuratEdit'); if(cancel) cancel.style.display = 'none';
+}
+resetSuratForm();
+document.getElementById('btnCancelSuratEdit')?.addEventListener('click', resetSuratForm);
+
+document.getElementById('btnSaveSurat')?.addEventListener('click', ()=>{
+  if(!(isStaf()||isAdmin())){ toast('Hanya Staf/Admin/Super Admin yang boleh mencatat surat'); return; }
+  if(!db){ toast('Hubungkan Firebase dulu (masuk akun)'); return; }
+  const perihal = document.getElementById('stPerihal').value.trim();
+  if(!perihal){ toast('Isi perihal surat dulu'); return; }
+  const data = {
+    jenis: document.getElementById('stJenis').value,
+    nomor: document.getElementById('stNomor').value.trim(),
+    tanggal: document.getElementById('stTanggal').value || todayISO(),
+    pihak: document.getElementById('stPihak').value.trim(),
+    perihal,
+    keterangan: document.getElementById('stKeterangan').value.trim(),
+  };
+  if(suratEditId){
+    suratRootRef(suratEditId).update(data).then(()=>{
+      toast('Surat diperbarui');
+      resetSuratForm();
+    }).catch(e=>{
+      console.error(e);
+      toast('Gagal memperbarui surat: '+(e.message||e.code||e));
+    });
+    return;
+  }
+  const newRef = suratRootRef().push();
+  newRef.set(Object.assign({createdAt: firebase.database.ServerValue.TIMESTAMP}, data)).then(()=>{
+    toast('Surat disimpan');
+    resetSuratForm();
+  }).catch(e=>{
+    console.error(e);
+    toast('Gagal menyimpan surat: '+(e.message||e.code||e));
+  });
+});
+
+function fillSuratForm(id){
+  const s = state.surat[id];
+  if(!s) return;
+  suratEditId = id;
+  document.getElementById('suratFormTitle').textContent = 'Ubah Surat';
+  document.getElementById('stJenis').value = s.jenis || 'masuk';
+  document.getElementById('stNomor').value = s.nomor || '';
+  document.getElementById('stTanggal').value = s.tanggal || '';
+  document.getElementById('stPihak').value = s.pihak || '';
+  document.getElementById('stPerihal').value = s.perihal || '';
+  document.getElementById('stKeterangan').value = s.keterangan || '';
+  document.getElementById('btnSaveSurat').textContent = 'Simpan Perubahan';
+  document.getElementById('btnCancelSuratEdit').style.display = '';
+  setTab('surat');
+}
+
+function suratMatchesFilter(s, q, jenisFilter){
+  if(jenisFilter && s.jenis !== jenisFilter) return false;
+  if(!q) return true;
+  const hay = [s.nomor,s.pihak,s.perihal,s.keterangan].map(v=>(v||'').toLowerCase()).join(' ');
+  return hay.includes(q);
+}
+
+function renderSuratTable(){
+  const tbody = document.querySelector('#suratTable tbody');
+  if(!tbody) return;
+  const searchEl = document.getElementById('suratSearch');
+  const jenisEl = document.getElementById('suratFilterJenis');
+  const q = (searchEl && searchEl.value || '').trim().toLowerCase();
+  const jenisFilter = jenisEl ? jenisEl.value : '';
+  const all = Object.entries(state.surat);
+  const list = all.filter(([id,s])=> suratMatchesFilter(s,q,jenisFilter))
+    .sort((a,b)=> String(b[1].tanggal||'').localeCompare(String(a[1].tanggal||'')));
+  tbody.innerHTML = '';
+  const emptyEl = document.getElementById('suratEmpty');
+  if(emptyEl) emptyEl.style.display = all.length ? 'none' : '';
+  list.forEach(([id,s])=>{
+    const jenisLabel = s.jenis==='keluar' ? 'Keluar' : 'Masuk';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(s.tanggal||'-')}</td>
+      <td><span class="pill${s.jenis==='keluar'?' active':''}">${jenisLabel}</span></td>
+      <td style="text-align:left;">${escapeHtml(s.nomor||'-')}</td>
+      <td style="text-align:left;">${escapeHtml(s.pihak||'-')}</td>
+      <td style="text-align:left;">${escapeHtml(s.perihal||'-')}</td>
+      <td class="noprint">
+        <button class="secondary" data-act="edit" data-id="${id}" type="button">Ubah</button>
+        <button class="danger" data-act="del" data-id="${id}" type="button">Hapus</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  if(all.length && !list.length){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td colspan="6" class="empty" style="padding:16px;">Tidak ada surat yang cocok dengan pencarian/filter.</td>`;
+    tbody.appendChild(tr);
+  }
+  tbody.querySelectorAll('button[data-act="edit"]').forEach(b=> b.addEventListener('click', ()=> fillSuratForm(b.dataset.id)));
+  tbody.querySelectorAll('button[data-act="del"]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      if(!confirm('Hapus surat ini dari arsip?')) return;
+      suratRootRef(b.dataset.id).remove();
+      if(suratEditId===b.dataset.id) resetSuratForm();
+    });
+  });
+}
+document.getElementById('suratSearch')?.addEventListener('input', renderSuratTable);
+document.getElementById('suratFilterJenis')?.addEventListener('change', renderSuratTable);
+
+document.getElementById('btnExportSurat')?.addEventListener('click', ()=>{
+  const rows = [['Tanggal','Jenis','Nomor','Dari/Kepada','Perihal','Keterangan']];
+  Object.values(state.surat).sort((a,b)=> String(a.tanggal||'').localeCompare(String(b.tanggal||''))).forEach(s=>{
+    rows.push([s.tanggal||'', s.jenis==='keluar'?'Keluar':'Masuk', s.nomor||'', s.pihak||'', s.perihal||'', s.keterangan||'']);
+  });
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, sheetFromAOA(rows,[14,10,18,24,30,30]), 'Surat Menyurat');
+  downloadWorkbook(wb, `surat-menyurat-${todayISO()}.xlsx`);
+});
 
 /* ===================== Absensi ===================== */
 let pendingAbsensi = {}; // studentId -> 'H'|'S'|'I'|'A' untuk tanggal yang sedang dilihat
