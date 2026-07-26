@@ -967,8 +967,11 @@
       <h3>Nilai Raport (konversi 4–9)</h3>
       <div class="tablewrap"><table id="tblRaport"><thead></thead><tbody></tbody></table></div>
 
-      <h3>Rata-rata Kelas per Mata Pelajaran</h3>
+      <h3>Rata-rata Kelas per Mata Pelajaran (Nilai Asli)</h3>
       <div class="tablewrap"><table id="tblAvg"><thead></thead><tbody></tbody></table></div>
+
+      <h3>Rata-rata Kelas per Mata Pelajaran (Nilai Raport)</h3>
+      <div class="tablewrap"><table id="tblAvgRaport"><thead></thead><tbody></tbody></table></div>
     </div>
 
     <div class="card noprint">
@@ -4604,12 +4607,12 @@ function renderRekap(){
   const tRap = document.getElementById('tblRaport');
   tRap.querySelector('thead').innerHTML = '<tr><th>No</th><th style="text-align:left;">Nama</th>' +
     subjects.map(s=>`<th>${escapeHtml(s)}</th>`).join('') +
-    '<th>Jml</th><th>Absen</th><th>Bersih</th>' +
+    '<th>Jml</th><th>Absen</th><th>Bersih</th><th>Rata²</th>' +
     '<th>Kelakuan</th><th>Kerajinan</th><th>Kebersihan</th><th>Sakit</th><th>Ijin</th><th>Alpa</th></tr>';
   tRap.querySelector('tbody').innerHTML = rows.length ? rows.map(r=>
     `<tr><td>${r.no}</td><td class="name">${escapeHtml(r.nama)}</td>` +
     r.raport.map(v=>`<td class="num${Number(v)<=5?' nilaiMerah':''}">${v}</td>`).join('') +
-    `<td class="num">${r.raportJumlah}</td><td class="num">${r.potonganRaport}</td><td class="num">${r.raportBersih}</td>` +
+    `<td class="num">${r.raportJumlah}</td><td class="num">${r.potonganRaport}</td><td class="num">${r.raportBersih}</td><td class="num">${r.raportRata.toFixed(2)}</td>` +
     `<td>${escapeHtml(r.sikap.kelakuan||'')}</td><td>${escapeHtml(r.sikap.kerajinan||'')}</td><td>${escapeHtml(r.sikap.kebersihan||'')}</td>` +
     `<td class="num">${r.absen.sakit||0}</td><td class="num">${r.absen.ijin||0}</td><td class="num">${r.absen.alpa||0}</td></tr>`
   ).join('') : '';
@@ -4623,6 +4626,17 @@ function renderRekap(){
     tAvg.querySelector('tbody').innerHTML = '<tr>' + avgs.map(a=>`<td class="num">${a.toFixed(1)}</td>`).join('') + `<td class="num"><strong>${overall.toFixed(2)}</strong></td></tr>`;
   } else {
     tAvg.querySelector('tbody').innerHTML = '';
+  }
+
+  const tAvgRap = document.getElementById('tblAvgRaport');
+  tAvgRap.querySelector('thead').innerHTML = '<tr>' + subjects.map(s=>`<th>${escapeHtml(s)}</th>`).join('') + '<th>Rata² Umum</th></tr>';
+  if(rows.length){
+    const sumsRap = subjects.map((_,i)=> rows.reduce((a,r)=>a+r.raport[i],0));
+    const avgsRap = sumsRap.map(s=> s/rows.length);
+    const overallRap = avgsRap.reduce((a,b)=>a+b,0)/avgsRap.length;
+    tAvgRap.querySelector('tbody').innerHTML = '<tr>' + avgsRap.map(a=>`<td class="num">${a.toFixed(2)}</td>`).join('') + `<td class="num"><strong>${overallRap.toFixed(2)}</strong></td></tr>`;
+  } else {
+    tAvgRap.querySelector('tbody').innerHTML = '';
   }
 
   let msg = document.getElementById('rekapEmptyMsg');
@@ -4652,15 +4666,21 @@ document.getElementById('btnExportRekap').addEventListener('click', ()=>{
   rows.forEach(r=> asliRows.push([r.no, r.nama, ...r.nilaiAsli, r.jumlah, r.potongan, r.bersih, Number(r.rata.toFixed(2)), r.peringkat]));
   XLSX.utils.book_append_sheet(wb, sheetFromAOA(asliRows, [4,22,...subjects.map(()=>10),8,8,8,8,10]), 'Nilai Asli');
 
-  const rapRows = [['No','Nama', ...subjects, 'Jml','Absen','Bersih', 'Kelakuan','Kerajinan','Kebersihan','Sakit','Ijin','Alpa']];
-  rows.forEach(r=> rapRows.push([r.no, r.nama, ...r.raport, r.raportJumlah, r.potonganRaport, r.raportBersih, r.sikap.kelakuan||'', r.sikap.kerajinan||'', r.sikap.kebersihan||'', r.absen.sakit||0, r.absen.ijin||0, r.absen.alpa||0]));
-  XLSX.utils.book_append_sheet(wb, sheetFromAOA(rapRows, [4,22,...subjects.map(()=>8),8,8,8,10,10,10,8,8,8]), 'Nilai Raport');
+  const rapRows = [['No','Nama', ...subjects, 'Jml','Absen','Bersih','Rata²', 'Kelakuan','Kerajinan','Kebersihan','Sakit','Ijin','Alpa']];
+  rows.forEach(r=> rapRows.push([r.no, r.nama, ...r.raport, r.raportJumlah, r.potonganRaport, r.raportBersih, Number(r.raportRata.toFixed(2)), r.sikap.kelakuan||'', r.sikap.kerajinan||'', r.sikap.kebersihan||'', r.absen.sakit||0, r.absen.ijin||0, r.absen.alpa||0]));
+  XLSX.utils.book_append_sheet(wb, sheetFromAOA(rapRows, [4,22,...subjects.map(()=>8),8,8,8,8,10,10,10,8,8,8]), 'Nilai Raport');
 
   const sums = subjects.map((_,i)=> rows.reduce((a,r)=>a+r.nilaiAsli[i],0));
   const avgs = sums.map(s=> Number((s/rows.length).toFixed(2)));
   const overall = Number((avgs.reduce((a,b)=>a+b,0)/avgs.length).toFixed(2));
   const avgRows = [[...subjects, 'Rata² Umum'], [...avgs, overall]];
-  XLSX.utils.book_append_sheet(wb, sheetFromAOA(avgRows, [...subjects.map(()=>10),12]), 'Rata-rata Kelas');
+  XLSX.utils.book_append_sheet(wb, sheetFromAOA(avgRows, [...subjects.map(()=>10),12]), 'Rata-rata Kelas (Asli)');
+
+  const sumsRap = subjects.map((_,i)=> rows.reduce((a,r)=>a+r.raport[i],0));
+  const avgsRap = sumsRap.map(s=> Number((s/rows.length).toFixed(2)));
+  const overallRap = Number((avgsRap.reduce((a,b)=>a+b,0)/avgsRap.length).toFixed(2));
+  const avgRapRows = [[...subjects, 'Rata² Umum'], [...avgsRap, overallRap]];
+  XLSX.utils.book_append_sheet(wb, sheetFromAOA(avgRapRows, [...subjects.map(()=>10),12]), 'Rata-rata Kelas (Raport)');
 
   downloadWorkbook(wb, `rekap-${kelasFileTag()}.xlsx`);
 });
@@ -4826,6 +4846,7 @@ document.getElementById('btnBuildCard').addEventListener('click', ()=>{
         <div class="field"><label>Jumlah Nilai Raport</label><div class="num">${r.raportJumlah}</div></div>
         <div class="field"><label>Dikurangi Absen (Raport)</label><div class="num">${r.potonganRaport}</div></div>
         <div class="field"><label>Raport Bersih</label><div class="num">${r.raportBersih}</div></div>
+        <div class="field"><label>Rata-rata Raport</label><div class="num">${r.raportRata.toFixed(2)}</div></div>
       </div>
       <div class="row">
         <div class="field"><label>Kelakuan</label><div>${escapeHtml(r.sikap.kelakuan||'-')}</div></div>
