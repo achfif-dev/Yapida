@@ -3850,7 +3850,7 @@ function renderTabelMassal(){
     const sc = state.scores[st.id] || {};
     const mapel = sc.mapel || {};
     return `<tr><td>${st.no}</td><td class="name">${escapeHtml(st.nama)}</td>` +
-      subjects.map(s=>`<td><input type="number" min="0" max="100" style="width:64px;text-align:center;padding:5px;" data-id="${st.id}" data-subj="${escapeHtml(s)}" value="${mapel[s] ?? ''}"></td>`).join('') +
+      subjects.map(s=>`<td><input type="number" min="0" max="100" inputmode="numeric" enterkeyhint="next" style="width:64px;text-align:center;padding:5px;" data-id="${st.id}" data-subj="${escapeHtml(s)}" value="${mapel[s] ?? ''}"></td>`).join('') +
       '</tr>';
   }).join('');
 }
