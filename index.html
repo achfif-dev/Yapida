@@ -3789,9 +3789,16 @@ function updateLiveCalc(){
 document.getElementById('btnSaveScore').addEventListener('click', ()=>{
   const id = document.getElementById('pickStudent').value;
   if(!id){ toast('Pilih siswa dulu'); return; }
+  const existingMapel = (state.scores[id] && state.scores[id].mapel) || {};
   const mapel = {};
   document.querySelectorAll('#subjectInputs input').forEach(inp=>{
-    mapel[inp.dataset.subj] = Number(inp.value||0);
+    const v = inp.value;
+    if(v===''){
+      // biarkan kosong: pertahankan nilai lama (jika ada), jangan menimpa dengan 0
+      if(existingMapel[inp.dataset.subj] !== undefined) mapel[inp.dataset.subj] = existingMapel[inp.dataset.subj];
+      return;
+    }
+    mapel[inp.dataset.subj] = Number(v);
   });
   const absen = {
     sakit: Number(document.getElementById('absSakit').value||0),
@@ -3847,6 +3854,33 @@ function renderTabelMassal(){
       '</tr>';
   }).join('');
 }
+
+// Tombol Enter (PC maupun HP) pindah ke baris di bawahnya pada kolom mapel yang sama,
+// mengikuti urutan siswa — persis seperti Excel. Kalau sudah di baris terakhir, lanjut
+// ke kolom mapel berikutnya mulai dari baris pertama.
+document.querySelector('#tblInputMassal tbody').addEventListener('keydown', (e)=>{
+  if(e.key !== 'Enter') return;
+  const inp = e.target;
+  if(!inp || !inp.dataset || !inp.dataset.subj) return;
+  e.preventDefault();
+  const tbody = document.querySelector('#tblInputMassal tbody');
+  const subj = inp.dataset.subj;
+  const kolomIni = Array.from(tbody.querySelectorAll('input[data-subj]')).filter(el=> el.dataset.subj === subj);
+  const idx = kolomIni.indexOf(inp);
+  if(idx === -1) return;
+  if(idx < kolomIni.length - 1){
+    kolomIni[idx+1].focus();
+    kolomIni[idx+1].select();
+  } else {
+    const subjects = state.subjects;
+    const subjIdx = subjects.indexOf(subj);
+    if(subjIdx > -1 && subjIdx < subjects.length - 1){
+      const nextSubj = subjects[subjIdx+1];
+      const kolomBerikutnya = Array.from(tbody.querySelectorAll('input[data-subj]')).filter(el=> el.dataset.subj === nextSubj);
+      if(kolomBerikutnya.length){ kolomBerikutnya[0].focus(); kolomBerikutnya[0].select(); }
+    }
+  }
+});
 
 document.getElementById('btnSaveTabelMassal').addEventListener('click', ()=>{
   if(!activeKelasId){ toast('Pilih/buat kelas dulu'); return; }
