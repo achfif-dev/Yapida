@@ -253,6 +253,39 @@
     body.printingKartuSiswa .card{display:none !important;}
     body.printingKartuSiswa #cardArea{display:block !important;}
   }
+  /* ---------- Surat (Buat Surat / Kop Surat kustom) ---------- */
+  .suratDocPage{
+    width:100%; max-width:720px; margin:0 auto; background:#fff; color:#111;
+    padding:22mm 20mm; box-sizing:border-box; box-shadow:var(--shadow);
+    font-family:var(--sdFont,'Public Sans',system-ui,sans-serif);
+    font-size:calc(13px * var(--sdFontScale,1)); line-height:var(--sdLineHeight,1.5);
+  }
+  .suratDocKop{display:flex; align-items:center; gap:12px; border-bottom:3px double #222; padding-bottom:8px; margin-bottom:14px;}
+  .suratDocKop img{width:64px; height:64px; object-fit:contain; flex:0 0 auto;}
+  .suratDocKop .txt{flex:1; text-align:center;}
+  .suratDocKop .yayasan{font-size:0.85em; letter-spacing:.03em;}
+  .suratDocKop .madrasah{font-weight:800; font-size:1.35em; font-family:'Fraunces',serif; text-transform:uppercase;}
+  .suratDocKop .alamat{font-size:0.78em; color:#333;}
+  .suratDocMeta{display:flex; justify-content:space-between; gap:12px; margin-bottom:10px;}
+  .suratDocMeta .kanan{text-align:right;}
+  .suratDocKepada{margin-bottom:10px; white-space:pre-line;}
+  .suratDocPerihal{margin-bottom:10px;}
+  .suratDocIsi{white-space:pre-line; margin-bottom:10px;}
+  .suratDocIsi.justify{text-align:justify;}
+  .suratDocPenutup{white-space:pre-line; margin-bottom:10px;}
+  .suratDocTtdWrap{display:flex; margin-top:18px;}
+  .suratDocTtdWrap.pos-kiri{justify-content:flex-start;}
+  .suratDocTtdWrap.pos-tengah{justify-content:center;}
+  .suratDocTtdWrap.pos-kanan{justify-content:flex-end;}
+  .suratDocTtd{text-align:center; min-width:200px;}
+  .suratDocTtd .nama{font-weight:700; text-decoration:underline; text-underline-offset:3px; margin-top:56px; display:block;}
+  .suratDocTtd .nip{font-size:0.85em;}
+  @media print{
+    body.printingSurat main{padding:0;}
+    body.printingSurat .card:not(.suratDocPrintCard){display:none !important;}
+    body.printingSurat .suratDocPrintCard{box-shadow:none; border:none; display:block !important;}
+    body.printingSurat .suratDocPage{box-shadow:none; margin:0 auto; padding:0;}
+  }
   @media (max-width:640px){
     .topbar h1{font-size:19px;}
     .topbar{padding:16px 14px 40px;}
@@ -469,6 +502,93 @@
         <button class="secondary" id="btnCancelSuratEdit" type="button" style="display:none;">Batal Ubah</button>
       </div>
     </div>
+    <div class="card noprint">
+      <h2 id="sdFormTitle">Buat Surat dari Madrasah</h2>
+      <p class="hint">Susun surat resmi (undangan, pemberitahuan, keterangan, dll) dengan kop &amp; isi bebas sesuai kebutuhan, lalu cetak atau simpan ke arsip di atas. Khusus <strong>Super Admin, Admin &amp; Staf</strong>.</p>
+
+      <h3>Kop Surat (opsional)</h3>
+      <div class="row" style="align-items:center;">
+        <div class="field" style="flex:0 0 auto;">
+          <label style="display:flex; align-items:center; gap:6px; font-weight:600;">
+            <input type="checkbox" id="sdPakaiKop" style="width:auto;" checked> Tampilkan kop surat
+          </label>
+        </div>
+        <div class="field" style="flex:2;"><label>Logo (opsional)</label><input type="file" id="sdLogoFile" accept="image/*"><span class="hint" id="sdLogoStatus"></span></div>
+        <div class="field" style="flex:0 0 auto; align-self:flex-end;"><button class="secondary" id="btnClearSdLogo" type="button">Hapus Logo</button></div>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:2;"><label>Nama Yayasan (baris atas, opsional)</label><input id="sdYayasan" placeholder="cth. YAYASAN AL-HIDAYAH"></div>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:2;"><label>Nama Madrasah / Lembaga</label><input id="sdNamaMadrasah"></div>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:2;"><label>Alamat / Kontak</label><input id="sdAlamat" placeholder="Alamat, No. Telp, Email (opsional)"></div>
+      </div>
+
+      <h3>Kepala Surat</h3>
+      <div class="row">
+        <div class="field" style="flex:0 0 200px;"><label>Nomor Surat</label><input id="sdNomor" placeholder="opsional"></div>
+        <div class="field" style="flex:0 0 200px;"><label>Lampiran</label><input id="sdLampiran" placeholder="opsional"></div>
+        <div class="field"><label>Perihal</label><input id="sdPerihal" placeholder="Perihal surat"></div>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:0 0 220px;"><label>Tempat</label><input id="sdTempat" placeholder="cth. Bangkalan"></div>
+        <div class="field" style="flex:0 0 220px;"><label>Tanggal</label><input id="sdTanggal" type="date"></div>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:2;"><label>Kepada Yth. (boleh beberapa baris)</label><textarea id="sdKepada" rows="2" placeholder="cth. Bapak/Ibu Wali Murid Kelas 3&#10;di tempat"></textarea></div>
+      </div>
+
+      <h3>Isi Surat</h3>
+      <p class="hint">Isi bebas, satu baris kosong = ganti paragraf. Kalimat pembuka dan penutup tidak otomatis ditambahkan — tulis sesuai kebutuhan surat.</p>
+      <div class="row">
+        <div class="field" style="flex:2;"><textarea id="sdIsi" rows="7" placeholder="Assalamu'alaikum warahmatullahi wabarakatuh,&#10;&#10;Sehubungan dengan ..."></textarea></div>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:2;"><label>Penutup (opsional)</label><textarea id="sdPenutup" rows="2" placeholder="Demikian surat ini kami sampaikan, atas perhatiannya kami ucapkan terima kasih."></textarea></div>
+      </div>
+
+      <h3>Tanda Tangan</h3>
+      <div class="row">
+        <div class="field" style="flex:0 0 180px;"><label>Posisi</label>
+          <select id="sdTtdPosisi"><option value="kanan">Kanan</option><option value="tengah">Tengah</option><option value="kiri">Kiri</option></select>
+        </div>
+        <div class="field"><label>Jabatan</label><input id="sdTtdJabatan" placeholder="cth. Kepala Madrasah"></div>
+        <div class="field"><label>Nama</label><input id="sdTtdNama"></div>
+        <div class="field" style="flex:0 0 160px;"><label>NIP (opsional)</label><input id="sdTtdNip"></div>
+      </div>
+
+      <h3>Layout &amp; Format Cetak</h3>
+      <div class="row">
+        <div class="field" style="flex:0 0 200px;"><label>Ukuran Kertas</label>
+          <select id="sdPaper"><option value="a4">A4 (210 × 297 mm)</option><option value="f4">F4 / Folio (215 × 330 mm)</option></select>
+        </div>
+        <div class="field" style="flex:0 0 200px;"><label>Perataan Isi Surat</label>
+          <select id="sdAlign"><option value="left">Rata Kiri</option><option value="justify">Rata Kiri-Kanan (Justify)</option></select>
+        </div>
+        <div class="field" style="flex:0 0 220px;"><label>Gaya Font</label><select id="sdFont"></select></div>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:0 0 180px;"><label>Ukuran Font (%)</label><input id="sdFontSize" type="number" step="5" min="70" max="150" placeholder="100"></div>
+        <div class="field" style="flex:0 0 180px;"><label>Spasi Baris</label><input id="sdLineHeight" type="number" step="0.05" min="1" max="2.2" placeholder="1.5"></div>
+      </div>
+
+      <div class="btnrow">
+        <button id="btnBuildSuratDoc" type="button">👁️ Tampilkan Pratinjau</button>
+        <button class="secondary" id="btnResetSuratDoc" type="button">Kosongkan Form</button>
+      </div>
+    </div>
+
+    <div class="card suratDocPrintCard" id="suratDocPreviewCard" style="display:none;">
+      <h2 class="noprint">Pratinjau Surat</h2>
+      <div class="btnrow noprint">
+        <button class="gold" id="btnPrintSuratDoc" type="button">🖨️ Cetak</button>
+        <button class="secondary" id="btnSaveSuratDoc" type="button">💾 Simpan ke Arsip Surat Keluar</button>
+      </div>
+      <div id="suratDocBoard"></div>
+    </div>
+
     <div class="card">
       <h2>Daftar Surat</h2>
       <div class="btnrow noprint">
@@ -3573,6 +3693,7 @@ function renderSuratTable(){
       <td style="text-align:left;">${escapeHtml(s.perihal||'-')}</td>
       <td class="noprint">
         <button class="secondary" data-act="edit" data-id="${id}" type="button">Ubah</button>
+        ${s.suratDoc ? `<button class="secondary" data-act="opendoc" data-id="${id}" type="button">🖨️ Buka Surat</button>` : ''}
         <button class="danger" data-act="del" data-id="${id}" type="button">Hapus</button>
       </td>`;
     tbody.appendChild(tr);
@@ -3583,6 +3704,7 @@ function renderSuratTable(){
     tbody.appendChild(tr);
   }
   tbody.querySelectorAll('button[data-act="edit"]').forEach(b=> b.addEventListener('click', ()=> fillSuratForm(b.dataset.id)));
+  tbody.querySelectorAll('button[data-act="opendoc"]').forEach(b=> b.addEventListener('click', ()=> openSuratDocFromArsip(b.dataset.id)));
   tbody.querySelectorAll('button[data-act="del"]').forEach(b=>{
     b.addEventListener('click', ()=>{
       if(!confirm('Hapus surat ini dari arsip?')) return;
@@ -3603,6 +3725,210 @@ document.getElementById('btnExportSurat')?.addEventListener('click', ()=>{
   XLSX.utils.book_append_sheet(wb, sheetFromAOA(rows,[14,10,18,24,30,30]), 'Surat Menyurat');
   downloadWorkbook(wb, `surat-menyurat-${todayISO()}.xlsx`);
 });
+
+/* ===================== Buat Surat (dokumen surat kustom, opsional & bisa disimpan ke arsip) ===================== */
+const SURAT_DOC_FONTS = {
+  sans:    {label:'Sans — Public Sans',       family:"'Public Sans', system-ui, sans-serif"},
+  inter:   {label:'Sans — Inter',             family:"'Inter', system-ui, sans-serif"},
+  poppins: {label:'Sans — Poppins',           family:"'Poppins', system-ui, sans-serif"},
+  serif:   {label:'Serif — PT Serif',         family:"'PT Serif', serif"},
+  lora:    {label:'Serif — Lora',             family:"'Lora', serif"},
+  garamond:{label:'Serif — EB Garamond',      family:"'EB Garamond', serif"},
+  merri:   {label:'Serif — Merriweather',     family:"'Merriweather', serif"},
+  times:   {label:'Klasik — Times New Roman', family:"'Times New Roman', Times, serif"},
+};
+const SURAT_DOC_PAPER = { a4:{w:210,h:297}, f4:{w:215,h:330} };
+let sdPendingLogo = undefined; // undefined = tak diubah, '' = dihapus, string = baru (dataURI)
+let sdEditArsipId = null; // id record di state.surat yang sedang dibuka/diubah suratDoc-nya (null = belum disimpan)
+
+(function initSuratDocFontSelect(){
+  const sel = document.getElementById('sdFont');
+  if(!sel) return;
+  sel.innerHTML = Object.keys(SURAT_DOC_FONTS).map(k=>`<option value="${k}">${escapeHtml(SURAT_DOC_FONTS[k].label)}</option>`).join('');
+})();
+
+function resetSuratDocForm(){
+  sdEditArsipId = null;
+  sdPendingLogo = undefined;
+  const set = (id,val)=>{ const el=document.getElementById(id); if(el) el.value = val; };
+  document.getElementById('sdPakaiKop').checked = true;
+  const logoFile = document.getElementById('sdLogoFile'); if(logoFile) logoFile.value = '';
+  const logoStatus = document.getElementById('sdLogoStatus'); if(logoStatus) logoStatus.textContent = '';
+  set('sdYayasan',''); set('sdNamaMadrasah',''); set('sdAlamat','');
+  set('sdNomor',''); set('sdLampiran',''); set('sdPerihal','');
+  set('sdTempat',''); set('sdTanggal', todayISO());
+  set('sdKepada',''); set('sdIsi',''); set('sdPenutup','');
+  set('sdTtdPosisi','kanan'); set('sdTtdJabatan','Kepala Madrasah'); set('sdTtdNama',''); set('sdTtdNip','');
+  set('sdPaper','a4'); set('sdAlign','left'); set('sdFont','sans');
+  set('sdFontSize','100'); set('sdLineHeight','1.5');
+  const title = document.getElementById('sdFormTitle'); if(title) title.textContent = 'Buat Surat dari Madrasah';
+  const card = document.getElementById('suratDocPreviewCard'); if(card) card.style.display = 'none';
+}
+resetSuratDocForm();
+document.getElementById('btnResetSuratDoc')?.addEventListener('click', ()=>{
+  if(!confirm('Kosongkan seluruh form surat ini?')) return;
+  resetSuratDocForm();
+});
+
+document.getElementById('sdLogoFile')?.addEventListener('change', async (e)=>{
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+  try{
+    sdPendingLogo = await fileToDataUri(file, 300);
+    document.getElementById('sdLogoStatus').textContent = 'Logo dipilih ✓ (klik "Tampilkan Pratinjau")';
+  }catch(err){
+    console.error(err);
+    toast('Gagal membaca gambar logo');
+  }
+});
+document.getElementById('btnClearSdLogo')?.addEventListener('click', ()=>{
+  sdPendingLogo = '';
+  const logoFile = document.getElementById('sdLogoFile'); if(logoFile) logoFile.value = '';
+  document.getElementById('sdLogoStatus').textContent = 'Logo akan dihapus';
+});
+
+function collectSuratDocConfig(){
+  const g = id => (document.getElementById(id)?.value || '').trim();
+  return {
+    pakaiKop: !!document.getElementById('sdPakaiKop')?.checked,
+    logo: sdPendingLogo!==undefined ? sdPendingLogo : (collectSuratDocConfig._lastLogo || ''),
+    yayasan: g('sdYayasan'), namaMadrasah: g('sdNamaMadrasah'), alamat: g('sdAlamat'),
+    nomor: g('sdNomor'), lampiran: g('sdLampiran'), perihal: g('sdPerihal'),
+    tempat: g('sdTempat'), tanggal: g('sdTanggal'),
+    kepada: g('sdKepada'), isi: g('sdIsi'), penutup: g('sdPenutup'),
+    ttdPosisi: g('sdTtdPosisi')||'kanan', ttdJabatan: g('sdTtdJabatan'), ttdNama: g('sdTtdNama'), ttdNip: g('sdTtdNip'),
+    paper: g('sdPaper')||'a4', align: g('sdAlign')||'left', font: g('sdFont')||'sans',
+    fontSize: Number(g('sdFontSize'))||100, lineHeight: Number(g('sdLineHeight'))||1.5,
+  };
+}
+
+function fillSuratDocForm(cfg){
+  const set = (id,val)=>{ const el=document.getElementById(id); if(el) el.value = val; };
+  document.getElementById('sdPakaiKop').checked = cfg.pakaiKop!==false;
+  sdPendingLogo = undefined; // biarkan logo lama tetap dipakai kecuali diubah lagi
+  collectSuratDocConfig._lastLogo = cfg.logo || '';
+  document.getElementById('sdLogoStatus').textContent = cfg.logo ? 'Memakai logo tersimpan' : '';
+  set('sdYayasan', cfg.yayasan||''); set('sdNamaMadrasah', cfg.namaMadrasah||''); set('sdAlamat', cfg.alamat||'');
+  set('sdNomor', cfg.nomor||''); set('sdLampiran', cfg.lampiran||''); set('sdPerihal', cfg.perihal||'');
+  set('sdTempat', cfg.tempat||''); set('sdTanggal', cfg.tanggal||todayISO());
+  set('sdKepada', cfg.kepada||''); set('sdIsi', cfg.isi||''); set('sdPenutup', cfg.penutup||'');
+  set('sdTtdPosisi', cfg.ttdPosisi||'kanan'); set('sdTtdJabatan', cfg.ttdJabatan||''); set('sdTtdNama', cfg.ttdNama||''); set('sdTtdNip', cfg.ttdNip||'');
+  set('sdPaper', cfg.paper||'a4'); set('sdAlign', cfg.align||'left'); set('sdFont', cfg.font||'sans');
+  set('sdFontSize', cfg.fontSize||100); set('sdLineHeight', cfg.lineHeight||1.5);
+}
+
+function formatTanggalIndo(iso){
+  if(!iso) return '';
+  const bulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const [y,m,d] = iso.split('-').map(Number);
+  if(!y||!m||!d) return iso;
+  return `${d} ${bulan[m-1]} ${y}`;
+}
+
+function renderSuratDocBoard(cfg){
+  const board = document.getElementById('suratDocBoard');
+  if(!board) return;
+  const fontDef = SURAT_DOC_FONTS[cfg.font] || SURAT_DOC_FONTS.sans;
+  const kopHtml = cfg.pakaiKop ? `
+    <div class="suratDocKop">
+      ${cfg.logo ? `<img src="${cfg.logo}" alt="logo">` : ''}
+      <div class="txt">
+        ${cfg.yayasan ? `<div class="yayasan">${escapeHtml(cfg.yayasan)}</div>` : ''}
+        <div class="madrasah">${escapeHtml(cfg.namaMadrasah||'')}</div>
+        ${cfg.alamat ? `<div class="alamat">${escapeHtml(cfg.alamat)}</div>` : ''}
+      </div>
+    </div>` : '';
+  const tglLabel = formatTanggalIndo(cfg.tanggal);
+  board.innerHTML = `
+    <div class="suratDocPage" style="--sdFont:${fontDef.family}; --sdFontScale:${(cfg.fontSize||100)/100}; --sdLineHeight:${cfg.lineHeight||1.5};">
+      ${kopHtml}
+      <div class="suratDocMeta">
+        <div class="kiri">
+          ${cfg.nomor ? `<div>Nomor: ${escapeHtml(cfg.nomor)}</div>` : ''}
+          ${cfg.lampiran ? `<div>Lampiran: ${escapeHtml(cfg.lampiran)}</div>` : ''}
+          ${cfg.perihal ? `<div>Perihal: <strong>${escapeHtml(cfg.perihal)}</strong></div>` : ''}
+        </div>
+        <div class="kanan">${[cfg.tempat, tglLabel].filter(Boolean).map(escapeHtml).join(', ')}</div>
+      </div>
+      ${cfg.kepada ? `<div class="suratDocKepada">${escapeHtml(cfg.kepada)}</div>` : ''}
+      <div class="suratDocIsi${cfg.align==='justify'?' justify':''}">${escapeHtml(cfg.isi||'')}</div>
+      ${cfg.penutup ? `<div class="suratDocPenutup${cfg.align==='justify'?' justify':''}">${escapeHtml(cfg.penutup)}</div>` : ''}
+      <div class="suratDocTtdWrap pos-${cfg.ttdPosisi||'kanan'}">
+        <div class="suratDocTtd">
+          <div>${escapeHtml(cfg.ttdJabatan||'')}</div>
+          <span class="nama">${escapeHtml(cfg.ttdNama||'............................')}</span>
+          ${cfg.ttdNip ? `<div class="nip">NIP. ${escapeHtml(cfg.ttdNip)}</div>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+
+function sdApplyPrintPageStyle(paper){
+  const sz = SURAT_DOC_PAPER[paper] || SURAT_DOC_PAPER.a4;
+  let styleEl = document.getElementById('suratDocPrintPageStyle');
+  if(!styleEl){ styleEl = document.createElement('style'); styleEl.id = 'suratDocPrintPageStyle'; document.head.appendChild(styleEl); }
+  styleEl.textContent = `@media print{ @page{ size: ${sz.w}mm ${sz.h}mm; margin:0mm; } }`;
+}
+
+let lastSuratDocConfig = null;
+document.getElementById('btnBuildSuratDoc')?.addEventListener('click', ()=>{
+  const cfg = collectSuratDocConfig();
+  if(cfg.pakaiKop && !cfg.namaMadrasah){ toast('Isi nama madrasah untuk kop surat, atau matikan opsi kop surat'); return; }
+  if(!cfg.perihal && !cfg.isi){ toast('Isi perihal atau isi surat dulu'); return; }
+  collectSuratDocConfig._lastLogo = cfg.logo;
+  lastSuratDocConfig = cfg;
+  renderSuratDocBoard(cfg);
+  const card = document.getElementById('suratDocPreviewCard');
+  if(card){ card.style.display = ''; card.scrollIntoView({behavior:'smooth', block:'start'}); }
+});
+
+document.getElementById('btnPrintSuratDoc')?.addEventListener('click', ()=>{
+  if(!lastSuratDocConfig){ toast('Tampilkan pratinjau dulu sebelum mencetak'); return; }
+  sdApplyPrintPageStyle(lastSuratDocConfig.paper);
+  document.body.classList.add('printingSurat');
+  window.print();
+});
+window.addEventListener('afterprint', ()=> document.body.classList.remove('printingSurat'));
+
+document.getElementById('btnSaveSuratDoc')?.addEventListener('click', ()=>{
+  if(!(isStaf()||isAdmin())){ toast('Hanya Staf/Admin/Super Admin yang boleh menyimpan surat'); return; }
+  if(!db){ toast('Hubungkan Firebase dulu (masuk akun)'); return; }
+  if(!lastSuratDocConfig){ toast('Tampilkan pratinjau dulu sebelum menyimpan'); return; }
+  const cfg = lastSuratDocConfig;
+  const data = {
+    jenis: 'keluar',
+    nomor: cfg.nomor || '',
+    tanggal: cfg.tanggal || todayISO(),
+    pihak: (cfg.kepada||'').split('\n')[0] || '',
+    perihal: cfg.perihal || '(Surat tanpa perihal)',
+    keterangan: 'Dibuat lewat fitur Buat Surat',
+    suratDoc: cfg,
+  };
+  const after = ()=>{ toast('Surat disimpan ke arsip'); };
+  if(sdEditArsipId){
+    suratRootRef(sdEditArsipId).update(data).then(after).catch(e=>{ console.error(e); toast('Gagal menyimpan: '+(e.message||e.code||e)); });
+  }else{
+    const newRef = suratRootRef().push();
+    newRef.set(Object.assign({createdAt: firebase.database.ServerValue.TIMESTAMP}, data)).then(()=>{
+      sdEditArsipId = newRef.key;
+      after();
+    }).catch(e=>{ console.error(e); toast('Gagal menyimpan: '+(e.message||e.code||e)); });
+  }
+});
+
+function openSuratDocFromArsip(id){
+  const s = state.surat[id];
+  if(!s || !s.suratDoc) return;
+  sdEditArsipId = id;
+  fillSuratDocForm(s.suratDoc);
+  lastSuratDocConfig = s.suratDoc;
+  document.getElementById('sdFormTitle').textContent = 'Buat Surat dari Madrasah (mengubah surat tersimpan)';
+  renderSuratDocBoard(s.suratDoc);
+  const card = document.getElementById('suratDocPreviewCard');
+  if(card) card.style.display = '';
+  setTab('surat');
+  document.getElementById('sdFormTitle')?.scrollIntoView({behavior:'smooth', block:'start'});
+}
 
 /* ===================== Absensi ===================== */
 let pendingAbsensi = {}; // studentId -> 'H'|'S'|'I'|'A' untuk tanggal yang sedang dilihat
