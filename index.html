@@ -187,6 +187,7 @@
     -webkit-print-color-adjust:exact; print-color-adjust:exact; color-adjust:exact;
   }
   .ijazahPage.hasCustomBorder{ background-size:100% 100%; background-repeat:no-repeat; }
+  .ijazahPage.hasCustomBorderBack{ background-size:100% 100%; background-repeat:no-repeat; }
   [data-ijzel].dragMode{ cursor:move; outline:1.5px dashed var(--gold); outline-offset:2px; }
   .ijazahInner.groupDragMode{ cursor:move; outline:1.5px dashed var(--gold); outline-offset:4px; }
   .ijazahPage::before{
@@ -196,37 +197,37 @@
     pointer-events:none;
   }
   .ijazahInner{position:relative; z-index:1; height:100%; display:flex; flex-direction:column; font-family:var(--ijzFontBody, 'Public Sans', system-ui, sans-serif);}
-  .ijazahArabTop{text-align:center; font-size:15px; line-height:1.6; color:#153627; direction:rtl; font-family:var(--ijzFontArab, 'Amiri', serif);}
-  .ijazahLembaga{text-align:center; font-weight:800; font-size:12.5px; margin-top:6px; color:#153627;}
-  .ijazahTitleWord{text-align:center; font-family:var(--ijzFontTitle, 'Fraunces', serif); font-weight:700; font-size:26px; margin:2px 0; color:#153627;}
-  .ijazahNos{display:flex; justify-content:space-between; font-size:10px; margin-top:-4px;}
-  .ijazahMadrasah{text-align:center; font-weight:800; font-size:12px; margin-top:6px;}
-  .ijazahAddr, .ijazahTingkat{text-align:center; font-size:10.5px;}
-  .ijazahTahun{text-align:center; font-size:10.5px; margin-top:4px;}
-  .ijazahLead{text-align:center; font-size:10.5px; margin-top:10px;}
-  .ijazahNama{text-align:center; font-weight:700; font-size:15px; margin:6px 0; text-decoration:underline; text-underline-offset:3px;}
-  .ijazahBioRow{display:flex; font-size:10.5px; gap:6px; margin-top:2px;}
+  .ijazahArabTop{text-align:center; font-size:calc(15px * var(--ijzScaleArab,1)); line-height:1.6; color:#153627; direction:rtl; font-family:var(--ijzFontArab, 'Amiri', serif);}
+  .ijazahLembaga{text-align:center; font-weight:800; font-size:calc(12.5px * var(--ijzScaleLatin,1)); margin-top:6px; color:#153627;}
+  .ijazahTitleWord{text-align:center; font-family:var(--ijzFontTitle, 'Fraunces', serif); font-weight:700; font-size:calc(26px * var(--ijzScaleLatin,1)); margin:2px 0; color:#153627;}
+  .ijazahNos{display:flex; justify-content:space-between; font-size:calc(10px * var(--ijzScaleLatin,1)); margin-top:-4px;}
+  .ijazahMadrasah{text-align:center; font-weight:800; font-size:calc(12px * var(--ijzScaleLatin,1)); margin-top:6px;}
+  .ijazahAddr, .ijazahTingkat{text-align:center; font-size:calc(10.5px * var(--ijzScaleLatin,1));}
+  .ijazahTahun{text-align:center; font-size:calc(10.5px * var(--ijzScaleLatin,1)); margin-top:4px;}
+  .ijazahLead{text-align:center; font-size:calc(10.5px * var(--ijzScaleLatin,1)); margin-top:10px;}
+  .ijazahNama{text-align:center; font-weight:700; font-size:calc(15px * var(--ijzScaleLatin,1)); margin:6px 0; text-decoration:underline; text-underline-offset:3px;}
+  .ijazahBioRow{display:flex; font-size:calc(10.5px * var(--ijzScaleLatin,1)); gap:6px; margin-top:2px;}
   .ijazahBioRow .lbl{width:98px; flex:0 0 auto;}
   .ijazahBioRow .val{font-weight:600; text-decoration:underline; text-underline-offset:2px;}
-  .ijazahTelahLulus{font-size:10px; margin-top:8px; text-align:justify;}
+  .ijazahTelahLulus{font-size:calc(10px * var(--ijzScaleLatin,1)); margin-top:8px; text-align:justify;}
   .ijazahFotoBox{width:70px; height:88px; border:1px solid #444; font-size:9px; text-align:center; display:flex; align-items:center; justify-content:center; color:#666; position:absolute; left:14px; bottom:70px; background:#fff; z-index:2;}
   .ijazahFotoBox img{width:100%; height:100%; object-fit:cover;}
-  .ijazahSignArea{margin-top:auto; font-size:10.5px; position:relative; z-index:1;}
+  .ijazahSignArea{margin-top:auto; font-size:calc(10.5px * var(--ijzScaleLatin,1)); position:relative; z-index:1;}
   .ijazahSignArea .ttd{text-align:center; margin-top:2px;}
   .ijazahSignArea .ttdNama{font-weight:700; text-decoration:underline; text-underline-offset:2px; margin-top:34px; display:block;}
   /* Blok pengurus yayasan: digeser ke kanan foto & diratakan tengah agar tidak pernah tertutup pas foto */
   .ijazahPengurusBlock{margin:12px auto 0; max-width:260px; text-align:center;}
   .ijazahPengurusBlock .ttd{text-align:center;}
   .ijazahPengurusBlock .ttdNama{margin-top:26px;}
-  .ijazahBackTitle{text-align:center; font-family:var(--ijzFontTitle, 'Fraunces', serif); font-weight:700; font-size:15px;}
-  .ijazahBackSub{text-align:center; font-weight:800; font-size:11.5px;}
-  .ijazahBackAddr{text-align:center; font-size:9.5px;}
-  .ijazahBackMeta{text-align:center; font-size:9.5px; margin-top:2px;}
-  .ijazahBackDaftar{text-align:center; font-size:9.5px; margin-top:8px; border-bottom:1px solid #333; padding-bottom:10px;}
-  .ijazahTbl{width:100%; font-size:9px; border-collapse:collapse; margin-top:8px;}
+  .ijazahBackTitle{text-align:center; font-family:var(--ijzFontTitle, 'Fraunces', serif); font-weight:700; font-size:calc(15px * var(--ijzScaleLatin,1));}
+  .ijazahBackSub{text-align:center; font-weight:800; font-size:calc(11.5px * var(--ijzScaleLatin,1));}
+  .ijazahBackAddr{text-align:center; font-size:calc(9.5px * var(--ijzScaleLatin,1));}
+  .ijazahBackMeta{text-align:center; font-size:calc(9.5px * var(--ijzScaleLatin,1)); margin-top:2px;}
+  .ijazahBackDaftar{text-align:center; font-size:calc(9.5px * var(--ijzScaleLatin,1)); margin-top:8px; border-bottom:1px solid #333; padding-bottom:10px;}
+  .ijazahTbl{width:100%; font-size:calc(9px * var(--ijzScaleLatin,1)); border-collapse:collapse; margin-top:8px;}
   .ijazahTbl th, .ijazahTbl td{border:1px solid #333; padding:2px 4px;}
   .ijazahTbl th{background:#eef3ee;}
-  .ijazahBackSign{display:flex; justify-content:space-around; text-align:center; font-size:9.5px; margin-top:14px;}
+  .ijazahBackSign{display:flex; justify-content:space-around; text-align:center; font-size:calc(9.5px * var(--ijzScaleLatin,1)); margin-top:14px;}
   .ijazahBackSign .ttdNama{font-weight:700; text-decoration:underline; text-underline-offset:2px; margin-top:30px; display:block;}
   @media print{
     body.printingIjazah main{padding:0;}
@@ -1076,6 +1077,16 @@
             <label>Gaya Font Arab</label>
             <select id="tplFontPresetArab"></select>
           </div>
+        </div>
+        <div class="row">
+          <div class="field" style="flex:0 0 200px;">
+            <label>Ukuran Font Latin (%)</label>
+            <input id="tplFontSizeLatin" type="number" step="5" min="50" max="200" placeholder="100">
+          </div>
+          <div class="field" style="flex:0 0 200px;">
+            <label>Ukuran Font Arab (%)</label>
+            <input id="tplFontSizeArab" type="number" step="5" min="50" max="200" placeholder="100">
+          </div>
           <div class="field" id="tplFontPreviewWrap" style="flex:2; min-width:220px;">
             <label>Pratinjau</label>
             <div id="tplFontPreview" style="border:1px solid var(--line); border-radius:8px; padding:10px 12px; background:var(--paper);">
@@ -1085,12 +1096,23 @@
             </div>
           </div>
         </div>
+        <h3>Gambar Bingkai Kustom per Tingkatan</h3>
+        <p class="hint">Bingkai depan dan belakang diunggah terpisah, dan tersimpan khusus untuk tingkatan (<strong id="ijazahTingkatanLabelBingkai"></strong>) yang sedang aktif — tingkatan lain punya bingkainya sendiri-sendiri.</p>
         <div class="row">
           <div class="field" style="flex:2;">
-            <label>Gambar Bingkai Kustom (opsional — akan menggantikan bingkai bawaan)</label>
-            <input type="file" id="tplBorderFile" accept="image/*">
+            <label>Bingkai Halaman Depan (opsional)</label>
+            <input type="file" id="tplBorderFileDepan" accept="image/*">
+            <span class="hint" id="tplBorderDepanStatus"></span>
           </div>
-          <div class="field" style="flex:0 0 auto; align-self:flex-end;"><button class="secondary" id="btnClearBorder" type="button">Hapus Bingkai Kustom</button></div>
+          <div class="field" style="flex:0 0 auto; align-self:flex-end;"><button class="secondary" id="btnClearBorderDepan" type="button">Hapus Bingkai Depan</button></div>
+        </div>
+        <div class="row">
+          <div class="field" style="flex:2;">
+            <label>Bingkai Halaman Belakang (opsional)</label>
+            <input type="file" id="tplBorderFileBelakang" accept="image/*">
+            <span class="hint" id="tplBorderBelakangStatus"></span>
+          </div>
+          <div class="field" style="flex:0 0 auto; align-self:flex-end;"><button class="secondary" id="btnClearBorderBelakang" type="button">Hapus Bingkai Belakang</button></div>
         </div>
         <h3>Penyesuaian Posisi Tulisan (untuk menyamakan dengan bingkai kustom)</h3>
         <p class="hint">Skala keseluruhan isi ijazah (teks + pas foto membesar/mengecil bersamaan) supaya muat di dalam gambar bingkai yang diunggah. Untuk menggeser tiap baris/komponen satu per satu (nama madrasah, judul, nama siswa, tiap baris biodata, foto, tanda tangan, dll — masing-masing independen, tidak digabung), gunakan "Mode Geser Posisi" di kartu Pratinjau &amp; Cetak di bawah.</p>
@@ -2110,11 +2132,11 @@ document.getElementById('btnBackupExcel').addEventListener('click', async ()=>{
     XLSX.utils.book_append_sheet(wb, sheetFromAOA(rankGabRows, [16,16,22,24]), 'Rank Manual Gabungan');
 
     // --- Sheet: Template Ijazah (ringkasan, bukan detail visual) ---
-    const ijzRows = [['Kunci Tingkatan','Nama Madrasah di Template','Ada Bingkai Kustom?','Jumlah Field Materi Tambahan']];
+    const ijzRows = [['Kunci Tingkatan','Nama Madrasah di Template','Bingkai Depan Kustom?','Bingkai Belakang Kustom?','Jumlah Field Materi Tambahan']];
     Object.entries(ijazahTemplates).forEach(([key,t])=>{
-      ijzRows.push([key, t.namaMadrasah||t.lembaga||'', t.customBorder?'Ya':'Tidak', (Array.isArray(t.materiTambahan) ? t.materiTambahan.length : (t.materiTambahan ? String(t.materiTambahan).split(',').length : 0))]);
+      ijzRows.push([key, t.namaMadrasah||t.lembaga||'', (t.borderImgDepan||t.borderImg)?'Ya':'Tidak', t.borderImgBelakang?'Ya':'Tidak', (Array.isArray(t.materiTambahan) ? t.materiTambahan.length : (t.materiTambahan ? String(t.materiTambahan).split(',').length : 0))]);
     });
-    XLSX.utils.book_append_sheet(wb, sheetFromAOA(ijzRows, [18,30,18,26]), 'Template Ijazah (ringkasan)');
+    XLSX.utils.book_append_sheet(wb, sheetFromAOA(ijzRows, [18,30,18,18,26]), 'Template Ijazah (ringkasan)');
 
     // --- Sheet: Pengguna (Users) ---
     const userRows = [['UID','Email','Nama','Role','Kelas Diampu (Guru)']];
@@ -4865,7 +4887,8 @@ document.getElementById('btnBuildCard').addEventListener('click', ()=>{
 
 /* ===================== IJAZAH ===================== */
 let ijzPendingFoto = null;   // dataURI menunggu disimpan untuk siswa yang sedang diedit
-let ijzPendingBorder = undefined; // undefined = tidak diubah, '' = dihapus, string = baru
+let ijzPendingBorderDepan = undefined; // undefined = tidak diubah, '' = dihapus, string = baru
+let ijzPendingBorderBelakang = undefined; // undefined = tidak diubah, '' = dihapus, string = baru
 
 function currentTingkatanKey(){
   if(!activeKelasId) return null;
@@ -4955,9 +4978,22 @@ function renderIjazahTab(){
   document.getElementById('tplScale').value = tpl.contentScale || 100;
   document.getElementById('tplFontPreset').value = tpl.fontPreset || 'klasik';
   document.getElementById('tplFontPresetArab').value = tpl.fontPresetArab || 'amiri';
+  document.getElementById('tplFontSizeLatin').value = tpl.fontScaleLatin || 100;
+  document.getElementById('tplFontSizeArab').value = tpl.fontScaleArab || 100;
   updateFontPreview();
   document.getElementById('tplPanitiaRow').style.display = tpl.showPanitia ? '' : 'none';
   document.getElementById('tplMateriTambahanRow').style.display = (key==='tpq') ? '' : 'none';
+
+  // ---- status bingkai kustom per tingkatan (depan/belakang terpisah) ----
+  ijzPendingBorderDepan = undefined;
+  ijzPendingBorderBelakang = undefined;
+  document.getElementById('tplBorderFileDepan').value = '';
+  document.getElementById('tplBorderFileBelakang').value = '';
+  document.getElementById('ijazahTingkatanLabelBingkai').textContent = k.tingkatan || '';
+  const borderDepanAda = !!(tpl.borderImgDepan || tpl.borderImg);
+  const borderBelakangAda = !!tpl.borderImgBelakang;
+  document.getElementById('tplBorderDepanStatus').textContent = borderDepanAda ? 'Bingkai kustom tersimpan untuk tingkatan ini.' : 'Belum ada bingkai kustom — memakai bingkai bawaan.';
+  document.getElementById('tplBorderBelakangStatus').textContent = borderBelakangAda ? 'Bingkai kustom tersimpan untuk tingkatan ini.' : 'Belum ada bingkai kustom — memakai bingkai bawaan.';
 
   // ---- pickers ----
   const students = orderedStudents();
@@ -5024,16 +5060,27 @@ document.getElementById('btnSaveIjazahUmum').addEventListener('click', ()=>{
   dataRoot('ijazahUmum').set(payload).then(()=>toast('Data umum ijazah disimpan'));
 });
 
-document.getElementById('tplBorderFile').addEventListener('change', async (e)=>{
+document.getElementById('tplBorderFileDepan').addEventListener('change', async (e)=>{
   const file = e.target.files[0];
   if(!file) return;
-  try{ ijzPendingBorder = await fileToDataUri(file, 900); toast('Bingkai siap — klik "Simpan Template"'); }
+  try{ ijzPendingBorderDepan = await fileToDataUri(file, 900); toast('Bingkai depan siap — klik "Simpan Template"'); }
   catch(err){ console.error(err); toast('Gagal membaca gambar bingkai'); }
 });
-document.getElementById('btnClearBorder').addEventListener('click', ()=>{
-  if(!confirm('Hapus bingkai kustom dari template ini? Jangan lupa klik "Simpan Template" setelah ini agar perubahan tersimpan.')) return;
-  ijzPendingBorder = '';
-  toast('Bingkai akan dihapus — klik "Simpan Template"');
+document.getElementById('btnClearBorderDepan').addEventListener('click', ()=>{
+  if(!confirm('Hapus bingkai depan kustom dari template tingkatan ini? Jangan lupa klik "Simpan Template" setelah ini agar perubahan tersimpan.')) return;
+  ijzPendingBorderDepan = '';
+  toast('Bingkai depan akan dihapus — klik "Simpan Template"');
+});
+document.getElementById('tplBorderFileBelakang').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  try{ ijzPendingBorderBelakang = await fileToDataUri(file, 900); toast('Bingkai belakang siap — klik "Simpan Template"'); }
+  catch(err){ console.error(err); toast('Gagal membaca gambar bingkai'); }
+});
+document.getElementById('btnClearBorderBelakang').addEventListener('click', ()=>{
+  if(!confirm('Hapus bingkai belakang kustom dari template tingkatan ini? Jangan lupa klik "Simpan Template" setelah ini agar perubahan tersimpan.')) return;
+  ijzPendingBorderBelakang = '';
+  toast('Bingkai belakang akan dihapus — klik "Simpan Template"');
 });
 
 document.getElementById('btnSaveTemplate').addEventListener('click', ()=>{
@@ -5058,12 +5105,17 @@ document.getElementById('btnSaveTemplate').addEventListener('click', ()=>{
     contentScale: Number(document.getElementById('tplScale').value) || 100,
     fontPreset: document.getElementById('tplFontPreset').value || 'klasik',
     fontPresetArab: document.getElementById('tplFontPresetArab').value || 'amiri',
+    fontScaleLatin: Number(document.getElementById('tplFontSizeLatin').value) || 100,
+    fontScaleArab: Number(document.getElementById('tplFontSizeArab').value) || 100,
   });
-  if(ijzPendingBorder !== undefined){ payload.borderImg = ijzPendingBorder; }
+  if(ijzPendingBorderDepan !== undefined){ payload.borderImgDepan = ijzPendingBorderDepan; }
+  if(ijzPendingBorderBelakang !== undefined){ payload.borderImgBelakang = ijzPendingBorderBelakang; }
   db.ref('rapor/ijazahTemplates/'+key).set(payload).then(()=>{
     toast('Template ijazah disimpan');
-    ijzPendingBorder = undefined;
-    document.getElementById('tplBorderFile').value = '';
+    ijzPendingBorderDepan = undefined;
+    ijzPendingBorderBelakang = undefined;
+    document.getElementById('tplBorderFileDepan').value = '';
+    document.getElementById('tplBorderFileBelakang').value = '';
   });
 });
 
@@ -5088,13 +5140,19 @@ function buildIjazahHTML(studentId){
   const tahunH = (m.tahun||'').split('/')[0] || (m.tahun||'');
   const fontPreset = ijzFontPreset(tpl.fontPreset);
   const arabFont = ijzArabFont(tpl.fontPresetArab);
+  const borderImgDepan = tpl.borderImgDepan || tpl.borderImg || ''; // borderImg = kompatibilitas data lama
+  const borderImgBelakang = tpl.borderImgBelakang || '';
+  const scaleLatin = (Number(tpl.fontScaleLatin)||100)/100;
+  const scaleArab = (Number(tpl.fontScaleArab)||100)/100;
   const pageStyleParts = [];
-  if(tpl.borderImg) pageStyleParts.push(`background-image:url('${tpl.borderImg}')`);
+  if(borderImgDepan) pageStyleParts.push(`background-image:url('${borderImgDepan}')`);
   pageStyleParts.push(`--ijzFontTitle:${fontPreset.title}`);
   pageStyleParts.push(`--ijzFontBody:${fontPreset.body}`);
   pageStyleParts.push(`--ijzFontArab:${arabFont.family}`);
+  pageStyleParts.push(`--ijzScaleLatin:${scaleLatin}`);
+  pageStyleParts.push(`--ijzScaleArab:${scaleArab}`);
   const borderStyle = ` style="${pageStyleParts.join(';')}"`;
-  const borderClass = tpl.borderImg ? ' hasCustomBorder' : '';
+  const borderClass = borderImgDepan ? ' hasCustomBorder' : '';
 
   const closing = (tpl.closingText||'')
     .replace('{DARI_M}', u.dariM||'').replace('{SAMPAI_M}', u.sampaiM||'')
@@ -5167,10 +5225,16 @@ function buildIjazahHTML(studentId){
   const tambahanJumlah = tambahanVals.reduce((a,b)=>a+b,0);
   const tambahanRata = tambahanSubjects.length ? (tambahanJumlah/tambahanSubjects.length) : 0;
 
-  const backFontStyle = ` style="--ijzFontTitle:${fontPreset.title};--ijzFontBody:${fontPreset.body};"`;
+  const backStyleParts = [];
+  if(borderImgBelakang) backStyleParts.push(`background-image:url('${borderImgBelakang}')`);
+  backStyleParts.push(`--ijzFontTitle:${fontPreset.title}`);
+  backStyleParts.push(`--ijzFontBody:${fontPreset.body}`);
+  backStyleParts.push(`--ijzScaleLatin:${scaleLatin}`);
+  const backPageStyle = ` style="${backStyleParts.join(';')}"`;
+  const backBorderClass = borderImgBelakang ? ' hasCustomBorderBack' : '';
   const back = `
-    <div class="ijazahPage">
-      <div class="ijazahInner"${backFontStyle}>
+    <div class="ijazahPage${backBorderClass}"${backPageStyle}>
+      <div class="ijazahInner">
         <div class="ijazahBackTitle">${escapeHtml(tpl.judulBelakang||'EVALUASI BELAJAR TAHAP AKHIR')}</div>
         <div class="ijazahBackSub">${escapeHtml(tpl.namaMadrasah||'')}</div>
         <div class="ijazahBackAddr">${escapeHtml(tpl.alamat||'')}${tpl.showTingkatLine? (' — '+escapeHtml(tpl.tingkatLabel||'')):''}</div>
@@ -5496,15 +5560,19 @@ function updateFontPreview(){
   if(!sel) return;
   const preset = ijzFontPreset(sel.value);
   const arabFont = ijzArabFont(selArab ? selArab.value : undefined);
+  const scaleLatin = (Number(document.getElementById('tplFontSizeLatin').value)||100)/100;
+  const scaleArab = (Number(document.getElementById('tplFontSizeArab').value)||100)/100;
   const titleEl = document.getElementById('tplFontPreviewTitle');
   const bodyEl = document.getElementById('tplFontPreviewBody');
   const arabEl = document.getElementById('tplFontPreviewArab');
-  if(titleEl) titleEl.style.fontFamily = preset.title;
-  if(bodyEl) bodyEl.style.fontFamily = preset.body;
-  if(arabEl) arabEl.style.fontFamily = arabFont.family;
+  if(titleEl){ titleEl.style.fontFamily = preset.title; titleEl.style.fontSize = (22*scaleLatin)+'px'; }
+  if(bodyEl){ bodyEl.style.fontFamily = preset.body; bodyEl.style.fontSize = (13*scaleLatin)+'px'; }
+  if(arabEl){ arabEl.style.fontFamily = arabFont.family; arabEl.style.fontSize = (16*scaleArab)+'px'; }
 }
 document.getElementById('tplFontPreset').addEventListener('change', updateFontPreview);
 document.getElementById('tplFontPresetArab').addEventListener('change', updateFontPreview);
+document.getElementById('tplFontSizeLatin').addEventListener('input', updateFontPreview);
+document.getElementById('tplFontSizeArab').addEventListener('input', updateFontPreview);
 
 /* ===================== Init ===================== */
 resetStudentForm();
