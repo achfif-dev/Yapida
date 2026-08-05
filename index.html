@@ -21,6 +21,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Playfair+Display:wght@500;600;700&family=EB+Garamond:wght@400;500;600;700&family=Merriweather:wght@400;700&family=Lora:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600;700&family=Cinzel:wght@400;500;600;700&family=Crimson+Text:wght@400;600;700&family=Libre+Baskerville:wght@400;700&family=Spectral:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Nunito:wght@400;600;700&family=Raleway:wght@400;500;600;700&family=Work+Sans:wght@400;500;600&family=Marcellus&family=Josefin+Sans:wght@400;500;600&family=Great+Vibes&family=DM+Serif+Display&family=Amiri:wght@400;700&family=Scheherazade+New:wght@400;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Aref+Ruqaa:wght@400;700&family=Reem+Kufi:wght@400;500;600;700&family=El+Messiri:wght@400;500;600;700&family=Lateef:wght@400;700&family=Cairo:wght@400;500;600;700&family=Tajawal:wght@400;500;700&family=Rakkas&family=Harmattan:wght@400;700&family=Mada:wght@400;500;700&family=Cormorant:wght@400;500;600;700&family=Prata&family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,600;6..96,700&family=Cinzel+Decorative:wght@400;700;900&family=Tangerine:wght@400;700&family=Italiana&family=IM+Fell+English&family=Vollkorn:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=PT+Serif:wght@400;700&family=Markazi+Text:wght@400;500;600;700&family=Katibeh&family=Jomhuria&family=Changa:wght@400;500;600;700&family=Mirza:wght@400;500;600;700&family=Noto+Kufi+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+  /* Ikon stok (pengganti emoji) — bergaya outline tipis biar tidak "kasar"/norak,
+     ukurannya ngikut ukuran teks di sekitarnya dan warnanya ngikut warna teks. */
+  .ic{ width:1em; height:1em; display:inline-block; vertical-align:-0.15em; margin-right:.3em;
+    fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .ic.solo{ margin-right:0; }
   :root{
     --ink:#1c2320;
     --paper:#f5f3ec;
@@ -468,7 +473,7 @@
       <div class="authhint" id="loginErr"></div>
       <div class="authhint">Belum bisa masuk? Hubungi admin database untuk didaftarkan sebagai pengguna.</div>
       <div class="authhint" style="margin-top:10px;">
-        <button type="button" id="btnOpenSetupWizardLogin" style="background:none;border:none;color:#8a856f;font-size:11px;text-decoration:underline;cursor:pointer;padding:0;font-family:inherit;">⚙️ Bukan Yayasan Al-Hidayah? Atur aplikasi ini untuk sekolah/perusahaan Anda sendiri</button>
+        <button type="button" id="btnOpenSetupWizardLogin" style="background:none;border:none;color:#8a856f;font-size:11px;text-decoration:underline;cursor:pointer;padding:0;font-family:inherit;"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="18" r="2"/></svg> Bukan Yayasan Al-Hidayah? Atur aplikasi ini untuk sekolah/perusahaan Anda sendiri</button>
       </div>
     </div>
   </div>
@@ -500,10 +505,10 @@
     </div>
 
     <div class="card" id="cardWhiteLabelSetup" style="display:none;">
-      <h2>⚙️ Setup Aplikasi (White Label)</h2>
+      <h2><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="18" r="2"/></svg> Setup Aplikasi (White Label)</h2>
       <p class="hint">Ubah nama, logo, warna, database Firebase, dan email Super Admin aplikasi ini — semuanya lewat wizard, tanpa perlu mengedit kode. Cocok kalau aplikasi ini mau dipakai oleh sekolah/perusahaan lain dengan identitas &amp; database sendiri.</p>
       <div class="btnrow">
-        <button class="gold" id="btnOpenSetupWizardAkun" type="button">🚀 Buka Setup Wizard</button>
+        <button class="gold" id="btnOpenSetupWizardAkun" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c2.5 2 4 5.5 4 9 0 2-.5 3.7-1.3 5.2L12 22l-2.7-5.8C8.5 14.7 8 13 8 11c0-3.5 1.5-7 4-9Z"/><circle cx="12" cy="10" r="1.8"/><path d="M8.5 15.5 5 17l1-3.7"/><path d="M15.5 15.5 19 17l-1-3.7"/></svg> Buka Setup Wizard</button>
       </div>
     </div>
 
@@ -511,8 +516,8 @@
       <h2>Backup &amp; Restore Database</h2>
       <p class="hint">Backup JSON mengunduh SELURUH data (semua kelas, siswa, nilai, absensi, template ijazah, dst) sebagai satu file — inilah yang dipakai untuk memulihkan (Restore) data. Backup Excel mengunduh isi data yang sama dalam bentuk tabel yang bisa dibuka &amp; dibaca langsung di Excel/HP tanpa aplikasi ini — cocok sebagai cadangan darurat kalau sistem/website bermasalah, TAPI tidak bisa dipakai untuk Restore (hanya untuk dibaca/diperiksa manual).</p>
       <div class="btnrow">
-        <button class="gold" id="btnBackupDb" type="button">⬇️ Unduh Backup (JSON — untuk Restore)</button>
-        <button class="secondary" id="btnBackupExcel" type="button">⬇️ Unduh Backup (Excel — cadangan darurat)</button>
+        <button class="gold" id="btnBackupDb" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Unduh Backup (JSON — untuk Restore)</button>
+        <button class="secondary" id="btnBackupExcel" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Unduh Backup (Excel — cadangan darurat)</button>
       </div>
       <div class="row" style="margin-top:12px; align-items:flex-end;">
         <div class="field" style="flex:2;">
@@ -658,7 +663,7 @@
       </div>
 
       <div class="btnrow">
-        <button id="btnBuildSuratDoc" type="button">👁️ Tampilkan Pratinjau</button>
+        <button id="btnBuildSuratDoc" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg> Tampilkan Pratinjau</button>
         <button class="secondary" id="btnResetSuratDoc" type="button">Kosongkan Form</button>
       </div>
     </div>
@@ -666,8 +671,8 @@
     <div class="card suratDocPrintCard" id="suratDocPreviewCard" style="display:none;">
       <h2 class="noprint">Pratinjau Surat</h2>
       <div class="btnrow noprint">
-        <button class="gold" id="btnPrintSuratDoc" type="button">🖨️ Cetak</button>
-        <button class="secondary" id="btnSaveSuratDoc" type="button">💾 Simpan ke Arsip Surat Keluar</button>
+        <button class="gold" id="btnPrintSuratDoc" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/></svg> Cetak</button>
+        <button class="secondary" id="btnSaveSuratDoc" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg> Simpan ke Arsip Surat Keluar</button>
       </div>
       <div id="suratDocBoard"></div>
     </div>
@@ -675,7 +680,7 @@
     <div class="card">
       <h2>Daftar Surat</h2>
       <div class="btnrow noprint">
-        <button class="gold" id="btnExportSurat" type="button">⬇️ Ekspor Excel</button>
+        <button class="gold" id="btnExportSurat" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Ekspor Excel</button>
       </div>
       <div class="row noprint" style="margin-bottom:10px;">
         <div class="field" style="flex:2 1 220px;">
@@ -705,7 +710,7 @@
   <section id="tab-kelas" style="display:none;">
 
     <div class="card noprint" style="background:var(--danger); border-color:var(--danger); color:var(--white); text-align:center; padding:14px 16px;">
-      <h2 style="margin:0; color:var(--white); letter-spacing:.02em;">⚠️ Pilih Kelas Terlebih Dahulu!!!</h2>
+      <h2 style="margin:0; color:var(--white); letter-spacing:.02em;"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/><line x1="12" y1="9" x2="12" y2="14"/><circle cx="12" cy="17" r="0.6" fill="currentColor" stroke="none"/></svg> Pilih Kelas Terlebih Dahulu!!!</h2>
       <p style="margin:6px 0 0; font-size:12.5px; opacity:.92;">Pastikan <strong>Kelas</strong> (dan Catur Wulan) yang dipilih di bawah ini sudah benar sebelum menambah/mengubah data — semua tab lain (Siswa, Absensi, Input Nilai, Rekap, Ijazah) akan mengikuti kelas yang aktif di sini. Kelas &amp; tahun ajaran yang sedang aktif akan tampil di bagian atas halaman.</p>
     </div>
 
@@ -778,7 +783,7 @@
           <label>Filter Tahun Ajaran</label>
           <select id="kelasFilterTahun"><option value="">— Semua Tahun —</option></select>
         </div>
-        <div class="field" style="flex:0 0 auto;"><button class="secondary" id="btnExportKelas" type="button">⬇️ Ekspor Excel</button></div>
+        <div class="field" style="flex:0 0 auto;"><button class="secondary" id="btnExportKelas" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Ekspor Excel</button></div>
       </div>
       <div class="tablewrap">
         <table id="kelasTable">
@@ -891,9 +896,9 @@
     <div class="card">
       <h2>Daftar Siswa</h2>
       <div class="btnrow noprint">
-        <button class="gold" id="btnExportSiswa" type="button">⬇️ Ekspor Excel</button>
-        <button class="secondary" id="btnDownloadTemplateSiswa" type="button">📄 Template Import Siswa</button>
-        <button class="secondary" id="btnImportSiswaTrigger" type="button">⬆️ Import dari Excel</button>
+        <button class="gold" id="btnExportSiswa" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Ekspor Excel</button>
+        <button class="secondary" id="btnDownloadTemplateSiswa" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><line x1="8" y1="9" x2="10" y2="9"/></svg> Template Import Siswa</button>
+        <button class="secondary" id="btnImportSiswaTrigger" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V9"/><path d="m7 14 5-5 5 5"/><path d="M5 3h14"/></svg> Import dari Excel</button>
         <input type="file" id="fileImportSiswa" accept=".xlsx,.xls" style="display:none;">
       </div>
       <p class="hint noprint">Import akan menambahkan siswa baru ke <strong>kelas aktif</strong>. Jika NISN atau Nama pada file sudah cocok dengan siswa yang ada di kelas aktif, datanya akan diperbarui (tidak dobel).</p>
@@ -935,8 +940,8 @@
         <div class="field" style="flex:0 0 160px;"><label>No. Urut Mulai Dari</label><input id="pindahNoBaru" type="number" min="1" value="1"></div>
       </div>
       <div class="btnrow noprint">
-        <button class="secondary" id="btnPindahPilihSemua" type="button">☑️ Pilih Semua</button>
-        <button class="secondary" id="btnPindahKosongkanSemua" type="button">☐ Kosongkan Semua</button>
+        <button class="secondary" id="btnPindahPilihSemua" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m8 12 3 3 6-6"/></svg> Pilih Semua</button>
+        <button class="secondary" id="btnPindahKosongkanSemua" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> Kosongkan Semua</button>
       </div>
       <div class="tablewrap" style="margin-top:8px;">
         <table id="pindahSiswaTable">
@@ -967,7 +972,7 @@
         </div>
       </div>
       <div class="btnrow noprint">
-        <button class="gold" id="btnExportSiswaGlobal" type="button">⬇️ Ekspor Excel (Seluruh Siswa)</button>
+        <button class="gold" id="btnExportSiswaGlobal" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Ekspor Excel (Seluruh Siswa)</button>
       </div>
       <div class="tablewrap" style="margin-top:8px;">
         <table id="globalSiswaTable">
@@ -1019,14 +1024,14 @@
       <p class="hint">Unduh template (kolom tanggal sudah otomatis dibuat), isi status tiap siswa di Excel (H = Hadir, S = Sakit, I = Izin, A = Alpa) untuk 1 pekan atau 1 bulan penuh sekaligus, lalu impor kembali file yang sudah diisi. Data tanggal yang sama akan ditimpa oleh isian dari file.</p>
       <div class="row">
         <div class="field" style="flex:0 0 200px;"><label>Tanggal Mulai (Template 1 Pekan)</label><input id="absTplMingguDari" type="date"></div>
-        <div class="field" style="flex:0 0 auto; align-self:flex-end;"><button class="secondary" id="btnTemplateAbsensiMinggu" type="button">⬇️ Unduh Template 1 Pekan</button></div>
+        <div class="field" style="flex:0 0 auto; align-self:flex-end;"><button class="secondary" id="btnTemplateAbsensiMinggu" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Unduh Template 1 Pekan</button></div>
       </div>
       <div class="row">
         <div class="field" style="flex:0 0 200px;"><label>Bulan (Template 1 Bulan Penuh)</label><input id="absTplBulan" type="month"></div>
-        <div class="field" style="flex:0 0 auto; align-self:flex-end;"><button class="secondary" id="btnTemplateAbsensiBulan" type="button">⬇️ Unduh Template 1 Bulan</button></div>
+        <div class="field" style="flex:0 0 auto; align-self:flex-end;"><button class="secondary" id="btnTemplateAbsensiBulan" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Unduh Template 1 Bulan</button></div>
       </div>
       <div class="btnrow">
-        <button class="gold" id="btnImportAbsensiTrigger" type="button">⬆️ Impor File Absensi Terisi</button>
+        <button class="gold" id="btnImportAbsensiTrigger" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V9"/><path d="m7 14 5-5 5 5"/><path d="M5 3h14"/></svg> Impor File Absensi Terisi</button>
         <input type="file" id="fileImportAbsensi" accept=".xlsx,.xls" style="display:none;">
       </div>
     </div>
@@ -1045,7 +1050,7 @@
         </table>
       </div>
       <div class="empty" id="rekapAbsensiEmpty">Pilih rentang tanggal lalu klik "Hitung Rekap".</div>
-      <div class="btnrow noprint"><button class="gold" id="btnExportAbsensi" type="button">⬇️ Ekspor Excel</button></div>
+      <div class="btnrow noprint"><button class="gold" id="btnExportAbsensi" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Ekspor Excel</button></div>
       <p class="hint">Tombol "Isi ke Nilai" akan menyalin jumlah Sakit/Izin/Alpa siswa tersebut ke form Input Nilai (perlu disimpan manual di sana).</p>
     </div>
 
@@ -1070,8 +1075,8 @@
       </div>
       <div id="daftarUjianArea" style="margin-top:14px;"></div>
       <div class="btnrow noprint" id="daftarUjianActions" style="display:none;">
-        <button class="gold" id="btnPrintDaftarUjian" type="button">🖨️ Cetak</button>
-        <button class="secondary" id="btnExportDaftarUjian" type="button">⬇️ Ekspor Excel</button>
+        <button class="gold" id="btnPrintDaftarUjian" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/></svg> Cetak</button>
+        <button class="secondary" id="btnExportDaftarUjian" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Ekspor Excel</button>
       </div>
     </div>
   </section>
@@ -1128,16 +1133,16 @@
       <h2>Input Nilai — Mode Tabel</h2>
       <p class="hint">Isi nilai asli (0–100) untuk tiap siswa &amp; mapel langsung di tabel ini, lalu klik "Simpan Semua Nilai". Kolom "Absen" &amp; "Sikap" tidak termasuk di sini — tetap isi lewat mode Per Siswa.</p>
       <div class="btnrow noprint">
-        <button class="gold" id="btnExportTabelNilai" type="button">⬇️ Ekspor Excel</button>
-        <button class="secondary" id="btnDownloadTemplate" type="button">📄 Unduh Template Excel</button>
-        <button class="secondary" id="btnImportTrigger" type="button">⬆️ Impor dari Excel</button>
+        <button class="gold" id="btnExportTabelNilai" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Ekspor Excel</button>
+        <button class="secondary" id="btnDownloadTemplate" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><line x1="8" y1="9" x2="10" y2="9"/></svg> Unduh Template Excel</button>
+        <button class="secondary" id="btnImportTrigger" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V9"/><path d="m7 14 5-5 5 5"/><path d="M5 3h14"/></svg> Impor dari Excel</button>
         <input type="file" id="fileImportNilai" accept=".xlsx,.xls" style="display:none;">
       </div>
       <div class="tablewrap" style="margin-top:10px;">
         <table id="tblInputMassal"><thead></thead><tbody></tbody></table>
       </div>
       <div class="empty" id="tblInputMassalEmpty" style="display:none;">Pilih/buat kelas dan tambahkan siswa dulu.</div>
-      <div class="btnrow"><button id="btnSaveTabelMassal">💾 Simpan Semua Nilai</button></div>
+      <div class="btnrow"><button id="btnSaveTabelMassal"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg> Simpan Semua Nilai</button></div>
     </div>
   </section>
 
@@ -1147,8 +1152,8 @@
     <div class="card noprint">
       <h2>Cetak</h2>
       <div class="btnrow">
-        <button class="gold" onclick="printRekapOnly()">🖨️ Cetak Rekap Ini</button>
-        <button class="secondary" id="btnExportRekap" type="button">⬇️ Ekspor Excel (semua tabel)</button>
+        <button class="gold" onclick="printRekapOnly()"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/></svg> Cetak Rekap Ini</button>
+        <button class="secondary" id="btnExportRekap" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Ekspor Excel (semua tabel)</button>
       </div>
     </div>
 
@@ -1193,8 +1198,8 @@
       <p class="hint noprint">Nilai tiap mapel dirata-rata dari Catur Wulan yang sudah punya nilai, lalu diranking ulang. Absen (sakit/ijin/alpa) dan potongan dijumlah dari ketiga catur wulan. Dipakai untuk peringkat akhir tahun / bahan ijazah — rapor tiap catur wulan di atas tetap tersimpan & tercetak terpisah seperti biasa.</p>
       <div class="btnrow noprint">
         <button class="gold" id="btnMuatRekapGabungan" type="button">Muat Rekap Gabungan</button>
-        <button class="secondary" id="btnExportRekapGabungan" type="button" style="display:none;">⬇️ Ekspor Excel</button>
-        <button class="secondary" id="btnPrintRekapGabungan" type="button" style="display:none;">🖨️ Cetak</button>
+        <button class="secondary" id="btnExportRekapGabungan" type="button" style="display:none;"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Ekspor Excel</button>
+        <button class="secondary" id="btnPrintRekapGabungan" type="button" style="display:none;"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/></svg> Cetak</button>
       </div>
       <div id="rekapGabunganArea" style="margin-top:12px;"></div>
     </div>
@@ -1377,17 +1382,17 @@
           </div>
           <div class="field" style="flex:0 0 auto; align-self:flex-end;">
             <button class="secondary" id="btnResetDragPosition" type="button">↺ Reset Posisi</button>
-            <button class="secondary" id="btnSaveDragPosition" type="button">💾 Simpan Posisi</button>
+            <button class="secondary" id="btnSaveDragPosition" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg> Simpan Posisi</button>
           </div>
         </div>
         <div class="btnrow" id="ijazahExportBtns" style="display:none;">
-          <button class="gold" id="btnPrintIjazah" type="button">🖨️ Cetak</button>
-          <button class="secondary" id="btnPdfIjazah" type="button">⬇️ Unduh PDF (2 sisi)</button>
-          <button class="secondary" id="btnJpgIjazahDepan" type="button">⬇️ JPG Depan</button>
-          <button class="secondary" id="btnJpgIjazahBelakang" type="button">⬇️ JPG Belakang</button>
+          <button class="gold" id="btnPrintIjazah" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/></svg> Cetak</button>
+          <button class="secondary" id="btnPdfIjazah" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Unduh PDF (2 sisi)</button>
+          <button class="secondary" id="btnJpgIjazahDepan" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> JPG Depan</button>
+          <button class="secondary" id="btnJpgIjazahBelakang" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> JPG Belakang</button>
         </div>
         <div class="btnrow">
-          <button class="secondary" id="btnPdfIjazahSemua" type="button">⬇️ Unduh PDF Semua Siswa (Kelas Ini)</button>
+          <button class="secondary" id="btnPdfIjazahSemua" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Unduh PDF Semua Siswa (Kelas Ini)</button>
         </div>
         <p class="hint">Butuh koneksi internet untuk memuat pustaka ekspor PDF/JPG saat pertama kali dipakai.</p>
       </div>
@@ -1407,13 +1412,13 @@
 <div id="setupWizardOverlay" class="noprint swOverlay" style="display:none;">
   <div class="card" id="setupWizardCard" style="max-width:560px; width:100%; margin:20px auto;">
     <div style="text-align:center; margin-bottom:14px;">
-      <div style="font-size:20px; font-weight:700; color:var(--deep-2);">🚀 Setup Aplikasi (White Label)</div>
+      <div style="font-size:20px; font-weight:700; color:var(--deep-2);"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c2.5 2 4 5.5 4 9 0 2-.5 3.7-1.3 5.2L12 22l-2.7-5.8C8.5 14.7 8 13 8 11c0-3.5 1.5-7 4-9Z"/><circle cx="12" cy="10" r="1.8"/><path d="M8.5 15.5 5 17l1-3.7"/><path d="M15.5 15.5 19 17l-1-3.7"/></svg> Setup Aplikasi (White Label)</div>
       <div class="hint">Sesuaikan aplikasi ini dengan identitas &amp; database Firebase Anda sendiri — tanpa mengedit kode.</div>
     </div>
     <div id="swProgress" style="display:flex; gap:6px; margin-bottom:16px;"></div>
 
     <div id="swStep1">
-      <h3 style="margin-top:0;">🎨 Identitas &amp; Branding</h3>
+      <h3 style="margin-top:0;"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.4-.3-.4-.5-.9-.5-1.4 0-1.1.9-2 2-2h2.3c2.3 0 4.2-1.9 4.2-4.2C21.5 6 17.2 2 12 2Z"/><circle cx="7" cy="10" r="1.3" fill="currentColor" stroke="none"/><circle cx="10.5" cy="6.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.5" cy="7" r="1.3" fill="currentColor" stroke="none"/><circle cx="17.5" cy="11.5" r="1.3" fill="currentColor" stroke="none"/></svg> Identitas &amp; Branding</h3>
       <div class="row">
         <div class="field"><label>Nama Yayasan/Sekolah (lengkap)</label><input id="swSchoolName" placeholder="cth. Yayasan Pendidikan Islam ..."></div>
       </div>
@@ -1458,13 +1463,13 @@
     </div>
 
     <div id="swStep2" style="display:none;">
-      <h3 style="margin-top:0;">🔥 Konfigurasi Firebase</h3>
+      <h3 style="margin-top:0;"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2s-5 5.5-5 10a5 5 0 0 0 10 0c0-1.3-.5-2.3-1-3 .2 1-.3 2-1.2 2.4C15.5 10 15 8.5 15 7c0-2-1-3.5-3-5Z"/></svg> Konfigurasi Firebase</h3>
       <p class="hint">Buat/pakai project Firebase milik sekolah/perusahaan Anda sendiri (gratis) — buka <b>Project Settings → Your apps → SDK setup and configuration</b> di Firebase Console, salin kodenya, lalu tempel di bawah. <b>Kosongkan semua field</b> di langkah ini kalau tidak jadi mengganti database (tetap pakai yang sekarang berjalan).</p>
       <div class="field">
         <label>Tempel Kode Konfigurasi Firebase</label>
         <textarea id="swPasteFirebase" rows="5" placeholder='const firebaseConfig = { apiKey: "...", authDomain: "...", ... };'></textarea>
       </div>
-      <div class="btnrow"><button type="button" class="secondary" id="swParseBtn">🔍 Ambil Otomatis dari Teks</button></div>
+      <div class="btnrow"><button type="button" class="secondary" id="swParseBtn"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Ambil Otomatis dari Teks</button></div>
       <p class="hint" id="swParseMsg"></p>
       <p class="hint" style="text-transform:uppercase; font-weight:700; letter-spacing:.05em; margin-top:14px;">Atau isi manual</p>
       <div class="row">
@@ -1482,19 +1487,19 @@
         <div class="field"><label>messagingSenderId</label><input id="sw_messagingSenderId"></div>
         <div class="field"><label>appId</label><input id="sw_appId"></div>
       </div>
-      <p class="hint">💡 Jangan lupa aktifkan <b>Authentication → Sign-in method → Google</b> dan <b>Realtime Database</b> di project Firebase yang baru, lalu salin Firebase Security Rules dari instance yang sekarang berjalan ke project tersebut.</p>
+      <p class="hint"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1V17h6v-.2c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2Z"/></svg> Jangan lupa aktifkan <b>Authentication → Sign-in method → Google</b> dan <b>Realtime Database</b> di project Firebase yang baru, lalu salin Firebase Security Rules dari instance yang sekarang berjalan ke project tersebut.</p>
     </div>
 
     <div id="swStep3" style="display:none;">
-      <h3 style="margin-top:0;">👑 Akun Super Admin</h3>
+      <h3 style="margin-top:0;"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m2 18 2-10 5 4 3-6 3 6 5-4 2 10Z"/><path d="M2 18h20"/></svg> Akun Super Admin</h3>
       <p class="hint">Akun Google dengan email ini akan SELALU mendapat akses Admin penuh setiap kali login, apa pun yang tercatat di tabel Pengguna. Cocok sebagai "kunci cadangan" pemilik aplikasi. Boleh dikosongkan (akun Google pertama yang login otomatis menjadi Admin selama tabel Pengguna masih kosong).</p>
       <div class="field"><label>Email Google Super Admin</label><input id="swSuperAdminEmail" placeholder="cth. pemilik@sekolahanda.com"></div>
     </div>
 
     <div id="swStep4" style="display:none;">
-      <h3 style="margin-top:0;">✅ Ringkasan</h3>
+      <h3 style="margin-top:0;"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg> Ringkasan</h3>
       <div id="swSummary" style="font-size:13px; line-height:2;"></div>
-      <p class="hint" style="background:var(--gold-soft); color:#5a3f18; padding:8px 10px; border-radius:8px; margin-top:10px;">⚠️ Setelah disimpan, aplikasi akan dimuat ulang otomatis untuk menerapkan perubahan.</p>
+      <p class="hint" style="background:var(--gold-soft); color:#5a3f18; padding:8px 10px; border-radius:8px; margin-top:10px;"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/><line x1="12" y1="9" x2="12" y2="14"/><circle cx="12" cy="17" r="0.6" fill="currentColor" stroke="none"/></svg> Setelah disimpan, aplikasi akan dimuat ulang otomatis untuk menerapkan perubahan.</p>
     </div>
 
     <div class="btnrow" style="justify-content:space-between; margin-top:18px;">
@@ -1521,6 +1526,27 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
+/* ===================== Ikon stok (pengganti emoji di teks yang dirender lewat innerHTML) =====================
+   Dipakai lewat icon('nama') di dalam template string, mengembalikan <svg> outline kecil
+   supaya tampilannya konsisten & rapi (bukan emoji bawaan OS yang gaya/warnanya beda-beda). */
+const ICON_INNER = {
+  printer: '<path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/>',
+  save: '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/>',
+  pencil: '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+  trash: '<path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>',
+  calendar: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+  'graduation-cap': '<path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12.5V17c0 1.5 3 3 6 3s6-1.5 6-3v-4.5"/><path d="M22 10v6"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  alert: '<path d="M12 3 2 20h20L12 3z"/><line x1="12" y1="9" x2="12" y2="14"/><circle cx="12" cy="17" r="0.6" fill="currentColor" stroke="none"/>',
+  upload: '<path d="M12 21V9"/><path d="m7 14 5-5 5 5"/><path d="M5 3h14"/>',
+  download: '<path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/>',
+};
+function icon(name, extraClass){
+  const inner = ICON_INNER[name] || '';
+  const cls = 'ic' + (extraClass ? ' '+extraClass : '');
+  return `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${inner}</svg>`;
+}
+
 /* ===================== White Label: konfigurasi runtime (bisa diubah lewat Setup Wizard, TANPA edit kode) =====================
    Prioritas nilai: localStorage (diisi lewat wizard) → DEFAULT_APP_CONFIG bawaan (identitas
    & Firebase Yapida) — supaya instance yang sudah berjalan sekarang TIDAK berubah sama
@@ -1719,7 +1745,7 @@ applyBranding();
       if(el) el.style.display = (i===swStep) ? '' : 'none';
     }
     document.getElementById('swBack').style.display = swStep>1 ? '' : 'none';
-    document.getElementById('swNext').textContent = swStep<4 ? 'Lanjut →' : '💾 Simpan & Muat Ulang';
+    document.getElementById('swNext').innerHTML = swStep<4 ? 'Lanjut →' : icon('save')+'Simpan &amp; Muat Ulang';
     const labels = ['Branding','Firebase','Super Admin','Ringkasan'];
     document.getElementById('swProgress').innerHTML = labels.map(function(l,i){
       const active = (i+1) <= swStep;
@@ -1744,7 +1770,7 @@ applyBranding();
   document.getElementById('swLogoFile').addEventListener('change', function(e){
     const file = e.target.files && e.target.files[0];
     if(!file) return;
-    if(file.size > 900*1024){ alert('⚠️ Ukuran logo terlalu besar (maks ±900 KB). Gunakan gambar yang lebih kecil/terkompresi.'); return; }
+    if(file.size > 900*1024){ alert('Ukuran logo terlalu besar (maks ±900 KB). Gunakan gambar yang lebih kecil/terkompresi.'); return; }
     const reader = new FileReader();
     reader.onload = function(){
       swBrand.logoDataUrl = reader.result;
@@ -1776,12 +1802,12 @@ applyBranding();
     const parsed = swParseFirebasePaste(text);
     const count = Object.keys(parsed).length;
     const msg = document.getElementById('swParseMsg');
-    if(count===0){ msg.textContent = '⚠️ Tidak ada field yang terdeteksi. Pastikan kode konfigurasi ditempel apa adanya dari Firebase Console.'; msg.style.color='var(--danger)'; return; }
+    if(count===0){ msg.textContent = 'Tidak ada field yang terdeteksi. Pastikan kode konfigurasi ditempel apa adanya dari Firebase Console.'; msg.style.color='var(--danger)'; return; }
     Object.keys(parsed).forEach(function(k){
       const el = document.getElementById('sw_'+k);
       if(el) el.value = parsed[k];
     });
-    msg.textContent = '✅ '+count+' field berhasil terisi otomatis dari teks yang ditempel. Periksa kembali di bawah.';
+    msg.textContent = count+' field berhasil terisi otomatis dari teks yang ditempel. Periksa kembali di bawah.';
     msg.style.color = 'var(--deep)';
   });
 
@@ -1810,7 +1836,7 @@ applyBranding();
       const core = ['apiKey','databaseURL','projectId'];
       const filledCount = core.filter(function(k){ return swFirebase[k]; }).length;
       if(filledCount>0 && filledCount<core.length){
-        alert('⚠️ Kalau mau mengganti database Firebase, minimal isi apiKey, databaseURL, dan projectId sekaligus. Kosongkan semua field kalau tidak jadi mengganti.');
+        alert('Kalau mau mengganti database Firebase, minimal isi apiKey, databaseURL, dan projectId sekaligus. Kosongkan semua field kalau tidak jadi mengganti.');
         return;
       }
     }
@@ -3194,7 +3220,7 @@ function renderKelasTable(){
   sortedKeys.forEach(key=>{
     const g = groups[key];
     const trHead = document.createElement('tr');
-    trHead.innerHTML = `<td colspan="5" style="text-align:left; background:var(--paper-2); font-weight:700; color:var(--deep-2);">📅 Tahun Ajaran: ${escapeHtml(g.label)} <span class="hint" style="font-weight:400;">(${g.items.length} kelas)</span></td>`;
+    trHead.innerHTML = `<td colspan="5" style="text-align:left; background:var(--paper-2); font-weight:700; color:var(--deep-2);">${icon('calendar')}Tahun Ajaran: ${escapeHtml(g.label)} <span class="hint" style="font-weight:400;">(${g.items.length} kelas)</span></td>`;
     tbody.appendChild(trHead);
     const items = sortKelasEntries(g.items);
     let curTingkatan = null;
@@ -3210,7 +3236,7 @@ function renderKelasTable(){
       const isActive = id===activeKelasId;
       tr.innerHTML = `
         <td>${escapeHtml(k.tingkatan||'')}</td>
-        <td class="name">${escapeHtml(k.kelasNama||'')} ${isActive ? '<span class="pill active">aktif</span>' : ''} ${k.kelasAkhir ? '<span class="pill" title="Kelas akhir — tab Ijazah aktif">🎓 Kelas Akhir</span>' : ''}</td>
+        <td class="name">${escapeHtml(k.kelasNama||'')} ${isActive ? '<span class="pill active">aktif</span>' : ''} ${k.kelasAkhir ? `<span class="pill" title="Kelas akhir — tab Ijazah aktif">${icon('graduation-cap')}Kelas Akhir</span>` : ''}</td>
         <td>${escapeHtml(k.tahun||'')}</td>
         <td>${escapeHtml(k.tahunMasehi||'')}</td>
         <td class="noprint">
@@ -4327,7 +4353,7 @@ function renderSuratTable(){
       <td style="text-align:left;">${escapeHtml(s.perihal||'-')}</td>
       <td class="noprint">
         <button class="secondary" data-act="edit" data-id="${id}" type="button">Ubah</button>
-        ${s.suratDoc ? `<button class="secondary" data-act="opendoc" data-id="${id}" type="button">🖨️ Buka Surat</button>` : ''}
+        ${s.suratDoc ? `<button class="secondary" data-act="opendoc" data-id="${id}" type="button">${icon('printer')}Buka Surat</button>` : ''}
         <button class="danger" data-act="del" data-id="${id}" type="button">Hapus</button>
       </td>`;
     tbody.appendChild(tr);
@@ -4409,7 +4435,7 @@ document.getElementById('sdLogoFile')?.addEventListener('change', async (e)=>{
   if(!file) return;
   try{
     sdPendingLogo = await fileToDataUri(file, 300);
-    document.getElementById('sdLogoStatus').textContent = 'Logo dipilih ✓ (klik "Tampilkan Pratinjau")';
+    document.getElementById('sdLogoStatus').innerHTML = 'Logo dipilih '+icon('check','solo')+' (klik "Tampilkan Pratinjau")';
   }catch(err){
     console.error(err);
     toast('Gagal membaca gambar logo');
@@ -4627,8 +4653,8 @@ function renderRiwayatAbsensi(){
     Object.values(byStudent).forEach(s=>{ if(t[s]!==undefined) t[s]++; });
     return `<tr><td class="name">${escapeHtml(tgl)}</td><td class="num badgeH">${t.H}</td><td class="num badgeS">${t.S}</td><td class="num badgeI">${t.I}</td><td class="num badgeA">${t.A}</td>
       <td class="noprint">
-        <button class="secondary" data-edit="${escapeHtml(tgl)}" type="button">✏️ Edit</button>
-        <button class="secondary" data-del="${escapeHtml(tgl)}" type="button">🗑️ Hapus</button>
+        <button class="secondary" data-edit="${escapeHtml(tgl)}" type="button">${icon('pencil')}Edit</button>
+        <button class="secondary" data-del="${escapeHtml(tgl)}" type="button">${icon('trash')}Hapus</button>
       </td></tr>`;
   }).join('');
   tbody.querySelectorAll('button[data-edit]').forEach(b=>{
@@ -5137,7 +5163,7 @@ document.getElementById('fileImportSiswa')?.addEventListener('change', (e)=>{
       console.error(err);
       toast('Gagal membaca file: '+err.message);
     }finally{
-      if(btn){ btn.disabled = false; btn.textContent = '⬆️ Import dari Excel'; }
+      if(btn){ btn.disabled = false; btn.innerHTML = icon('upload')+'Import dari Excel'; }
       e.target.value = '';
     }
   };
@@ -5654,8 +5680,8 @@ function renderRekap(){
     `<td class="num">${r.jumlah}</td><td class="num">${r.potongan}</td><td class="num">${r.bersih}</td><td class="num">${r.rata.toFixed(2)}</td>` +
     `<td class="num">` +
       `<input type="number" class="rankInput noprint" data-id="${r.id}" value="${r.peringkat}" style="width:48px;text-align:center;padding:3px;">` +
-      `<span class="rankPrint">${r.peringkat}${r.peringkatOverride?' ✎':(r.peringkatTie?' *':'')}</span>` +
-      `${r.peringkatOverride?' <span class="hint noprint" title="Peringkat diedit manual oleh guru">✎</span>':(r.peringkatTie?' <span class="hint noprint" title="Nilai bersih sama, belum ada mapel prioritas yang membedakan">*</span>':'')}` +
+      `<span class="rankPrint">${r.peringkat}${r.peringkatOverride?(' '+icon('pencil','solo')):(r.peringkatTie?' *':'')}</span>` +
+      `${r.peringkatOverride?(' <span class="hint noprint" title="Peringkat diedit manual oleh guru">'+icon('pencil','solo')+'</span>'):(r.peringkatTie?' <span class="hint noprint" title="Nilai bersih sama, belum ada mapel prioritas yang membedakan">*</span>':'')}` +
     `</td></tr>`
   ).join('') : '';
   tAsli.querySelectorAll('input.rankInput').forEach(inp=>{
@@ -5794,8 +5820,8 @@ function renderRekapGabungan(rows, scoresByC){
     `<td class="num">${r.jumlah.toFixed(1)}</td><td class="num">${r.potongan}</td><td class="num">${r.bersih.toFixed(1)}</td><td class="num">${r.rata.toFixed(2)}</td>` +
     `<td class="num">` +
       `<input type="number" class="rankInputGab noprint" data-id="${r.id}" value="${r.peringkat}" style="width:48px;text-align:center;padding:3px;">` +
-      `<span class="rankPrint">${r.peringkat}${r.peringkatOverride?' ✎':(r.peringkatTie?' *':'')}</span>` +
-      `${r.peringkatOverride?' <span class="hint noprint" title="Peringkat diedit manual oleh guru">✎</span>':(r.peringkatTie?' <span class="hint noprint" title="Nilai bersih sama, belum ada mapel prioritas yang membedakan">*</span>':'')}` +
+      `<span class="rankPrint">${r.peringkat}${r.peringkatOverride?(' '+icon('pencil','solo')):(r.peringkatTie?' *':'')}</span>` +
+      `${r.peringkatOverride?(' <span class="hint noprint" title="Peringkat diedit manual oleh guru">'+icon('pencil','solo')+'</span>'):(r.peringkatTie?' <span class="hint noprint" title="Nilai bersih sama, belum ada mapel prioritas yang membedakan">*</span>':'')}` +
     `</td>` +
     `<td class="num">${r.caturTerisi}/3</td></tr>`
   ).join('');
@@ -5903,7 +5929,7 @@ document.getElementById('btnBuildCard').addEventListener('click', ()=>{
         <div class="field"><label>Dikurangi Absen (Asli)</label><div class="num">${r.potongan}</div></div>
         <div class="field"><label>Jumlah Bersih</label><div class="num">${r.bersih}</div></div>
         <div class="field"><label>Rata-rata</label><div class="num">${r.rata.toFixed(2)}</div></div>
-        <div class="field"><label>Peringkat</label><div class="num">${r.peringkat}${r.peringkatOverride?' ✎':''}</div></div>
+        <div class="field"><label>Peringkat</label><div class="num">${r.peringkat}${r.peringkatOverride?(' '+icon('pencil','solo')):''}</div></div>
       </div>
       <div class="row">
         <div class="field"><label>Jumlah Nilai Raport</label><div class="num">${r.raportJumlah}</div></div>
@@ -5922,7 +5948,7 @@ document.getElementById('btnBuildCard').addEventListener('click', ()=>{
         <div class="field" style="text-align:center;">${escapeHtml(m.tempat||'')}, ${m.tanggal||'...................................'}<br>Wali Kelas<br><br><br><strong>${escapeHtml(m.wali||'..............................')}</strong></div>
       </div>
     </div>
-    <div class="btnrow noprint"><button class="gold" onclick="printKartuSiswa()">🖨️ Cetak Kartu Ini</button></div>
+    <div class="btnrow noprint"><button class="gold" onclick="printKartuSiswa()">${icon('printer')}Cetak Kartu Ini</button></div>
   `;
 });
 
