@@ -4,7 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Buku Nilai Raport — Madrasah</title>
-<link rel="icon" id="dynFavicon" href="">
+<meta name="theme-color" content="#1e4d3a">
+<!-- Set ikon aplikasi dari file statis (tampil langsung, tidak menunggu JS jalan).
+     Kalau Admin mengganti logo lewat Setup Wizard (White Label), applyBranding()
+     di bawah akan menimpa href-nya secara dinamis saat runtime. -->
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" id="dynFavicon32">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" id="dynFavicon16">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" id="dynFavicon192">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png" id="dynFavicon512">
+<link rel="icon" id="dynFavicon" href="icons/favicon-32.png">
+<!-- Dukungan ikon di iOS/Android saat "Tambahkan ke Layar Utama" -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Yapida">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" id="dynAppleTouchIcon">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Playfair+Display:wght@500;600;700&family=EB+Garamond:wght@400;500;600;700&family=Merriweather:wght@400;700&family=Lora:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600;700&family=Cinzel:wght@400;500;600;700&family=Crimson+Text:wght@400;600;700&family=Libre+Baskerville:wght@400;700&family=Spectral:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Nunito:wght@400;600;700&family=Raleway:wght@400;500;600;700&family=Work+Sans:wght@400;500;600&family=Marcellus&family=Josefin+Sans:wght@400;500;600&family=Great+Vibes&family=DM+Serif+Display&family=Amiri:wght@400;700&family=Scheherazade+New:wght@400;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Aref+Ruqaa:wght@400;700&family=Reem+Kufi:wght@400;500;600;700&family=El+Messiri:wght@400;500;600;700&family=Lateef:wght@400;700&family=Cairo:wght@400;500;600;700&family=Tajawal:wght@400;500;700&family=Rakkas&family=Harmattan:wght@400;700&family=Mada:wght@400;500;700&family=Cormorant:wght@400;500;600;700&family=Prata&family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,600;6..96,700&family=Cinzel+Decorative:wght@400;700;900&family=Tangerine:wght@400;700&family=Italiana&family=IM+Fell+English&family=Vollkorn:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=PT+Serif:wght@400;700&family=Markazi+Text:wght@400;500;600;700&family=Katibeh&family=Jomhuria&family=Changa:wght@400;500;600;700&family=Mirza:wght@400;500;600;700&family=Noto+Kufi+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -1634,8 +1647,17 @@ function applyBranding(){
     const el = document.getElementById(id);
     if(el) el.src = logo;
   });
-  const favicon = document.getElementById('dynFavicon');
-  if(favicon) favicon.href = logo;
+  // Kalau Admin sudah mengisi logo kustom lewat Setup Wizard, timpa semua ikon
+  // (favicon berbagai ukuran + apple-touch-icon) supaya konsisten di semua tempat.
+  // Kalau belum (masih logo bawaan), biarkan ikon statis di /icons yang sudah
+  // dioptimalkan per-ukuran tetap dipakai (lebih tajam daripada 1 file di-resize browser).
+  const hasCustomLogo = !!(b.logoDataUrl);
+  if(hasCustomLogo){
+    ['dynFavicon','dynFavicon16','dynFavicon32','dynFavicon192','dynFavicon512','dynAppleTouchIcon'].forEach(id=>{
+      const el = document.getElementById(id);
+      if(el) el.href = logo;
+    });
+  }
   const schoolLineEl = document.getElementById('schoolLine');
   if(schoolLineEl) schoolLineEl.textContent = (b.shortName || DEFAULT_APP_CONFIG.brand.shortName) + ' — realtime';
   const loginSchoolEl = document.getElementById('loginSchoolName');
