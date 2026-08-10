@@ -1,0 +1,388 @@
+  /* Ikon stok (pengganti emoji) — bergaya outline tipis biar tidak "kasar"/norak,
+     ukurannya ngikut ukuran teks di sekitarnya dan warnanya ngikut warna teks. */
+  .ic{ width:1em; height:1em; display:inline-block; vertical-align:-0.15em; margin-right:.3em;
+    fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .ic.solo{ margin-right:0; }
+  :root{
+    --ink:#1c2320;
+    --paper:#f5f3ec;
+    --paper-2:#ede9dc;
+    --deep:#1e4d3a;
+    --deep-2:#153627;
+    --gold:#b8863a;
+    --gold-soft:#e6d3ab;
+    --line:#d8d2bf;
+    --danger:#9a3f3f;
+    --white:#fffdf8;
+    --shadow: 0 1px 2px rgba(28,35,32,.06), 0 6px 20px rgba(28,35,32,.08);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Public Sans', system-ui, sans-serif;
+    -webkit-font-smoothing:antialiased;
+    -webkit-tap-highlight-color:transparent;
+  }
+  /* Cegah elemen manapun (gambar, tabel, dsb) mendorong lebar halaman melebihi layar.
+     (overflow-x:hidden di html/body SENGAJA tidak dipakai — itu mematahkan
+     position:sticky di banyak browser. Cukup dibatasi lewat max-width per elemen.) */
+  img, table, .card, .tablewrap, .field, .row{ max-width:100%; }
+  input, select, textarea, button{ touch-action:manipulation; }
+  /* Target sentuh minimal ~40px supaya nyaman ditekan jari di HP */
+  button, .tab{ min-height:40px; }
+  select, input[type="text"], input[type="number"], input[type="password"], input[type="email"]{ min-height:40px; }
+  h1,h2,h3,.display{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    letter-spacing:-0.01em;
+  }
+  .mono{font-family:'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums;}
+
+  /* ---------- Sticky header (topbar + tabs tetap terlihat saat discroll) ---------- */
+  #stickyHeader{
+    position:sticky; top:0; z-index:60;
+  }
+
+  /* ---------- Shell ---------- */
+  .topbar{
+    background:linear-gradient(180deg, var(--deep) 0%, var(--deep-2) 100%);
+    color:var(--white);
+    padding:18px 20px 46px;
+    position:relative;
+    overflow:hidden;
+  }
+  .topbar::after{
+    content:"";
+    position:absolute; left:0; right:0; bottom:0; height:10px;
+    background-image: repeating-linear-gradient(135deg, var(--gold) 0 8px, transparent 8px 16px);
+    opacity:.55;
+  }
+  .topbar h1{color:var(--white); font-size:22px; margin:0 0 2px;}
+  .topbar .sub{opacity:.78; font-size:13px;}
+  .topbar .row2{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:10px;}
+  .topbar .badge{
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:11px; letter-spacing:.04em; text-transform:uppercase;
+    background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18);
+    padding:4px 10px; border-radius:100px;
+  }
+  .dot{width:7px;height:7px;border-radius:50%;background:#7fd99a;box-shadow:0 0 0 3px rgba(127,217,154,.25);}
+  .dot.off{background:#d97757;box-shadow:0 0 0 3px rgba(217,119,87,.25);}
+  #kelasSwitcher{ max-width:420px; }
+  .btnRefresh{
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:11px; letter-spacing:.04em; text-transform:uppercase;
+    background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18);
+    padding:4px 10px; border-radius:100px; color:var(--white); cursor:pointer;
+    font-family:inherit; font-weight:600; transition:background .15s, transform .05s;
+  }
+  .btnRefresh:hover{ background:rgba(255,255,255,.2); }
+  .btnRefresh:active{ transform:scale(.96); }
+  .btnRefresh svg{ width:13px; height:13px; flex:0 0 auto; }
+  .btnRefresh.spinning svg{ animation:spinRefresh .6s linear; }
+  @keyframes spinRefresh{ from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+
+  .tabs{
+    display:flex; gap:4px; margin:-30px 12px 0; position:relative; z-index:2;
+    background:var(--white); border-radius:14px; padding:6px;
+    box-shadow:var(--shadow); overflow-x:auto;
+  }
+  .tab{
+    flex:1; text-align:center; padding:10px 8px; border-radius:10px;
+    font-size:13px; font-weight:600; color:#6b6656; cursor:pointer;
+    white-space:nowrap; user-select:none;
+  }
+  .tab.active{background:var(--deep); color:var(--white);}
+  main{padding:18px 12px 60px; max-width:1100px; margin:0 auto;}
+  .card{
+    background:var(--white); border:1px solid var(--line); border-radius:14px;
+    padding:16px; margin-bottom:16px; box-shadow:var(--shadow);
+  }
+  .card h2{font-size:16px; margin:0 0 12px; color:var(--deep-2);}
+  .card h3{font-size:14px; margin:18px 0 8px; color:var(--deep-2);}
+  .row{display:flex; flex-wrap:wrap; gap:10px;}
+  .field{flex:1 1 200px; display:flex; flex-direction:column; gap:4px;}
+  label{font-size:12px; color:#6b6656; font-weight:600;}
+  input, select, textarea{
+    font:inherit; padding:9px 10px; border:1px solid var(--line); border-radius:8px;
+    background:var(--paper); color:var(--ink); width:100%;
+  }
+  input:focus, select:focus, textarea:focus{outline:2px solid var(--gold-soft); border-color:var(--gold);}
+  button{
+    font:inherit; font-weight:600; border:none; border-radius:9px; padding:10px 16px;
+    cursor:pointer; background:var(--deep); color:var(--white); transition:transform .05s;
+  }
+  button:active{transform:scale(.98);}
+  button.secondary{background:var(--paper-2); color:var(--ink); border:1px solid var(--line);}
+  button.danger{background:var(--danger); color:var(--white);}
+  button.gold{background:var(--gold); color:var(--white);}
+  button:disabled{opacity:.5; cursor:not-allowed;}
+  .btnrow{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
+
+  table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  th,td{border:1px solid var(--line); padding:6px 7px; text-align:center;}
+  th{background:var(--paper-2); font-size:11px; color:#4d4a3d; font-weight:700;}
+  td.name{text-align:left; font-weight:600; white-space:nowrap;}
+  .tablewrap{overflow-x:auto; border-radius:10px;}
+  tr:nth-child(even) td{background:#faf9f4;}
+  .num{font-family:'IBM Plex Mono', monospace;}
+  .pill{
+    display:inline-block; padding:2px 8px; border-radius:100px; font-size:11px; font-weight:700;
+    background:var(--gold-soft); color:#5a3f18;
+  }
+  .pill.active{background:var(--deep); color:var(--white);}
+  .empty{
+    text-align:center; padding:30px 10px; color:#8a856f; font-size:13.5px;
+  }
+  .hint{font-size:12px; color:#8a856f; margin-top:4px;}
+  .subjInput[readonly]{ background:var(--paper-2); color:#6b6656; cursor:default; }
+  .studentpick{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px;}
+  .studentpick select{flex:1; min-width:220px;}
+  .grid17{display:grid; grid-template-columns:repeat(auto-fill, minmax(140px,1fr)); gap:8px;}
+  .toast{
+    position:fixed; bottom:18px; left:50%; transform:translateX(-50%);
+    background:var(--ink); color:var(--white); padding:10px 18px; border-radius:100px;
+    font-size:13px; z-index:99; opacity:0; pointer-events:none; transition:opacity .25s;
+  }
+  .toast.show{opacity:1;}
+  .certframe{
+    border:2px solid var(--deep); border-radius:6px; padding:14px; margin-bottom:16px;
+    background:repeating-linear-gradient(135deg, rgba(184,134,58,.05) 0 10px, transparent 10px 20px);
+  }
+  .certframe .certHead{display:flex; align-items:center; justify-content:center; gap:14px;}
+  .certframe .certLogo{width:52px; height:52px; object-fit:contain; flex:0 0 auto;}
+  .certframe .certHeadText{text-align:center;}
+  .certframe .school{font-family:'Fraunces',serif; font-weight:700; font-size:17px; text-align:center; color:var(--deep-2);}
+  .certframe .addr{text-align:center; font-size:12px; color:#6b6656;}
+  .certframe .meta{display:flex; justify-content:center; gap:18px; font-size:12px; margin-top:8px; flex-wrap:wrap;}
+  .nilaiMerah{color:var(--danger); font-weight:700;}
+  .rankPrint{display:none;}
+
+  @media print{
+    .rankInput{display:none !important;}
+    .rankPrint{display:inline !important;}
+    @page{ size: A4 landscape; margin: 8mm; }
+    .topbar,.tabs,.noprint{display:none !important;}
+    body{background:#fff;}
+    main{padding:0; max-width:none;}
+    .card{box-shadow:none; border:none; padding:0;}
+    .tablewrap{overflow-x:visible !important; border-radius:0;}
+    table{font-size:8.5px !important; table-layout:auto; width:100%;}
+    th,td{padding:3px 3px !important;}
+    td.name{white-space:normal;}
+  }
+
+  /* ---------- Ijazah ---------- */
+  .ijazahBoard{display:flex; gap:18px; flex-wrap:wrap; justify-content:center;}
+  .ijazahPage{
+    width:480px; aspect-ratio:210/297; background:#fbfbf2; position:relative;
+    border:10px solid #1e6b3e; border-radius:4px; padding:16px 14px;
+    box-shadow:var(--shadow); overflow:hidden;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact; color-adjust:exact;
+  }
+  .ijazahPage.hasCustomBorder{ background-size:100% 100%; background-repeat:no-repeat; }
+  .ijazahPage.hasCustomBorderBack{ background-size:100% 100%; background-repeat:no-repeat; }
+  [data-ijzel].dragMode{ cursor:move; outline:1.5px dashed var(--gold); outline-offset:2px; }
+  .ijazahInner.groupDragMode{ cursor:move; outline:1.5px dashed var(--gold); outline-offset:4px; }
+  .ijazahPage::before{
+    content:""; position:absolute; inset:6px;
+    border:2px solid #1e6b3e;
+    background-image: repeating-linear-gradient(45deg, rgba(30,107,62,.07) 0 6px, transparent 6px 12px);
+    pointer-events:none;
+  }
+  .ijazahInner{position:relative; z-index:1; height:100%; display:flex; flex-direction:column; font-family:var(--ijzFontBody, 'Public Sans', system-ui, sans-serif);}
+  .ijazahArabTop{text-align:center; font-size:calc(15px * var(--ijzScaleArab,1)); line-height:1.6; color:#153627; direction:rtl; font-family:var(--ijzFontArab, 'Amiri', serif);}
+  .ijazahLembaga{text-align:center; font-weight:800; font-size:calc(12.5px * var(--ijzScaleLatin,1)); margin-top:6px; color:#153627;}
+  .ijazahTitleWord{text-align:center; font-family:var(--ijzFontTitle, 'Fraunces', serif); font-weight:700; font-size:calc(26px * var(--ijzScaleLatin,1)); margin:2px 0; color:#153627;}
+  .ijazahNos{display:flex; justify-content:space-between; font-size:calc(10px * var(--ijzScaleLatin,1)); margin-top:-4px;}
+  .ijazahMadrasah{text-align:center; font-weight:800; font-size:calc(12px * var(--ijzScaleLatin,1)); margin-top:6px;}
+  .ijazahAddr, .ijazahTingkat{text-align:center; font-size:calc(10.5px * var(--ijzScaleLatin,1));}
+  .ijazahTahun{text-align:center; font-size:calc(10.5px * var(--ijzScaleLatin,1)); margin-top:4px;}
+  .ijazahLead{text-align:center; font-size:calc(10.5px * var(--ijzScaleLatin,1)); margin-top:10px;}
+  .ijazahNama{text-align:center; font-weight:700; font-size:calc(15px * var(--ijzScaleLatin,1)); margin:6px 0; text-decoration:underline; text-underline-offset:3px;}
+  .ijazahBioRow{display:flex; font-size:calc(10.5px * var(--ijzScaleLatin,1)); gap:6px; margin-top:2px;}
+  .ijazahBioRow .lbl{width:98px; flex:0 0 auto;}
+  .ijazahBioRow .val{font-weight:600; text-decoration:underline; text-underline-offset:2px;}
+  .ijazahTelahLulus{font-size:calc(10px * var(--ijzScaleLatin,1)); margin-top:8px; text-align:justify;}
+  .ijazahFotoBox{width:70px; height:88px; border:1px solid #444; font-size:9px; text-align:center; display:flex; align-items:center; justify-content:center; color:#666; position:absolute; left:14px; bottom:70px; background:#fff; z-index:2;}
+  .ijazahFotoBox img{width:100%; height:100%; object-fit:cover;}
+  .ijazahSignArea{margin-top:auto; font-size:calc(10.5px * var(--ijzScaleLatin,1)); position:relative; z-index:1;}
+  .ijazahSignArea .ttd{text-align:center; margin-top:2px;}
+  .ijazahSignArea .ttdNama{font-weight:700; text-decoration:underline; text-underline-offset:2px; margin-top:34px; display:block;}
+  /* Blok pengurus yayasan: digeser ke kanan foto & diratakan tengah agar tidak pernah tertutup pas foto */
+  .ijazahPengurusBlock{margin:12px auto 0; max-width:260px; text-align:center;}
+  .ijazahPengurusBlock .ttd{text-align:center;}
+  .ijazahPengurusBlock .ttdNama{margin-top:26px;}
+  .ijazahBackTitle{text-align:center; font-family:var(--ijzFontTitle, 'Fraunces', serif); font-weight:700; font-size:calc(15px * var(--ijzScaleLatin,1));}
+  .ijazahBackSub{text-align:center; font-weight:800; font-size:calc(11.5px * var(--ijzScaleLatin,1));}
+  .ijazahBackAddr{text-align:center; font-size:calc(9.5px * var(--ijzScaleLatin,1));}
+  .ijazahBackMeta{text-align:center; font-size:calc(9.5px * var(--ijzScaleLatin,1)); margin-top:2px;}
+  .ijazahBackDaftar{text-align:center; font-size:calc(9.5px * var(--ijzScaleLatin,1)); margin-top:8px; border-bottom:1px solid #333; padding-bottom:10px;}
+  .ijazahTbl{width:100%; font-size:calc(9px * var(--ijzScaleLatin,1)); border-collapse:collapse; margin-top:8px;}
+  .ijazahTbl th, .ijazahTbl td{border:1px solid #333; padding:2px 4px;}
+  .ijazahTbl th{background:#eef3ee;}
+  .ijazahBackSign{display:flex; justify-content:space-around; text-align:center; font-size:calc(9.5px * var(--ijzScaleLatin,1)); margin-top:14px;}
+  .ijazahBackSign .ttdNama{font-weight:700; text-decoration:underline; text-underline-offset:2px; margin-top:30px; display:block;}
+  @media print{
+    body.printingIjazah main{padding:0;}
+    body.printingIjazah .card:not(.ijazahPrintCard){display:none !important;}
+    body.printingIjazah .ijazahPrintCard{box-shadow:none; border:none;}
+    body.printingIjazah .ijazahBoard{gap:0;}
+    body.printingIjazah .ijazahPage{box-shadow:none; page-break-after:always; margin:0 auto;}
+    body.printingIjazah .ijazahPage, body.printingIjazah .ijazahPage *{
+      -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important;
+    }
+    body.printingRekapGabungan .card:not(#rekapGabunganCard){display:none !important;}
+    body.printingRekapGabungan #rekapGabunganCard{display:block !important; box-shadow:none; border:none;}
+    body.printingRekapGabungan #rekapGabunganCard .noprint{display:none !important;}
+    body.printingDaftarUjian .card:not(#cardDaftarUjian){display:none !important;}
+    body.printingDaftarUjian #cardDaftarUjian{display:block !important; box-shadow:none; border:none;}
+    body.printingDaftarUjian #cardDaftarUjian .noprint{display:none !important;}
+    /* Cetak Rekap Ini: hanya tabel rekap kelas, sembunyikan Kartu Raport per Siswa
+       supaya keduanya tidak nyambung jadi satu kertas cetak. */
+    body.printingRekapOnly .card:not(#rekapPrintArea){display:none !important;}
+    body.printingRekapOnly #cardArea{display:none !important;}
+    /* Cetak Kartu Ini: hanya kartu raport siswa yang aktif, sembunyikan tabel rekap
+       kelas & kartu lain supaya tidak ikut tercetak di kertas yang sama. */
+    body.printingKartuSiswa .card{display:none !important;}
+    body.printingKartuSiswa #cardArea{display:block !important;}
+  }
+  /* ---------- Surat (Buat Surat / Kop Surat kustom) ---------- */
+  .suratDocPage{
+    width:100%; max-width:720px; margin:0 auto; background:#fff; color:#111;
+    padding:22mm 20mm; box-sizing:border-box; box-shadow:var(--shadow);
+    font-family:var(--sdFont,'Public Sans',system-ui,sans-serif);
+    font-size:calc(13px * var(--sdFontScale,1)); line-height:var(--sdLineHeight,1.5);
+  }
+  .suratDocKop{display:flex; align-items:center; gap:12px; border-bottom:3px double #222; padding-bottom:8px; margin-bottom:14px;}
+  .suratDocKop img{width:64px; height:64px; object-fit:contain; flex:0 0 auto;}
+  .suratDocKop .txt{flex:1; text-align:center;}
+  .suratDocKop .yayasan{font-size:0.85em; letter-spacing:.03em;}
+  .suratDocKop .madrasah{font-weight:800; font-size:1.35em; font-family:'Fraunces',serif; text-transform:uppercase;}
+  .suratDocKop .alamat{font-size:0.78em; color:#333;}
+  .suratDocMeta{display:flex; justify-content:space-between; gap:12px; margin-bottom:10px;}
+  .suratDocMeta .kanan{text-align:right;}
+  .suratDocKepada{margin-bottom:10px; white-space:pre-line;}
+  .suratDocPerihal{margin-bottom:10px;}
+  .suratDocIsi{white-space:pre-line; margin-bottom:10px;}
+  .suratDocIsi.justify{text-align:justify;}
+  .suratDocPenutup{white-space:pre-line; margin-bottom:10px;}
+  .suratDocTtdWrap{display:flex; margin-top:18px;}
+  .suratDocTtdWrap.pos-kiri{justify-content:flex-start;}
+  .suratDocTtdWrap.pos-tengah{justify-content:center;}
+  .suratDocTtdWrap.pos-kanan{justify-content:flex-end;}
+  .suratDocTtd{text-align:center; min-width:200px;}
+  .suratDocTtd .nama{font-weight:700; text-decoration:underline; text-underline-offset:3px; margin-top:56px; display:block;}
+  .suratDocTtd .nip{font-size:0.85em;}
+  @media print{
+    body.printingSurat main{padding:0;}
+    body.printingSurat .card:not(.suratDocPrintCard){display:none !important;}
+    body.printingSurat .suratDocPrintCard{box-shadow:none; border:none; display:block !important;}
+    body.printingSurat .suratDocPage{box-shadow:none; margin:0 auto; padding:0;}
+  }
+  @media (max-width:640px){
+    /* --- Header: lebih ringkas, badge digulir horizontal alih-alih menumpuk --- */
+    .topbar h1{font-size:17px;}
+    .topbar .sub{font-size:11.5px;}
+    .topbar{padding:14px 12px 36px;}
+    .topbar img#headerLogo{width:36px; height:36px;}
+    .topbar .row2{
+      flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none;
+      margin:10px -12px 0; padding:0 12px 2px;
+    }
+    .topbar .row2::-webkit-scrollbar{display:none;}
+    .topbar .row2 > *{flex:0 0 auto;}
+    .badge{font-size:10px; padding:4px 8px;}
+    .userchip{font-size:11.5px;}
+    /* Refresh: ikon saja di layar sempit supaya baris badge tidak penuh */
+    .btnRefresh{font-size:0; padding:6px 8px; gap:0;}
+    .btnRefresh svg{width:14px; height:14px;}
+
+    /* --- Tabs: geser halus + rapi --- */
+    .tabs{margin:-24px 8px 0; padding:4px; gap:2px; scrollbar-width:none; scroll-snap-type:x proximity;}
+    .tabs::-webkit-scrollbar{display:none;}
+    .tab{padding:9px 10px; font-size:12.5px; scroll-snap-align:start;}
+
+    /* --- Konten: lebih lapang antar-elemen, padding kartu lebih hemat --- */
+    main{padding:12px 8px 60px;}
+    .card{padding:12px; border-radius:12px; margin-bottom:12px;}
+    .card h2{font-size:14.5px;}
+    .card h3{font-size:13px; margin:14px 0 6px;}
+    .hint{font-size:11.5px;}
+
+    /* --- Form: satu kolom penuh supaya mudah disentuh, label tetap ringkas --- */
+    .row{gap:8px; margin-bottom:2px;}
+    .field{flex:1 1 100% !important; min-width:0;}
+    label{font-size:11.5px;}
+    input, select, textarea{padding:8px 9px; font-size:14px;}
+
+    /* --- Tombol: susun penuh 1 kolom di layar sangat sempit, tetap gampang dipencet --- */
+    .btnrow{gap:8px;}
+    .btnrow button{flex:1 1 auto;}
+    .studentpick{flex-direction:column; align-items:stretch;}
+    .studentpick select{min-width:0;}
+
+    /* --- Tabel: kompak tapi tetap terbaca, scroll horizontal per tabel --- */
+    table{font-size:11.5px;}
+    th,td{padding:5px 4px;}
+    .tablewrap{-webkit-overflow-scrolling:touch;}
+
+    /* --- Grid input nilai: 2 kolom rapi alih-alih memaksa lebar 140px --- */
+    .grid17{grid-template-columns:repeat(2, minmax(0,1fr)); gap:6px;}
+
+    /* --- Ijazah: kartu ijazah dulu lebar tetap 480px, sekarang menyesuaikan layar --- */
+    .ijazahBoard{gap:12px;}
+    .ijazahPage{width:100%; max-width:480px;}
+
+    /* --- Surat: kop surat dulu pakai padding mm tetap (boros di HP), disusutkan di layar --- */
+    .suratDocPage{padding:14px 12px;}
+  }
+
+  /* ---------- Auth / Login ---------- */
+  .userchip{
+    display:inline-flex; align-items:center; gap:8px;
+    background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.28);
+    border-radius:100px; padding:4px 6px 4px 4px; font-size:12.5px;
+  }
+  .userchip img{width:22px; height:22px; border-radius:50%; display:block;}
+  .userchip button{padding:5px 10px; font-size:11.5px; background:rgba(255,255,255,.18);}
+  .btnGoogle{
+    display:inline-flex; align-items:center; gap:10px; justify-content:center;
+    background:var(--white); color:var(--ink); border:1px solid var(--line);
+    padding:11px 18px; font-weight:700; width:100%; max-width:320px;
+  }
+  .btnGoogle svg{width:18px; height:18px;}
+  .loginwrap{
+    min-height:60vh; display:flex; align-items:center; justify-content:center; padding:20px 12px;
+  }
+  .logincard{
+    max-width:380px; width:100%; text-align:center;
+  }
+  .logincard .school{font-family:'Fraunces',serif; font-weight:700; font-size:19px; color:var(--deep-2); margin-bottom:4px;}
+  .logincard .addr{font-size:12.5px; color:#6b6656; margin-bottom:18px;}
+  .authhint{font-size:11.5px; color:#8a856f; margin-top:14px;}
+
+  /* ---------- Absensi ---------- */
+  .statuspick{display:inline-flex; border-radius:8px; overflow:hidden; border:1px solid var(--line);}
+  .statuspick button{
+    background:var(--white); color:var(--ink); border-radius:0; padding:6px 10px; font-size:12px;
+    border-right:1px solid var(--line);
+  }
+  .statuspick button:last-child{border-right:none;}
+  .statuspick button.on[data-st="H"]{background:#2f7a4f; color:#fff;}
+  .statuspick button.on[data-st="S"]{background:#b8863a; color:#fff;}
+  .statuspick button.on[data-st="I"]{background:#3a6ea5; color:#fff;}
+  .statuspick button.on[data-st="A"]{background:var(--danger); color:#fff;}
+  /* ---------- Setup Wizard (White Label) ---------- */
+  .swOverlay{
+    position:fixed; inset:0; z-index:200; background:rgba(28,35,32,.55);
+    display:flex; align-items:flex-start; justify-content:center;
+    padding:20px 12px; overflow-y:auto;
+  }
+  #setupWizardCard textarea{font:inherit; padding:9px 10px; border:1px solid var(--line); border-radius:8px; background:var(--paper); color:var(--ink); width:100%; resize:vertical;}
+  .badgeH{color:#2f7a4f; font-weight:700;}
+  .badgeS{color:#b8863a; font-weight:700;}
+  .badgeI{color:#3a6ea5; font-weight:700;}
+  .badgeA{color:var(--danger); font-weight:700;}

@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buku Nilai Raport — Madrasah</title>
+<meta name="theme-color" content="#1e4d3a">
+<!-- Set ikon aplikasi dari file statis (tampil langsung, tidak menunggu JS jalan).
+     Kalau Admin mengganti logo lewat Setup Wizard (White Label), applyBranding()
+     di bawah akan menimpa href-nya secara dinamis saat runtime. -->
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" id="dynFavicon32">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" id="dynFavicon16">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" id="dynFavicon192">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png" id="dynFavicon512">
+<link rel="icon" id="dynFavicon" href="icons/favicon-32.png">
+<!-- Dukungan ikon di iOS/Android saat "Tambahkan ke Layar Utama" -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Yapida">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" id="dynAppleTouchIcon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Playfair+Display:wght@500;600;700&family=EB+Garamond:wght@400;500;600;700&family=Merriweather:wght@400;700&family=Lora:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600;700&family=Cinzel:wght@400;500;600;700&family=Crimson+Text:wght@400;600;700&family=Libre+Baskerville:wght@400;700&family=Spectral:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Nunito:wght@400;600;700&family=Raleway:wght@400;500;600;700&family=Work+Sans:wght@400;500;600&family=Marcellus&family=Josefin+Sans:wght@400;500;600&family=Great+Vibes&family=DM+Serif+Display&family=Amiri:wght@400;700&family=Scheherazade+New:wght@400;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Aref+Ruqaa:wght@400;700&family=Reem+Kufi:wght@400;500;600;700&family=El+Messiri:wght@400;500;600;700&family=Lateef:wght@400;700&family=Cairo:wght@400;500;600;700&family=Tajawal:wght@400;500;700&family=Rakkas&family=Harmattan:wght@400;700&family=Mada:wght@400;500;700&family=Cormorant:wght@400;500;600;700&family=Prata&family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,600;6..96,700&family=Cinzel+Decorative:wght@400;700;900&family=Tangerine:wght@400;700&family=Italiana&family=IM+Fell+English&family=Vollkorn:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=PT+Serif:wght@400;700&family=Markazi+Text:wght@400;500;600;700&family=Katibeh&family=Jomhuria&family=Changa:wght@400;500;600;700&family=Mirza:wght@400;500;600;700&family=Noto+Kufi+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="stickyHeader">
+<div class="topbar">
+  <div style="display:flex; align-items:center; gap:12px;">
+    <img src="" id="headerLogo" alt="Logo Yayasan" style="width:44px;height:44px;object-fit:contain;flex:0 0 auto;">
+    <div>
+      <h1 style="margin:0;">Database &amp; Buku Nilai Siswa</h1>
+      <div class="sub" id="schoolLine">Yayasan Pendidikan Islam Al-Hidayah — Yapida — realtime</div>
+    </div>
+  </div>
+  <div class="row2">
+    <div class="badge"><span class="dot off" id="connDot"></span><span id="connText">Menghubungkan…</span></div>
+    <div class="badge" id="activeKelasBadge" style="display:none; background:rgba(184,134,58,.22); border-color:rgba(184,134,58,.4);">
+      <span class="dot" style="background:var(--gold); box-shadow:0 0 0 3px rgba(184,134,58,.28);"></span>
+      <span id="activeKelasText"></span>
+    </div>
+    <div class="badge noprint" id="onlineBadge" style="display:none;" title="">
+      <span class="dot"></span><span id="onlineCountText"></span>
+    </div>
+    <button class="btnRefresh noprint" id="btnRefreshHeader" type="button" title="Muat ulang halaman">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      Refresh
+    </button>
+    <span id="userChipWrap" class="noprint"></span>
+  </div>
+</div>
+
+<div class="tabs noprint" id="tabsBar" style="display:none;">
+  <div class="tab active" data-tab="kelas">Kelas</div>
+  <div class="tab" data-tab="siswa">Siswa</div>
+  <div class="tab" data-tab="absensi">Absensi</div>
+  <div class="tab" data-tab="input">Input Nilai</div>
+  <div class="tab" data-tab="rekap">Rekap &amp; Cetak</div>
+  <div class="tab" data-tab="ijazah">Ijazah</div>
+  <div class="tab" data-tab="akun">Akun</div>
+  <div class="tab" data-tab="surat" id="tabBtnSurat" style="display:none;">Surat Menyurat</div>
+  <div class="tab" data-tab="pengguna" id="tabBtnPengguna" style="display:none;">Pengguna</div>
+</div>
+</div>
+<!-- /#stickyHeader -->
+
+
+<main>
+
+  <!-- ================= LOGIN GATE ================= -->
+  <div class="loginwrap noprint" id="loginGate">
+    <div class="card logincard">
+      <img src="" id="loginLogo" alt="Logo Yayasan" style="width:84px;height:84px;object-fit:contain;margin:0 auto 10px;display:block;">
+      <div class="school" id="loginSchoolName">Yayasan Pendidikan Islam Al-Hidayah — Madrasah Tarbiyatul Islam Al-Hidayah</div>
+      <div class="addr" id="loginSchoolAddr">Ujung Piring, Bangkalan</div>
+      <h2 style="margin-top:0;">Masuk untuk melanjutkan</h2>
+      <p class="hint">Database siswa, nilai, dan absensi ini hanya bisa diakses oleh akun Google yang diizinkan madrasah.</p>
+      <div style="display:flex; justify-content:center; margin-top:10px;">
+        <button class="btnGoogle" id="btnGoogleLogin" type="button">
+          <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5h-1.9V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l5.7-5.7C34.6 6 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.8 1.1 8 3l5.7-5.7C34.6 6 29.6 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.5 0 10.4-1.9 14.3-5.1l-6.6-5.6C29.6 35 26.9 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.6 39.6 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H24v8h11.3c-.8 2.3-2.2 4.2-4.1 5.6l6.6 5.6C41.4 36.8 44 30.9 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
+          Masuk dengan Google
+        </button>
+      </div>
+      <div class="authhint" id="loginErr"></div>
+      <div class="authhint">Belum bisa masuk? Hubungi admin database untuk didaftarkan sebagai pengguna.</div>
+      <div class="authhint" style="margin-top:10px;">
+        <button type="button" id="btnOpenSetupWizardLogin" style="background:none;border:none;color:#8a856f;font-size:11px;text-decoration:underline;cursor:pointer;padding:0;font-family:inherit;"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="18" r="2"/></svg> Bukan Yayasan Al-Hidayah? Atur aplikasi ini untuk sekolah/perusahaan Anda sendiri</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= VIEWER WAITING SCREEN ================= -->
+  <div class="loginwrap noprint" id="viewerWait" style="display:none;">
+    <div class="card logincard">
+      <img src="" id="viewerWaitLogo" alt="Logo Yayasan" style="width:72px;height:72px;object-fit:contain;margin:0 auto 10px;display:block;">
+      <h2 style="margin-top:0;">Menunggu Persetujuan</h2>
+      <p class="hint">Akun Google <strong id="viewerWaitEmail"></strong> berhasil masuk, tapi belum ditetapkan sebagai Staf atau Guru oleh Admin. Anda belum bisa melihat maupun mengubah data apa pun sampai role Anda ditetapkan.</p>
+      <div class="btnrow" style="justify-content:center;">
+        <button class="danger" id="btnLogoutViewer" type="button">Keluar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="appContent" style="display:none;">
+
+  <!-- ================= AKUN ================= -->
+  <section id="tab-akun" style="display:none;">
+
+    <div class="card">
+      <h2>Akun &amp; Koneksi</h2>
+      <div class="row">
+        <div class="field"><label>Masuk sebagai</label><div id="akunEmail" class="hint">—</div></div>
+        <div class="field"><label>Status Database</label><div class="hint" id="akunStatus">—</div></div>
+      </div>
+      <div class="btnrow"><button class="danger" id="btnLogoutAkun" type="button">Keluar</button></div>
+    </div>
+
+    <div class="card" id="cardWhiteLabelSetup" style="display:none;">
+      <h2><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="18" r="2"/></svg> Setup Aplikasi (White Label)</h2>
+      <p class="hint">Ubah nama, logo, warna, database Firebase, dan email Super Admin aplikasi ini — semuanya lewat wizard, tanpa perlu mengedit kode. Cocok kalau aplikasi ini mau dipakai oleh sekolah/perusahaan lain dengan identitas &amp; database sendiri.</p>
+      <div class="btnrow">
+        <button class="gold" id="btnOpenSetupWizardAkun" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c2.5 2 4 5.5 4 9 0 2-.5 3.7-1.3 5.2L12 22l-2.7-5.8C8.5 14.7 8 13 8 11c0-3.5 1.5-7 4-9Z"/><circle cx="12" cy="10" r="1.8"/><path d="M8.5 15.5 5 17l1-3.7"/><path d="M15.5 15.5 19 17l-1-3.7"/></svg> Buka Setup Wizard</button>
+      </div>
+    </div>
+
+    <div class="card" id="cardBackupRestore">
+      <h2>Backup &amp; Restore Database</h2>
+      <p class="hint">Backup JSON mengunduh SELURUH data (semua kelas, siswa, nilai, absensi, template ijazah, dst) sebagai satu file — inilah yang dipakai untuk memulihkan (Restore) data. Backup Excel mengunduh isi data yang sama dalam bentuk tabel yang bisa dibuka &amp; dibaca langsung di Excel/HP tanpa aplikasi ini — cocok sebagai cadangan darurat kalau sistem/website bermasalah, TAPI tidak bisa dipakai untuk Restore (hanya untuk dibaca/diperiksa manual).</p>
+      <div class="btnrow">
+        <button class="gold" id="btnBackupDb" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Unduh Backup (JSON — untuk Restore)</button>
+        <button class="secondary" id="btnBackupExcel" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Unduh Backup (Excel — cadangan darurat)</button>
+      </div>
+      <div class="row" style="margin-top:12px; align-items:flex-end;">
+        <div class="field" style="flex:2;">
+          <label>Pulihkan dari File Backup</label>
+          <input type="file" id="restoreDbFile" accept="application/json,.json">
+        </div>
+        <div class="field" style="flex:0 0 auto;">
+          <button class="danger" id="btnRestoreDb" type="button" disabled>Pulihkan Database</button>
+        </div>
+      </div>
+      <div class="hint" id="restoreDbInfo"></div>
+    </div>
+
+    <div class="card">
+      <h2>Batas Konversi Nilai Asli → Nilai Raport</h2>
+      <p class="hint">Berlaku untuk SEMUA kelas di database/sekolah ini. Contoh bawaan: ≥85→9, 75–84→8, 65–74→7, 55–64→6, 45–54→5, &lt;45→4. Nilai asli otomatis dicocokkan ke baris dengan "Nilai Asli Minimal" tertinggi yang masih terpenuhi.</p>
+      <div class="tablewrap">
+        <table id="konversiRaportTable">
+          <thead><tr><th style="text-align:left;">Nilai Asli Minimal</th><th style="text-align:left;">Nilai Raport</th><th class="noprint"></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="empty" id="konversiRaportEmpty" style="display:none;">Belum ada aturan konversi.</div>
+      <div class="btnrow noprint" id="konversiRaportEditRow" style="margin-top:10px;">
+        <button class="secondary" id="btnKonversiTambahBaris" type="button">+ Tambah Baris</button>
+        <button class="gold" id="btnKonversiSimpan" type="button">Simpan Konversi</button>
+        <button class="secondary" id="btnKonversiReset" type="button">Kembalikan ke Bawaan (85/75/65/55/45)</button>
+      </div>
+      <div class="hint" id="konversiRaportInfo"></div>
+    </div>
+
+  </section>
+
+  <!-- ================= PENGGUNA ================= -->
+  <section id="tab-pengguna" style="display:none;">
+    <div class="card">
+      <h2>Kelola Pengguna</h2>
+      <p class="hint">Akun Google baru otomatis masuk sebagai <strong>Viewer</strong> (tidak bisa baca/tulis apa pun) sampai ditetapkan sebagai Staf atau Guru di sini. <strong>Guru</strong> hanya bisa mengakses kelas yang dicentang pada kolom "Kelas Diampu". Akun <strong>Super Admin</strong> (<span id="penggunaSuperAdminEmail"></span>) tertanam di kode dan tidak bisa diubah/diturunkan oleh siapa pun. Label <span class="pill active">● Aktif</span> menandakan akun tsb sedang membuka aplikasi ini sekarang (realtime).</p>
+      <div class="tablewrap">
+        <table id="penggunaTable">
+          <thead><tr><th style="text-align:left;">Akun</th><th>Role</th><th style="text-align:left;">Kelas Diampu (khusus Guru)</th><th class="noprint">Aksi</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="empty" id="penggunaEmpty" style="display:none;">Belum ada akun lain yang pernah login.</div>
+    </div>
+  </section>
+
+  <!-- ================= SURAT MENYURAT ================= -->
+  <section id="tab-surat" style="display:none;">
+    <div class="card">
+      <h2 id="suratFormTitle">Tambah Surat</h2>
+      <p class="hint">Arsip surat masuk &amp; keluar madrasah, tidak terikat kelas tertentu. Khusus <strong>Super Admin, Admin &amp; Staf</strong>.</p>
+      <div class="row">
+        <div class="field" style="flex:0 0 160px;"><label>Jenis Surat</label>
+          <select id="stJenis"><option value="masuk">Surat Masuk</option><option value="keluar">Surat Keluar</option></select>
+        </div>
+        <div class="field"><label>Nomor Surat</label><input id="stNomor" placeholder="No. surat"></div>
+        <div class="field" style="flex:0 0 160px;"><label>Tanggal Surat</label><input id="stTanggal" type="date"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Dari / Kepada</label><input id="stPihak" placeholder="Nama instansi / orang"></div>
+        <div class="field" style="flex:2;"><label>Perihal</label><input id="stPerihal" placeholder="Perihal surat"></div>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:2;"><label>Keterangan</label><input id="stKeterangan" placeholder="Catatan tambahan (opsional)"></div>
+      </div>
+      <div class="btnrow">
+        <button id="btnSaveSurat">+ Simpan Surat</button>
+        <button class="secondary" id="btnCancelSuratEdit" type="button" style="display:none;">Batal Ubah</button>
+      </div>
+    </div>
+    <div class="card noprint">
+      <h2 id="sdFormTitle">Buat Surat dari Madrasah</h2>
+      <p class="hint">Susun surat resmi (undangan, pemberitahuan, keterangan, dll) dengan kop &amp; isi bebas sesuai kebutuhan, lalu cetak atau simpan ke arsip di atas. Khusus <strong>Super Admin, Admin &amp; Staf</strong>.</p>
+
+      <h3>Kop Surat (opsional)</h3>
+      <div class="row" style="align-items:center;">
+        <div class="field" style="flex:0 0 auto;">
+          <label style="display:flex; align-items:center; gap:6px; font-weight:600;">
+            <input type="checkbox" id="sdPakaiKop" style="width:auto;" checked> Tampilkan kop surat
+          </label>
+        </div>
+        <div class="field" style="flex:2;"><label>Logo (opsional)</label><input type="file" id="sdLogoFile" accept="image/*"><span class="hint" id="sdLogoStatus"></span></div>
+        <div class="field" style="flex:0 0 auto; align-self:flex-end;"><button class="secondary" id="btnClearSdLogo" type="button">Hapus Logo</button></div>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:2;"><label>Nama Yayasan (baris atas, opsional)</label><input id="sdYayasan" placeholder="cth. YAYASAN AL-HIDAYAH"></div>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:2;"><label>Nama Madrasah / Lembaga</label><input id="sdNamaMadrasah"></div>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:2;"><label>Alamat / Kontak</label><input id="sdAlamat" placeholder="Alamat, No. Telp, Email (opsional)"></div>
+      </div>
+
+      <h3>Kepala Surat</h3>
+      <div class="row">
+        <div class="field" style="flex:0 0 200px;"><label>Nomor Surat</label><input id="sdNomor" placeholder="opsional"></div>
+        <div class="field" style="flex:0 0 200px;"><label>Lampiran</label><input id="sdLampiran" placeholder="opsional"></div>
+        <div class="field"><label>Perihal</label><input id="sdPerihal" placeholder="Perihal surat"></div>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:0 0 220px;"><label>Tempat</label><input id="sdTempat" placeholder="cth. Bangkalan"></div>
+        <div class="field" style="flex:0 0 220px;"><label>Tanggal</label><input id="sdTanggal" type="date"></div>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:2;"><label>Kepada Yth. (boleh beberapa baris)</label><textarea id="sdKepada" rows="2" placeholder="cth. Bapak/Ibu Wali Murid Kelas 3&#10;di tempat"></textarea></div>
+      </div>
+
+      <h3>Isi Surat</h3>
+      <p class="hint">Isi bebas, satu baris kosong = ganti paragraf. Kalimat pembuka dan penutup tidak otomatis ditambahkan — tulis sesuai kebutuhan surat.</p>
+      <div class="row">
+        <div class="field" style="flex:2;"><textarea id="sdIsi" rows="7" placeholder="Assalamu'alaikum warahmatullahi wabarakatuh,&#10;&#10;Sehubungan dengan ..."></textarea></div>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:2;"><label>Penutup (opsional)</label><textarea id="sdPenutup" rows="2" placeholder="Demikian surat ini kami sampaikan, atas perhatiannya kami ucapkan terima kasih."></textarea></div>
+      </div>
+
+      <h3>Tanda Tangan</h3>
+      <div class="row">
+        <div class="field" style="flex:0 0 180px;"><label>Posisi</label>
+          <select id="sdTtdPosisi"><option value="kanan">Kanan</option><option value="tengah">Tengah</option><option value="kiri">Kiri</option></select>
+        </div>
+        <div class="field"><label>Jabatan</label><input id="sdTtdJabatan" placeholder="cth. Kepala Madrasah"></div>
+        <div class="field"><label>Nama</label><input id="sdTtdNama"></div>
+        <div class="field" style="flex:0 0 160px;"><label>NIP (opsional)</label><input id="sdTtdNip"></div>
+      </div>
+
+      <h3>Layout &amp; Format Cetak</h3>
+      <div class="row">
+        <div class="field" style="flex:0 0 200px;"><label>Ukuran Kertas</label>
+          <select id="sdPaper"><option value="a4">A4 (210 × 297 mm)</option><option value="f4">F4 / Folio (215 × 330 mm)</option></select>
+        </div>
+        <div class="field" style="flex:0 0 200px;"><label>Perataan Isi Surat</label>
+          <select id="sdAlign"><option value="left">Rata Kiri</option><option value="justify">Rata Kiri-Kanan (Justify)</option></select>
+        </div>
+        <div class="field" style="flex:0 0 220px;"><label>Gaya Font</label><select id="sdFont"></select></div>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:0 0 180px;"><label>Ukuran Font (%)</label><input id="sdFontSize" type="number" step="5" min="70" max="150" placeholder="100"></div>
+        <div class="field" style="flex:0 0 180px;"><label>Spasi Baris</label><input id="sdLineHeight" type="number" step="0.05" min="1" max="2.2" placeholder="1.5"></div>
+      </div>
+
+      <div class="btnrow">
+        <button id="btnBuildSuratDoc" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg> Tampilkan Pratinjau</button>
+        <button class="secondary" id="btnResetSuratDoc" type="button">Kosongkan Form</button>
+      </div>
+    </div>
+
+    <div class="card suratDocPrintCard" id="suratDocPreviewCard" style="display:none;">
+      <h2 class="noprint">Pratinjau Surat</h2>
+      <div class="btnrow noprint">
+        <button class="gold" id="btnPrintSuratDoc" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/></svg> Cetak</button>
+        <button class="secondary" id="btnSaveSuratDoc" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg> Simpan ke Arsip Surat Keluar</button>
+      </div>
+      <div id="suratDocBoard"></div>
+    </div>
+
+    <div class="card">
+      <h2>Daftar Surat</h2>
+      <div class="btnrow noprint">
+        <button class="gold" id="btnExportSurat" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Ekspor Excel</button>
+      </div>
+      <div class="row noprint" style="margin-bottom:10px;">
+        <div class="field" style="flex:2 1 220px;">
+          <label>Cari Surat</label>
+          <input id="suratSearch" type="text" placeholder="Cari nomor, perihal, dari/kepada, keterangan…">
+        </div>
+        <div class="field" style="flex:0 0 160px;">
+          <label>Jenis</label>
+          <select id="suratFilterJenis">
+            <option value="">Semua</option>
+            <option value="masuk">Surat Masuk</option>
+            <option value="keluar">Surat Keluar</option>
+          </select>
+        </div>
+      </div>
+      <div class="tablewrap">
+        <table id="suratTable">
+          <thead><tr><th>Tanggal</th><th>Jenis</th><th style="text-align:left;">Nomor</th><th style="text-align:left;">Dari/Kepada</th><th style="text-align:left;">Perihal</th><th class="noprint">Aksi</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="empty" id="suratEmpty" style="display:none;">Belum ada surat tercatat.</div>
+    </div>
+  </section>
+
+  <!-- ================= KELAS ================= -->
+  <section id="tab-kelas" style="display:none;">
+
+    <div class="card noprint" style="background:var(--danger); border-color:var(--danger); color:var(--white); text-align:center; padding:14px 16px;">
+      <h2 style="margin:0; color:var(--white); letter-spacing:.02em;"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/><line x1="12" y1="9" x2="12" y2="14"/><circle cx="12" cy="17" r="0.6" fill="currentColor" stroke="none"/></svg> Pilih Kelas Terlebih Dahulu!!!</h2>
+      <p style="margin:6px 0 0; font-size:12.5px; opacity:.92;">Pastikan <strong>Kelas</strong> (dan Catur Wulan) yang dipilih di bawah ini sudah benar sebelum menambah/mengubah data — semua tab lain (Siswa, Absensi, Input Nilai, Rekap, Ijazah) akan mengikuti kelas yang aktif di sini. Kelas &amp; tahun ajaran yang sedang aktif akan tampil di bagian atas halaman.</p>
+    </div>
+
+    <div class="card">
+      <h2>Kelas Aktif</h2>
+      <p class="hint">Pilih kelas yang sedang dibuka. Semua tab lain (Siswa, Absensi, Input Nilai, Rekap) akan mengikuti kelas yang dipilih di sini. Satu kelas dipakai utuh dari Catur Wulan 1 sampai 3 — gunakan pemilih Catur Wulan untuk berpindah antar-catur wulan TANPA membuat kelas baru.</p>
+      <div class="row">
+        <div class="field">
+          <label>Kelas</label>
+          <select id="kelasSwitcher" class="noprint"><option value="">— belum ada kelas —</option></select>
+        </div>
+        <div class="field" style="flex:0 0 180px;">
+          <label>Catur Wulan Aktif</label>
+          <select id="caturSwitcher" class="noprint">
+            <option value="cw1">Catur Wulan 1</option>
+            <option value="cw2">Catur Wulan 2</option>
+            <option value="cw3">Catur Wulan 3</option>
+          </select>
+        </div>
+      </div>
+      <div class="hint" id="legacyScoreBanner" style="display:none; background:var(--gold-soft); color:#5a3f18; padding:8px 10px; border-radius:8px; margin-top:8px;">
+        Kelas ini punya nilai dari format lama (sebelum ada Catur Wulan). Pindahkan ke Catur Wulan 1 supaya tidak tersembunyi:
+        <button class="secondary" id="btnMigrasiNilaiLama" type="button" style="margin-left:6px;">Migrasi ke Catur Wulan 1</button>
+      </div>
+    </div>
+
+    <div class="card" id="cardBuatKelas">
+      <h2 id="kelasFormTitle">Buat Kelas / Tingkatan Baru</h2>
+      <p class="hint">Setiap kelas punya data siswa, nilai, dan daftar mapel sendiri-sendiri — semua tersimpan dalam Firebase project yang sama.</p>
+      <div class="row">
+        <div class="field"><label>Tingkatan</label>
+          <select id="newTingkatan">
+            <option>TPQ</option>
+            <option>Ibtidaiyah</option>
+            <option>Tsanawiyah</option>
+            <option>Aliyah</option>
+          </select>
+        </div>
+        <div class="field"><label>Nama / Nomor Kelas</label><input id="newKelasNama" placeholder="cth. 1 - TSANAWIYAH"></div>
+        <div class="field"><label>Tahun Ajaran (Hijriyah)</label><input id="newTahun" placeholder="cth. 1446-1447 H"></div>
+        <div class="field"><label>Tahun Ajaran (Masehi)</label><input id="newTahunMasehi" placeholder="cth. 2024-2025 M"></div>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:1 1 100%; min-width:0;">
+          <label style="display:flex; align-items:center; gap:6px; font-weight:600;">
+            <input type="checkbox" id="newKelasAkhir" style="width:auto; flex:0 0 auto;"> Kelas / Tingkat Akhir (kelulusan)
+          </label>
+          <p class="hint" style="margin:4px 0 0;">Centang HANYA untuk kelas tertinggi di tingkatan ini (mis. kelas 3 Tsanawiyah, kelas 6 Ibtidaiyah) — tab <strong>Ijazah</strong> hanya aktif untuk kelas yang ditandai sebagai kelas akhir.</p>
+        </div>
+      </div>
+      <p class="hint">Satu kelas ini akan dipakai untuk Catur Wulan 1, 2, dan 3 sekaligus — tidak perlu buat kelas baru tiap ganti catur wulan. Buat kelas baru hanya saat siswa benar-benar naik ke tingkat/kelas berikutnya, atau saat mulai tahun pelajaran baru.</p>
+      <div class="row" id="copySubjectsRow">
+        <div class="field" style="flex:2;">
+          <label>Copy Format dari Kelas Tahun Sebelumnya (opsional)</label>
+          <select id="copySubjectsFrom"><option value="">— jangan salin, isi manual —</option></select>
+          <p class="hint" style="margin:4px 0 0;">Otomatis mengisi Tingkatan, Nama/Nomor Kelas, dan <strong>Tahun Ajaran (dimajukan +1 tahun otomatis)</strong> dari kelas yang dipilih, dan menyalin daftar mapelnya. Cocok dipakai saat membuat kelas untuk tahun pelajaran berikutnya dengan format yang sama — tetap cek dulu Tahun Ajarannya sebelum simpan.</p>
+        </div>
+      </div>
+      <div class="btnrow">
+        <button id="btnCreateKelas">+ Buat Kelas</button>
+        <button class="secondary" id="btnCancelKelasEdit" type="button" style="display:none;">Batal Ubah</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Semua Kelas</h2>
+      <p class="hint">Kelas dikelompokkan otomatis per Tahun Ajaran supaya lebih mudah mencari kelas dari tahun tertentu.</p>
+      <div class="row noprint" style="align-items:flex-end;">
+        <div class="field" style="flex:0 0 280px;">
+          <label>Filter Tahun Ajaran</label>
+          <select id="kelasFilterTahun"><option value="">— Semua Tahun —</option></select>
+        </div>
+        <div class="field" style="flex:0 0 auto;"><button class="secondary" id="btnExportKelas" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Ekspor Excel</button></div>
+      </div>
+      <div class="tablewrap">
+        <table id="kelasTable">
+          <thead><tr><th>Tingkatan</th><th style="text-align:left;">Kelas</th><th>Tahun Ajaran (H)</th><th>Tahun Ajaran (M)</th><th class="noprint">Aksi</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="empty" id="kelasEmpty" style="display:none;">Belum ada kelas. Buat kelas pertama di atas.</div>
+      <div class="empty" id="kelasFilterEmpty" style="display:none;">Tidak ada kelas untuk tahun ajaran yang dipilih.</div>
+    </div>
+
+    <div class="card" id="identitasCard" style="display:none;">
+      <h2>Identitas Rapor — Kelas Aktif (berlaku sepanjang tahun)</h2>
+      <div class="row">
+        <div class="field"><label>Nama Madrasah</label><input id="mNama"></div>
+        <div class="field"><label>Alamat</label><input id="mAlamat"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Tingkat</label><input id="mTingkat"></div>
+        <div class="field"><label>Kelas</label><input id="mKelas"></div>
+        <div class="field"><label>Tahun Ajaran (Hijriyah)</label><input id="mTahun"></div>
+        <div class="field"><label>Tahun Ajaran (Masehi)</label><input id="mTahunMasehi" placeholder="cth. 2024-2025 M"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Wali Kelas</label><input id="mWali"></div>
+        <div class="field"><label>Kepala Madrasah</label><input id="mKepala"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Tempat</label><input id="mTempat"></div>
+      </div>
+      <div class="btnrow"><button id="btnSaveMeta">Simpan Identitas</button></div>
+    </div>
+
+    <div class="card" id="caturMetaCard" style="display:none;">
+      <h2>Identitas Rapor — <span id="caturMetaLabel">Catur Wulan Aktif</span></h2>
+      <p class="hint">Khusus untuk catur wulan yang sedang dipilih di atas — label dan tanggal cetak boleh berbeda tiap catur wulan.</p>
+      <div class="row">
+        <div class="field"><label>Label Catur Wulan / Semester</label><input id="mCatur" placeholder="cth. 1 (SATU)"></div>
+        <div class="field"><label>Tanggal Penulisan Raport</label><input id="mTanggal" type="date"></div>
+      </div>
+      <div class="btnrow"><button id="btnSaveCaturMeta">Simpan Identitas Catur Wulan</button></div>
+    </div>
+
+    <div class="card" id="subjectsCard" style="display:none;">
+      <h2>Daftar Mata Pelajaran — Kelas Aktif</h2>
+      <p class="hint">Urutan ini menentukan urutan kolom di seluruh aplikasi untuk kelas yang sedang aktif — geser naik/turun pakai tombol ▲▼ di tiap baris supaya urutannya cocok dengan kolom di Raport fisik (kalau sekolah masih tulis tangan). Klik "Edit" pada mapel untuk mengubah namanya (langsung tersimpan), atau tambahkan mapel baru, lalu klik "Simpan Daftar Mapel" untuk menyimpan urutan/perubahan sekaligus.</p>
+      <div id="subjectList"></div>
+      <div class="btnrow">
+        <input id="newSubject" placeholder="Nama mapel baru" style="flex:1;min-width:160px;">
+        <button class="secondary" id="btnAddSubject" type="button">+ Tambah Mapel</button>
+        <button id="btnSaveSubjects">Simpan Daftar Mapel</button>
+      </div>
+    </div>
+
+    <div class="card" id="tieBreakCard" style="display:none;">
+      <h2>Mapel Prioritas untuk Peringkat Sama</h2>
+      <p class="hint">Jika ada dua siswa dengan nilai bersih yang sama, aplikasi akan membandingkan nilai asli mapel di bawah ini secara berurutan (mapel pertama dicek dulu) untuk menentukan siapa peringkat lebih tinggi. Contoh: dua siswa sama-sama peringkat 5 → dibandingkan mapel prioritas pertama, siapa lebih tinggi jadi peringkat 5, satunya peringkat 6. Guru tetap bisa mengedit langsung angka Peringkat di tabel Rekap (kolom Rank) untuk siswa yang peringkatnya sama — nilai yang diedit manual akan dipakai apa adanya, tanpa memandang urutan Mapel Prioritas di atas. Kosongkan lagi kolom tersebut untuk kembali ke perhitungan otomatis.</p>
+      <div class="row">
+        <div class="field">
+          <label>Tambah mapel prioritas</label>
+          <select id="tieBreakAddSelect"></select>
+        </div>
+        <div class="field" style="flex:0 0 auto; align-self:flex-end;">
+          <button class="secondary" id="btnTieBreakAdd" type="button">+ Tambah ke Urutan</button>
+        </div>
+      </div>
+      <div id="tieBreakList" style="margin-top:10px;"></div>
+      <div class="empty" id="tieBreakEmpty" style="display:none;">Belum ada mapel prioritas. Jika kosong, siswa dengan nilai bersih sama akan mendapat peringkat yang sama.</div>
+      <div class="btnrow"><button id="btnSaveTieBreak">Simpan Urutan Prioritas</button></div>
+    </div>
+
+  </section>
+
+  <!-- ================= SISWA ================= -->
+  <section id="tab-siswa" style="display:none;">
+    <div class="card">
+      <h2 id="studentFormTitle">Tambah Siswa Baru</h2>
+      <p class="hint">Data induk / database siswa. No. urut menentukan urutan di rapor &amp; absensi.</p>
+      <div class="row">
+        <div class="field" style="flex:0 0 90px;"><label>No. Urut</label><input id="sfNo" type="number" min="1"></div>
+        <div class="field" style="flex:3;"><label>Nama Lengkap</label><input id="sfNama" placeholder="Nama lengkap"></div>
+        <div class="field" style="flex:0 0 130px;"><label>Jenis Kelamin</label>
+          <select id="sfJk"><option value="L">Laki-laki</option><option value="P">Perempuan</option></select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field"><label>NISN</label><input id="sfNisn" placeholder="Nomor Induk Siswa Nasional"></div>
+        <div class="field"><label>NIS Lokal</label><input id="sfNis" placeholder="Nomor Induk Siswa madrasah"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Tempat Lahir</label><input id="sfTempatLahir"></div>
+        <div class="field"><label>Tanggal Lahir</label><input id="sfTglLahir" type="date"></div>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:2;"><label>Alamat</label><input id="sfAlamat"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Nama Ayah</label><input id="sfAyah"></div>
+        <div class="field"><label>Nama Ibu</label><input id="sfIbu"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Wali (jika bukan orang tua)</label><input id="sfWali"></div>
+        <div class="field"><label>No. HP Wali/Orang Tua</label><input id="sfTelp"></div>
+      </div>
+      <div class="btnrow">
+        <button id="btnSaveStudent">+ Simpan Siswa</button>
+        <button class="secondary" id="btnCancelStudentEdit" type="button" style="display:none;">Batal Ubah</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Daftar Siswa</h2>
+      <div class="btnrow noprint">
+        <button class="gold" id="btnExportSiswa" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Ekspor Excel</button>
+        <button class="secondary" id="btnDownloadTemplateSiswa" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><line x1="8" y1="9" x2="10" y2="9"/></svg> Template Import Siswa</button>
+        <button class="secondary" id="btnImportSiswaTrigger" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V9"/><path d="m7 14 5-5 5 5"/><path d="M5 3h14"/></svg> Import dari Excel</button>
+        <input type="file" id="fileImportSiswa" accept=".xlsx,.xls" style="display:none;">
+      </div>
+      <p class="hint noprint">Import akan menambahkan siswa baru ke <strong>kelas aktif</strong>. Jika NISN atau Nama pada file sudah cocok dengan siswa yang ada di kelas aktif, datanya akan diperbarui (tidak dobel).</p>
+      <div class="row noprint" style="margin-bottom:10px;">
+        <div class="field" style="flex:2 1 220px;">
+          <label>Cari Siswa</label>
+          <input id="studentSearch" type="text" placeholder="Cari nama, NISN, NIS, alamat, ayah/ibu/wali…">
+        </div>
+        <div class="field" style="flex:0 0 150px;">
+          <label>Kelas</label>
+          <select id="studentFilterKelas"></select>
+        </div>
+        <div class="field" style="flex:0 0 130px;">
+          <label>Jenis Kelamin</label>
+          <select id="studentFilterJk">
+            <option value="">Semua</option>
+            <option value="L">Laki-laki</option>
+            <option value="P">Perempuan</option>
+          </select>
+        </div>
+      </div>
+      <p class="hint noprint" id="studentFilterHint" style="display:none;"></p>
+      <div class="tablewrap">
+        <table id="studentTable">
+          <thead><tr><th>No</th><th style="text-align:left;">Nama</th><th>NISN</th><th>JK</th><th style="text-align:left;">Alamat</th><th class="noprint">Aksi</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="empty" id="studentEmpty" style="display:none;">Belum ada siswa. Tambahkan siswa di atas.</div>
+    </div>
+
+    <div class="card">
+      <h2>Kenaikan / Pindah Kelas</h2>
+      <p class="hint">Saat naik tahun ajaran / naik kelas, gunakan ini untuk memindahkan siswa dari kelas aktif ke kelas tujuan — bukan hapus &amp; input ulang. Biodata dan semua nilai di kelas-kelas sebelumnya tetap tersimpan dan bisa dilihat lewat "Riwayat Kelas &amp; Nilai" di bawah.</p>
+      <p class="hint">Secara default <strong>semua siswa tercentang</strong> (migrasi otomatis semua ke kelas baru). Hilangkan centang pada siswa yang <strong>tidak naik / tinggal kelas</strong> supaya tetap berada di kelas ini.</p>
+      <p class="hint">Daftar "Pindah ke Kelas" di bawah hanya menampilkan kelas dari <strong>tahun ajaran yang sama atau lebih baru</strong> dari kelas aktif — kelas dari tahun ajaran yang sudah lewat otomatis disembunyikan supaya tidak salah pindah ke kelas yang sudah "selesai".</p>
+      <div class="row">
+        <div class="field"><label>Pindah ke Kelas</label><select id="pindahKelasTujuan"></select></div>
+        <div class="field" style="flex:0 0 160px;"><label>No. Urut Mulai Dari</label><input id="pindahNoBaru" type="number" min="1" value="1"></div>
+      </div>
+      <div class="btnrow noprint">
+        <button class="secondary" id="btnPindahPilihSemua" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m8 12 3 3 6-6"/></svg> Pilih Semua</button>
+        <button class="secondary" id="btnPindahKosongkanSemua" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> Kosongkan Semua</button>
+      </div>
+      <div class="tablewrap" style="margin-top:8px;">
+        <table id="pindahSiswaTable">
+          <thead><tr><th style="width:34px;"></th><th style="width:44px;">No</th><th style="text-align:left;">Nama</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="empty" id="pindahSiswaEmpty" style="display:none;">Belum ada siswa di kelas aktif ini.</div>
+      <div class="btnrow"><button id="btnPindahKelas">Pindahkan Siswa Terpilih</button></div>
+    </div>
+
+    <div class="card">
+      <h2>Riwayat Kelas &amp; Nilai Siswa</h2>
+      <p class="hint">Lihat semua kelas yang pernah/sedang ditempuh seorang siswa beserta nilainya di tiap kelas.</p>
+      <div class="row">
+        <div class="field"><label>Pilih Siswa</label><select id="riwayatSiswaPick"></select></div>
+      </div>
+      <div id="riwayatKelasList" class="tablewrap" style="margin-top:10px;"></div>
+    </div>
+
+    <div class="card" id="cardDatabaseSiswaGlobal" style="display:none;">
+      <h2>Database Siswa Keseluruhan</h2>
+      <p class="hint">Seluruh murid madrasah lintas kelas &amp; tahun ajaran (termasuk yang sudah pindah/lulus dari kelas aktif saat ini). Khusus <strong>Super Admin, Admin &amp; Staf</strong>.</p>
+      <div class="row noprint" style="margin-bottom:10px;">
+        <div class="field" style="flex:2 1 220px;">
+          <label>Cari Siswa (seluruh kelas)</label>
+          <input id="globalSiswaSearch" type="text" placeholder="Cari nama, NISN, NIS, alamat, ayah/ibu/wali…">
+        </div>
+      </div>
+      <div class="btnrow noprint">
+        <button class="gold" id="btnExportSiswaGlobal" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Ekspor Excel (Seluruh Siswa)</button>
+      </div>
+      <div class="tablewrap" style="margin-top:8px;">
+        <table id="globalSiswaTable">
+          <thead><tr><th style="text-align:left;">Nama</th><th>NISN</th><th>JK</th><th style="text-align:left;">Kelas Aktif Saat Ini</th><th>Kelas Ditempuh</th><th class="noprint">Aksi</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="empty" id="globalSiswaEmpty" style="display:none;">Belum ada data siswa sama sekali.</div>
+      <div id="globalRiwayatWrap" style="display:none;margin-top:16px;">
+        <h3 id="globalRiwayatTitle" style="margin:0 0 8px;"></h3>
+        <div id="globalRiwayatBox" class="tablewrap"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ABSENSI ================= -->
+  <section id="tab-absensi" style="display:none;">
+    <div class="card">
+      <h2>Absensi Harian</h2>
+      <p class="hint">Pilih tanggal, tandai status tiap siswa, lalu simpan. Data tersimpan realtime per kelas aktif.</p>
+      <div class="row">
+        <div class="field" style="flex:0 0 180px;"><label>Tanggal</label><input id="absTanggal" type="date"></div>
+        <div class="field" style="flex:0 0 auto; align-self:flex-end;"><button class="secondary" id="btnMarkAllHadir" type="button">Tandai Semua Hadir</button></div>
+      </div>
+      <div class="tablewrap">
+        <table id="absensiTable">
+          <thead><tr><th>No</th><th style="text-align:left;">Nama</th><th>Status</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="empty" id="absensiEmpty" style="display:none;">Pilih/buat kelas dan tambahkan siswa dulu.</div>
+      <div class="btnrow"><button id="btnSaveAbsensi">Simpan Absensi Tanggal Ini</button></div>
+    </div>
+
+    <div class="card">
+      <h2>Riwayat Absensi</h2>
+      <p class="hint">Daftar tanggal yang sudah pernah diisi. Klik "Edit" untuk memuat ulang tanggal tersebut ke form Absensi Harian di atas, ubah statusnya, lalu klik "Simpan Absensi Tanggal Ini" lagi untuk menyimpan perubahan.</p>
+      <div class="tablewrap">
+        <table id="riwayatAbsensiTable">
+          <thead><tr><th style="text-align:left;">Tanggal</th><th>Hadir</th><th>Sakit</th><th>Izin</th><th>Alpa</th><th class="noprint">Aksi</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="empty" id="riwayatAbsensiEmpty">Belum ada absensi yang tersimpan.</div>
+    </div>
+
+    <div class="card noprint">
+      <h2>Impor Absensi dari Template Excel</h2>
+      <p class="hint">Unduh template (kolom tanggal sudah otomatis dibuat), isi status tiap siswa di Excel (H = Hadir, S = Sakit, I = Izin, A = Alpa) untuk 1 pekan atau 1 bulan penuh sekaligus, lalu impor kembali file yang sudah diisi. Data tanggal yang sama akan ditimpa oleh isian dari file.</p>
+      <div class="row">
+        <div class="field" style="flex:0 0 200px;"><label>Tanggal Mulai (Template 1 Pekan)</label><input id="absTplMingguDari" type="date"></div>
+        <div class="field" style="flex:0 0 auto; align-self:flex-end;"><button class="secondary" id="btnTemplateAbsensiMinggu" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Unduh Template 1 Pekan</button></div>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:0 0 200px;"><label>Bulan (Template 1 Bulan Penuh)</label><input id="absTplBulan" type="month"></div>
+        <div class="field" style="flex:0 0 auto; align-self:flex-end;"><button class="secondary" id="btnTemplateAbsensiBulan" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Unduh Template 1 Bulan</button></div>
+      </div>
+      <div class="btnrow">
+        <button class="gold" id="btnImportAbsensiTrigger" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V9"/><path d="m7 14 5-5 5 5"/><path d="M5 3h14"/></svg> Impor File Absensi Terisi</button>
+        <input type="file" id="fileImportAbsensi" accept=".xlsx,.xls" style="display:none;">
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Rekap Absensi</h2>
+      <div class="row">
+        <div class="field"><label>Dari Tanggal</label><input id="rekapAbsDari" type="date"></div>
+        <div class="field"><label>Sampai Tanggal</label><input id="rekapAbsSampai" type="date"></div>
+        <div class="field" style="flex:0 0 auto; align-self:flex-end;"><button class="secondary" id="btnHitungRekapAbsensi" type="button">Hitung Rekap</button></div>
+      </div>
+      <div class="tablewrap">
+        <table id="rekapAbsensiTable">
+          <thead><tr><th>No</th><th style="text-align:left;">Nama</th><th>Hadir</th><th>Sakit</th><th>Izin</th><th>Alpa</th><th class="noprint">Aksi</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="empty" id="rekapAbsensiEmpty">Pilih rentang tanggal lalu klik "Hitung Rekap".</div>
+      <div class="btnrow noprint"><button class="gold" id="btnExportAbsensi" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Ekspor Excel</button></div>
+      <p class="hint">Tombol "Isi ke Nilai" akan menyalin jumlah Sakit/Izin/Alpa siswa tersebut ke form Input Nilai (perlu disimpan manual di sana).</p>
+    </div>
+
+    <div class="card" id="cardDaftarUjian">
+      <h2 class="noprint">Cetak Daftar Hadir &amp; Nilai Ujian</h2>
+      <p class="hint noprint">Membuat lembar "Daftar Hadir dan Nilai Ujian" per Mata Pelajaran untuk diserahkan ke Mumtahin/penguji saat ujian — No &amp; Nama Murid terisi otomatis dari data siswa kelas ini, kolom Tanda Tangan, Hasil Nilai Ujian, dan Keterangan dikosongkan untuk diisi tangan. Pilih "— Tanpa Mata Pelajaran —" untuk mencetak lembar kosong (baris Bidang Studi jadi titik-titik) yang bisa difotokopi lalu diisi manual mata pelajarannya oleh Mumtahin.</p>
+      <div class="row noprint">
+        <div class="field"><label>Mata Pelajaran (Bidang Studi)</label><select id="ujianMapel"></select></div>
+        <div class="field"><label>Judul Ujian (Arab)</label><input id="ujianJudulArab" placeholder="cth. الإمتحان الثاني"></div>
+      </div>
+      <div class="row noprint">
+        <div class="field"><label>Nama Madrasah (Arab)</label><input id="ujianNamaArab" placeholder="cth. للمدرسة الإبتدائية الهداية"></div>
+        <div class="field"><label>Sanah Dirasah / Tahun Ajaran (Arab)</label><input id="ujianTahunArab" placeholder="cth. ١٤٤٧ – ١٤٤٨هـ / ٢٠٢٦ – ٢٠٢٧م"></div>
+      </div>
+      <div class="row noprint">
+        <div class="field"><label>Tempat</label><input id="ujianTempat" placeholder="cth. Bangkalan"></div>
+        <div class="field"><label>Tahun (di footer tanda tangan)</label><input id="ujianTahunFooter" placeholder="cth. 2026"></div>
+      </div>
+      <div class="btnrow noprint">
+        <button class="secondary" id="btnSimpanUjianMeta" type="button">Simpan Pengaturan</button>
+        <button class="gold" id="btnTampilkanDaftarUjian" type="button">Tampilkan</button>
+      </div>
+      <div id="daftarUjianArea" style="margin-top:14px;"></div>
+      <div class="btnrow noprint" id="daftarUjianActions" style="display:none;">
+        <button class="gold" id="btnPrintDaftarUjian" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/></svg> Cetak</button>
+        <button class="secondary" id="btnExportDaftarUjian" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Ekspor Excel</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= INPUT NILAI ================= -->
+  <section id="tab-input" style="display:none;">
+    <div class="card noprint">
+      <h2>Mode Input Nilai</h2>
+      <div class="btnrow">
+        <button id="btnModePerSiswa" class="secondary">Per Siswa</button>
+        <button id="btnModeTabel" class="secondary">Mode Tabel (seperti Excel)</button>
+      </div>
+      <p class="hint">Mode Tabel menampilkan semua siswa berurutan ke bawah dan semua mapel berurutan ke samping, persis seperti mengisi Excel — cocok untuk menyalin nilai satu mapel untuk semua siswa sekaligus.</p>
+      <p class="hint" id="nilaiLastSavedInfo"></p>
+    </div>
+
+    <div class="card" id="cardPerSiswa">
+      <h2>Input Nilai per Siswa</h2>
+      <div class="studentpick">
+        <select id="pickStudent"></select>
+      </div>
+      <div id="inputEmpty" class="empty">Pilih atau tambahkan siswa terlebih dahulu.</div>
+      <div id="inputForm" style="display:none;">
+        <h3>Nilai Asli per Mata Pelajaran (0–100)</h3>
+        <div class="grid17" id="subjectInputs"></div>
+
+        <h3>Absensi</h3>
+        <div class="row">
+          <div class="field"><label>Sakit</label><input id="absSakit" type="number" min="0"></div>
+          <div class="field"><label>Ijin</label><input id="absIjin" type="number" min="0"></div>
+          <div class="field"><label>Alpa</label><input id="absAlpa" type="number" min="0"></div>
+        </div>
+        <p class="hint">Pengurangan nilai dihitung otomatis: Nilai Asli −10 tiap kelipatan 3 Alpa &amp; −10 tiap kelipatan 5 Ijin. Nilai Raport −1 tiap kelipatan 3 Alpa &amp; −1 tiap kelipatan 5 Ijin. Sakit tidak mengurangi nilai apapun.</p>
+        <div class="row">
+          <div class="field"><label>Pengurangan Nilai Asli (otomatis)</label><input id="absPotongan" type="number" min="0" readonly disabled></div>
+          <div class="field"><label>Pengurangan Nilai Raport (otomatis)</label><input id="absPotonganRaport" type="number" min="0" readonly disabled></div>
+        </div>
+
+        <h3>Sikap</h3>
+        <div class="row">
+          <div class="field"><label>Kelakuan</label><input id="sikapKelakuan" placeholder="cth. A, B, B-"></div>
+          <div class="field"><label>Kerajinan</label><input id="sikapKerajinan" placeholder="cth. A, B, B-"></div>
+          <div class="field"><label>Kebersihan</label><input id="sikapKebersihan" placeholder="cth. A, B, B-"></div>
+        </div>
+
+        <div class="btnrow">
+          <button id="btnSaveScore">Simpan Nilai</button>
+          <span class="hint" id="liveCalc" style="align-self:center;"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="cardTabel" style="display:none;">
+      <h2>Input Nilai — Mode Tabel</h2>
+      <p class="hint">Isi nilai asli (0–100) untuk tiap siswa &amp; mapel langsung di tabel ini, lalu klik "Simpan Semua Nilai". Kolom "Absen" &amp; "Sikap" tidak termasuk di sini — tetap isi lewat mode Per Siswa.</p>
+      <div class="btnrow noprint">
+        <button class="gold" id="btnExportTabelNilai" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Ekspor Excel</button>
+        <button class="secondary" id="btnDownloadTemplate" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><line x1="8" y1="9" x2="10" y2="9"/></svg> Unduh Template Excel</button>
+        <button class="secondary" id="btnImportTrigger" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V9"/><path d="m7 14 5-5 5 5"/><path d="M5 3h14"/></svg> Impor dari Excel</button>
+        <input type="file" id="fileImportNilai" accept=".xlsx,.xls" style="display:none;">
+      </div>
+      <div class="tablewrap" style="margin-top:10px;">
+        <table id="tblInputMassal"><thead></thead><tbody></tbody></table>
+      </div>
+      <div class="empty" id="tblInputMassalEmpty" style="display:none;">Pilih/buat kelas dan tambahkan siswa dulu.</div>
+      <div class="btnrow"><button id="btnSaveTabelMassal"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg> Simpan Semua Nilai</button></div>
+    </div>
+  </section>
+
+  <!-- ================= REKAP ================= -->
+  <section id="tab-rekap" style="display:none;">
+
+    <div class="card noprint">
+      <h2>Cetak</h2>
+      <div class="btnrow">
+        <button class="gold" onclick="printRekapOnly()"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/></svg> Cetak Rekap Ini</button>
+        <button class="secondary" id="btnExportRekap" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Ekspor Excel (semua tabel)</button>
+      </div>
+    </div>
+
+    <div class="card" id="rekapPrintArea">
+      <div class="certframe">
+        <div class="certHead">
+          <img src="" id="rekapLogo" class="certLogo" alt="Logo Madrasah">
+          <div class="certHeadText">
+            <div class="school" id="printSchool">—</div>
+            <div class="addr" id="printAddr">—</div>
+          </div>
+        </div>
+        <div class="meta">
+          <span id="printKelas"></span><span id="printCatur"></span><span id="printTahun"></span>
+        </div>
+      </div>
+
+      <h3>Nilai Asli</h3>
+      <div class="tablewrap"><table id="tblAsli"><thead></thead><tbody></tbody></table></div>
+
+      <h3>Nilai Raport (konversi 4–9)</h3>
+      <div class="tablewrap"><table id="tblRaport"><thead></thead><tbody></tbody></table></div>
+
+      <h3>Rata-rata Kelas per Mata Pelajaran (Nilai Asli)</h3>
+      <div class="tablewrap"><table id="tblAvg"><thead></thead><tbody></tbody></table></div>
+
+      <h3>Rata-rata Kelas per Mata Pelajaran (Nilai Raport)</h3>
+      <div class="tablewrap"><table id="tblAvgRaport"><thead></thead><tbody></tbody></table></div>
+    </div>
+
+    <div class="card noprint">
+      <h2>Cetak Kartu Raport per Siswa</h2>
+      <div class="studentpick">
+        <select id="pickPrintStudent"></select>
+        <button class="secondary" id="btnBuildCard" type="button">Tampilkan Kartu</button>
+      </div>
+    </div>
+    <div id="cardArea"></div>
+
+    <div class="card noprint" id="rekapGabunganCard">
+      <h2 class="noprint">Rekap Akhir Tahun — Gabungan CW1 + CW2 + CW3</h2>
+      <p class="hint noprint">Nilai tiap mapel dirata-rata dari Catur Wulan yang sudah punya nilai, lalu diranking ulang. Absen (sakit/ijin/alpa) dan potongan dijumlah dari ketiga catur wulan. Dipakai untuk peringkat akhir tahun / bahan ijazah — rapor tiap catur wulan di atas tetap tersimpan & tercetak terpisah seperti biasa.</p>
+      <div class="btnrow noprint">
+        <button class="gold" id="btnMuatRekapGabungan" type="button">Muat Rekap Gabungan</button>
+        <button class="secondary" id="btnExportRekapGabungan" type="button" style="display:none;"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Ekspor Excel</button>
+        <button class="secondary" id="btnPrintRekapGabungan" type="button" style="display:none;"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/></svg> Cetak</button>
+      </div>
+      <div id="rekapGabunganArea" style="margin-top:12px;"></div>
+    </div>
+
+  </section>
+
+  <!-- ================= IJAZAH ================= -->
+  <section id="tab-ijazah" style="display:none;">
+
+    <div class="card noprint">
+      <h2>Ijazah — Kelas Akhir</h2>
+      <p class="hint">Ijazah dibuat dari <strong>kelas yang sedang aktif</strong> (pilih/atur di tab "Kelas"). Fitur ini khusus untuk kelas akhir tingkat TPQ, Ibtidaiyah (Awwaliyah 6 Tahun), dan Tsanawiyah (Wustho 3 Tahun) — nilai diambil otomatis dari data Input Nilai kelas tersebut.</p>
+      <div id="ijazahNoKelas" class="empty" style="display:none;">Pilih atau buat kelas dulu di tab "Kelas".</div>
+      <div id="ijazahNotSupported" class="empty" style="display:none;"></div>
+    </div>
+
+    <div id="ijazahBody" style="display:none;">
+
+      <div class="card noprint">
+        <h2>Data Umum Ijazah — Kelas Aktif</h2>
+        <p class="hint">Berlaku untuk semua siswa di kelas aktif ini. Bisa diubah kapan pun.</p>
+        <div class="row">
+          <div class="field"><label>No. Ijazah dimulai dari</label><input id="ijzNoAwal" type="number" min="1" placeholder="cth. 247"></div>
+          <div class="field"><label>Tanggal Ujian — dari (H)</label><input id="ijzDariH" placeholder="cth. 22 ROJAB 1447"></div>
+          <div class="field"><label>Tanggal Ujian — dari (M)</label><input id="ijzDariM" placeholder="cth. 11 JANUARI 2026"></div>
+          <div class="field"><label>Tanggal Ujian — sampai (H)</label><input id="ijzSampaiH" placeholder="cth. 10 SYA'BAN 1447"></div>
+          <div class="field"><label>Tanggal Ujian — sampai (M)</label><input id="ijzSampaiM" placeholder="cth. 29 JANUARI 2026"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Tempat</label><input id="ijzTempat" placeholder="Bangkalan"></div>
+          <div class="field"><label>Tanggal Terbit Ijazah (H)</label><input id="ijzTerbitH" placeholder="cth. 19 SYA'BAN 1447"></div>
+          <div class="field"><label>Tanggal Terbit Ijazah (M)</label><input id="ijzTerbitM" placeholder="cth. 07 FEBRUARI 2026"></div>
+        </div>
+        <div class="btnrow"><button id="btnSaveIjazahUmum">Simpan Data Umum</button></div>
+      </div>
+
+      <div class="card noprint">
+        <h2>Template Cetak — <span id="ijazahTingkatanLabel"></span></h2>
+        <p class="hint">Format ini dipakai untuk semua kelas akhir di tingkatan yang sama, dan bisa diperbarui kapan saja tanpa mengubah data siswa/nilai.</p>
+        <div class="row">
+          <div class="field" style="flex:2;"><label>Nama Yayasan (baris atas)</label><input id="tplLembagaAtas"></div>
+        </div>
+        <div class="row">
+          <div class="field" style="flex:2;"><label>Nama Madrasah / Lembaga</label><input id="tplNamaMadrasah"></div>
+          <div class="field"><label>Alamat</label><input id="tplAlamat"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Label Tingkat</label><input id="tplTingkatLabel" placeholder="cth. TINGKAT WUSTHO ( 3 TAHUN )"></div>
+          <div class="field"><label>Judul di Halaman Belakang</label><input id="tplJudulBelakang" placeholder="EVALUASI BELAJAR TAHAP AKHIR"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Jabatan Penandatangan Utama</label><input id="tplKepalaLabel" placeholder="cth. Kepala Madrasah."></div>
+          <div class="field"><label>Nama Penandatangan Utama</label><input id="tplKepalaNama"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Jabatan Ketua Yayasan</label><input id="tplKetuaLabel" placeholder="Ketua"></div>
+          <div class="field"><label>Nama Ketua Yayasan</label><input id="tplKetuaNama" placeholder="JUHARI, S.Ag MEI"></div>
+        </div>
+        <div class="row" id="tplPanitiaRow">
+          <div class="field"><label>Nama Ketua Panitia EBTA</label><input id="tplPanitiaKetua"></div>
+          <div class="field"><label>Nama Sekretaris Panitia EBTA</label><input id="tplPanitiaSekretaris"></div>
+        </div>
+        <div class="row" id="tplMateriTambahanRow">
+          <div class="field" style="flex:2;"><label>Mapel "Materi Tambahan" (khusus TPQ, pisahkan koma)</label><input id="tplMateriTambahan" placeholder="Surat-surat Pendek, Niatnya Shalat, Do'a Sehari-hari"></div>
+        </div>
+        <h3>Header Arab (baris "Bismillah / Yarfa'illah")</h3>
+        <p class="hint">Bisa diedit atau disembunyikan bila gambar bingkai kustom yang diunggah sudah memuat tulisan Arab sendiri, supaya tidak dobel.</p>
+        <div class="row">
+          <div class="field" style="flex:0 0 auto;">
+            <label style="display:flex; align-items:center; gap:6px; font-weight:600;">
+              <input type="checkbox" id="tplShowArabTop" style="width:auto;"> Tampilkan header Arab
+            </label>
+          </div>
+          <div class="field" style="flex:2;"><label>Teks header Arab (baris baru = ganti baris)</label><textarea id="tplArabTop" rows="2"></textarea></div>
+        </div>
+        <h3>Font Ijazah</h3>
+        <p class="hint">Pilih gaya huruf Latin untuk judul "Ijazah" dan seluruh isi teks sertifikat, serta gaya huruf Arab untuk header Arab di bagian atas.</p>
+        <div class="row">
+          <div class="field" style="flex:0 0 320px;">
+            <label>Gaya Font Latin</label>
+            <select id="tplFontPreset"></select>
+          </div>
+          <div class="field" style="flex:0 0 320px;">
+            <label>Gaya Font Arab</label>
+            <select id="tplFontPresetArab"></select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field" style="flex:0 0 200px;">
+            <label>Ukuran Font Latin (%)</label>
+            <input id="tplFontSizeLatin" type="number" step="5" min="50" max="200" placeholder="100">
+          </div>
+          <div class="field" style="flex:0 0 200px;">
+            <label>Ukuran Font Arab (%)</label>
+            <input id="tplFontSizeArab" type="number" step="5" min="50" max="200" placeholder="100">
+          </div>
+          <div class="field" id="tplFontPreviewWrap" style="flex:2; min-width:220px;">
+            <label>Pratinjau</label>
+            <div id="tplFontPreview" style="border:1px solid var(--line); border-radius:8px; padding:10px 12px; background:var(--paper);">
+              <div id="tplFontPreviewArab" style="font-size:16px; margin-bottom:4px; color:var(--deep-2); direction:rtl;">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+              <div id="tplFontPreviewTitle" style="font-size:22px; font-weight:700; color:var(--deep-2);">Ijazah</div>
+              <div id="tplFontPreviewBody" style="font-size:13px;">Kami memutuskan bahwa: Aulia Insani Aunillah</div>
+            </div>
+          </div>
+        </div>
+        <h3>Gambar Bingkai Kustom per Tingkatan</h3>
+        <p class="hint">Bingkai depan dan belakang diunggah terpisah, dan tersimpan khusus untuk tingkatan (<strong id="ijazahTingkatanLabelBingkai"></strong>) yang sedang aktif — tingkatan lain punya bingkainya sendiri-sendiri.</p>
+        <div class="row">
+          <div class="field" style="flex:2;">
+            <label>Bingkai Halaman Depan (opsional)</label>
+            <input type="file" id="tplBorderFileDepan" accept="image/*">
+            <span class="hint" id="tplBorderDepanStatus"></span>
+          </div>
+          <div class="field" style="flex:0 0 auto; align-self:flex-end;"><button class="secondary" id="btnClearBorderDepan" type="button">Hapus Bingkai Depan</button></div>
+        </div>
+        <div class="row">
+          <div class="field" style="flex:2;">
+            <label>Bingkai Halaman Belakang (opsional)</label>
+            <input type="file" id="tplBorderFileBelakang" accept="image/*">
+            <span class="hint" id="tplBorderBelakangStatus"></span>
+          </div>
+          <div class="field" style="flex:0 0 auto; align-self:flex-end;"><button class="secondary" id="btnClearBorderBelakang" type="button">Hapus Bingkai Belakang</button></div>
+        </div>
+        <h3>Penyesuaian Posisi Tulisan (untuk menyamakan dengan bingkai kustom)</h3>
+        <p class="hint">Skala keseluruhan isi ijazah (teks + pas foto membesar/mengecil bersamaan) supaya muat di dalam gambar bingkai yang diunggah. Untuk menggeser tiap baris/komponen satu per satu (nama madrasah, judul, nama siswa, tiap baris biodata, foto, tanda tangan, dll — masing-masing independen, tidak digabung), gunakan "Mode Geser Posisi" di kartu Pratinjau &amp; Cetak di bawah.</p>
+        <div class="row">
+          <div class="field" style="flex:0 0 200px;"><label>Skala Konten (%)</label><input id="tplScale" type="number" step="1" min="50" max="150" placeholder="100"></div>
+        </div>
+        <div class="btnrow"><button id="btnSaveTemplate">Simpan Template</button></div>
+      </div>
+
+      <div class="card noprint">
+        <h2>Data per Siswa</h2>
+        <div class="studentpick">
+          <select id="ijzPickStudent"></select>
+        </div>
+        <div id="ijzStudentEmpty" class="empty">Pilih siswa untuk mengisi No. Ijazah &amp; pas foto.</div>
+        <div id="ijzStudentForm" style="display:none;">
+          <div class="row">
+            <div class="field" style="flex:0 0 140px;"><label>No. Ijazah</label><input id="ijzNoIjazah"></div>
+            <div class="field" style="flex:0 0 140px;"><label>No. Induk</label><input id="ijzNoInduk"></div>
+            <div class="field" style="flex:2;"><label>Pas Foto 3x4 (opsional)</label><input type="file" id="ijzFotoFile" accept="image/*"></div>
+          </div>
+          <div class="btnrow"><button id="btnSaveIjzSiswa">Simpan Data Siswa Ini</button></div>
+        </div>
+      </div>
+
+      <div class="card noprint">
+        <h2>Pratinjau &amp; Cetak</h2>
+        <div class="studentpick">
+          <select id="ijzPickPreview"></select>
+          <button class="secondary" id="btnBuildIjazah" type="button">Tampilkan Ijazah</button>
+        </div>
+        <div class="row">
+          <div class="field" style="flex:0 0 200px;">
+            <label>Ukuran Kertas (cetak / PDF)</label>
+            <select id="ijzPaperSize">
+              <option value="a4">A4 (210 × 297 mm)</option>
+              <option value="f4">F4 / Folio (215 × 330 mm)</option>
+            </select>
+          </div>
+        </div>
+        <div class="row" style="align-items:center;">
+          <div class="field" style="flex:0 0 auto;">
+            <label style="display:block; font-weight:600; margin-bottom:4px;">Mode Geser Posisi</label>
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <label style="display:flex; align-items:center; gap:6px; font-weight:400;">
+                <input type="radio" name="ijzDragModeRadio" id="ijzDragModeOff" value="off" checked style="width:auto;"> Nonaktif
+              </label>
+              <label style="display:flex; align-items:center; gap:6px; font-weight:400;">
+                <input type="radio" name="ijzDragModeRadio" id="ijzDragModeGroup" value="group" style="width:auto;"> Geser Grup (semua bergerak bersama)
+              </label>
+              <label style="display:flex; align-items:center; gap:6px; font-weight:400;">
+                <input type="radio" name="ijzDragModeRadio" id="ijzDragModeRow" value="row" style="width:auto;"> Geser Per Baris (komponen)
+              </label>
+            </div>
+          </div>
+          <div class="field" style="flex:2; min-width:220px;">
+            <p class="hint" style="margin:0;"><strong>Geser Grup:</strong> klik &amp; seret di mana saja pada ijazah bagian depan untuk menggeser <strong>seluruh isi sekaligus</strong> (bergerak bersama-sama). <strong>Geser Per Baris:</strong> klik &amp; seret <strong>masing-masing baris/komponen</strong> satu per satu — nama madrasah, judul, nama siswa, tiap baris biodata, foto, tanda tangan, dll bisa digeser sendiri-sendiri, tidak ikut bergerak bersama. Klik "Simpan Posisi" setelah semua pas.</p>
+          </div>
+          <div class="field" style="flex:0 0 auto; align-self:flex-end;">
+            <button class="secondary" id="btnResetDragPosition" type="button">↺ Reset Posisi</button>
+            <button class="secondary" id="btnSaveDragPosition" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg> Simpan Posisi</button>
+          </div>
+        </div>
+        <div class="btnrow" id="ijazahExportBtns" style="display:none;">
+          <button class="gold" id="btnPrintIjazah" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/></svg> Cetak</button>
+          <button class="secondary" id="btnPdfIjazah" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Unduh PDF (2 sisi)</button>
+          <button class="secondary" id="btnJpgIjazahDepan" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> JPG Depan</button>
+          <button class="secondary" id="btnJpgIjazahBelakang" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> JPG Belakang</button>
+        </div>
+        <div class="btnrow">
+          <button class="secondary" id="btnPdfIjazahSemua" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Unduh PDF Semua Siswa (Kelas Ini)</button>
+        </div>
+        <p class="hint">Butuh koneksi internet untuk memuat pustaka ekspor PDF/JPG saat pertama kali dipakai.</p>
+      </div>
+
+      <div class="card ijazahPrintCard" id="ijazahPreviewCard">
+        <div class="ijazahBoard" id="ijazahBoard"></div>
+      </div>
+
+    </div>
+  </section>
+
+  </div><!-- /appContent -->
+
+</main>
+
+<!-- ================= SETUP WIZARD (White Label) ================= -->
+<div id="setupWizardOverlay" class="noprint swOverlay" style="display:none;">
+  <div class="card" id="setupWizardCard" style="max-width:560px; width:100%; margin:20px auto;">
+    <div style="text-align:center; margin-bottom:14px;">
+      <div style="font-size:20px; font-weight:700; color:var(--deep-2);"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c2.5 2 4 5.5 4 9 0 2-.5 3.7-1.3 5.2L12 22l-2.7-5.8C8.5 14.7 8 13 8 11c0-3.5 1.5-7 4-9Z"/><circle cx="12" cy="10" r="1.8"/><path d="M8.5 15.5 5 17l1-3.7"/><path d="M15.5 15.5 19 17l-1-3.7"/></svg> Setup Aplikasi (White Label)</div>
+      <div class="hint">Sesuaikan aplikasi ini dengan identitas &amp; database Firebase Anda sendiri — tanpa mengedit kode.</div>
+    </div>
+    <div id="swProgress" style="display:flex; gap:6px; margin-bottom:16px;"></div>
+
+    <div id="swStep1">
+      <h3 style="margin-top:0;"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.4-.3-.4-.5-.9-.5-1.4 0-1.1.9-2 2-2h2.3c2.3 0 4.2-1.9 4.2-4.2C21.5 6 17.2 2 12 2Z"/><circle cx="7" cy="10" r="1.3" fill="currentColor" stroke="none"/><circle cx="10.5" cy="6.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.5" cy="7" r="1.3" fill="currentColor" stroke="none"/><circle cx="17.5" cy="11.5" r="1.3" fill="currentColor" stroke="none"/></svg> Identitas &amp; Branding</h3>
+      <div class="row">
+        <div class="field"><label>Nama Yayasan/Sekolah (lengkap)</label><input id="swSchoolName" placeholder="cth. Yayasan Pendidikan Islam ..."></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Nama Singkat (tampil di header)</label><input id="swShortName" placeholder="cth. Yayasan ... — singkatan"></div>
+        <div class="field"><label>Judul Aplikasi (tab browser)</label><input id="swAppTitle" placeholder="cth. Buku Nilai Raport — Madrasah"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Alamat</label><input id="swAddress" placeholder="cth. Kota Anda"></div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Warna Utama</label>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <input type="color" id="swPrimaryColor" style="width:38px;height:34px;padding:2px;border:1px solid var(--line);border-radius:8px;cursor:pointer;flex:0 0 auto;">
+            <input id="swPrimaryColorText" style="flex:1;">
+          </div>
+        </div>
+        <div class="field">
+          <label>Warna Aksen</label>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <input type="color" id="swAccentColor" style="width:38px;height:34px;padding:2px;border:1px solid var(--line);border-radius:8px;cursor:pointer;flex:0 0 auto;">
+            <input id="swAccentColorText" style="flex:1;">
+          </div>
+        </div>
+      </div>
+      <div class="row" style="align-items:center;">
+        <div class="field" style="flex:0 0 auto;">
+          <label>Logo</label>
+          <img id="swLogoPreview" src="" alt="Preview logo" style="width:56px;height:56px;object-fit:contain;border:1px solid var(--line);border-radius:50%;background:var(--paper-2);display:block;">
+        </div>
+        <div class="field">
+          <label>&nbsp;</label>
+          <div class="btnrow" style="margin-top:0;">
+            <button type="button" class="secondary" id="swLogoUploadBtn">Unggah Logo</button>
+            <button type="button" class="secondary" id="swLogoRemove">Hapus</button>
+          </div>
+          <input type="file" id="swLogoFile" accept="image/*" style="display:none;">
+          <p class="hint">PNG/JPG, maks ±900 KB. Kosongkan untuk pakai logo bawaan.</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="swStep2" style="display:none;">
+      <h3 style="margin-top:0;"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2s-5 5.5-5 10a5 5 0 0 0 10 0c0-1.3-.5-2.3-1-3 .2 1-.3 2-1.2 2.4C15.5 10 15 8.5 15 7c0-2-1-3.5-3-5Z"/></svg> Konfigurasi Firebase</h3>
+      <p class="hint">Buat/pakai project Firebase milik sekolah/perusahaan Anda sendiri (gratis) — buka <b>Project Settings → Your apps → SDK setup and configuration</b> di Firebase Console, salin kodenya, lalu tempel di bawah. <b>Kosongkan semua field</b> di langkah ini kalau tidak jadi mengganti database (tetap pakai yang sekarang berjalan).</p>
+      <div class="field">
+        <label>Tempel Kode Konfigurasi Firebase</label>
+        <textarea id="swPasteFirebase" rows="5" placeholder='const firebaseConfig = { apiKey: "...", authDomain: "...", ... };'></textarea>
+      </div>
+      <div class="btnrow"><button type="button" class="secondary" id="swParseBtn"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Ambil Otomatis dari Teks</button></div>
+      <p class="hint" id="swParseMsg"></p>
+      <p class="hint" style="text-transform:uppercase; font-weight:700; letter-spacing:.05em; margin-top:14px;">Atau isi manual</p>
+      <div class="row">
+        <div class="field"><label>apiKey</label><input id="sw_apiKey"></div>
+        <div class="field"><label>authDomain</label><input id="sw_authDomain"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>databaseURL</label><input id="sw_databaseURL"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>projectId</label><input id="sw_projectId"></div>
+        <div class="field"><label>storageBucket</label><input id="sw_storageBucket"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>messagingSenderId</label><input id="sw_messagingSenderId"></div>
+        <div class="field"><label>appId</label><input id="sw_appId"></div>
+      </div>
+      <p class="hint"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1V17h6v-.2c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2Z"/></svg> Jangan lupa aktifkan <b>Authentication → Sign-in method → Google</b> dan <b>Realtime Database</b> di project Firebase yang baru, lalu salin Firebase Security Rules dari instance yang sekarang berjalan ke project tersebut.</p>
+    </div>
+
+    <div id="swStep3" style="display:none;">
+      <h3 style="margin-top:0;"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m2 18 2-10 5 4 3-6 3 6 5-4 2 10Z"/><path d="M2 18h20"/></svg> Akun Super Admin</h3>
+      <p class="hint">Akun Google dengan email ini akan SELALU mendapat akses Admin penuh setiap kali login, apa pun yang tercatat di tabel Pengguna. Cocok sebagai "kunci cadangan" pemilik aplikasi. Boleh dikosongkan (akun Google pertama yang login otomatis menjadi Admin selama tabel Pengguna masih kosong).</p>
+      <div class="field"><label>Email Google Super Admin</label><input id="swSuperAdminEmail" placeholder="cth. pemilik@sekolahanda.com"></div>
+    </div>
+
+    <div id="swStep4" style="display:none;">
+      <h3 style="margin-top:0;"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg> Ringkasan</h3>
+      <div id="swSummary" style="font-size:13px; line-height:2;"></div>
+      <p class="hint" style="background:var(--gold-soft); color:#5a3f18; padding:8px 10px; border-radius:8px; margin-top:10px;"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/><line x1="12" y1="9" x2="12" y2="14"/><circle cx="12" cy="17" r="0.6" fill="currentColor" stroke="none"/></svg> Setelah disimpan, aplikasi akan dimuat ulang otomatis untuk menerapkan perubahan.</p>
+    </div>
+
+    <div class="btnrow" style="justify-content:space-between; margin-top:18px;">
+      <div class="btnrow" style="margin:0;">
+        <button class="secondary" id="swBack" type="button" style="display:none;">← Kembali</button>
+        <button class="secondary" id="swCancel" type="button">Batal</button>
+      </div>
+      <div class="btnrow" style="margin:0;">
+        <button id="swNext" type="button">Lanjut →</button>
+      </div>
+    </div>
+    <div style="text-align:center; margin-top:14px;">
+      <button type="button" id="swReset" style="background:none;border:none;color:#8a856f;font-size:11px;text-decoration:underline;cursor:pointer;font-family:inherit;">Kembalikan ke pengaturan bawaan</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="js/00-config-runtime.js"></script>
+<script src="js/01-role-whitelabel-wizard.js"></script>
+<script src="js/02-state-konversi.js"></script>
+<script src="js/03-tabs-auth-presence.js"></script>
+<script src="js/04-role-ui-pengguna.js"></script>
+<script src="js/05-backup-restore.js"></script>
+<script src="js/06-data-refs.js"></script>
+<script src="js/07-surat-arsip.js"></script>
+<script src="js/08-identitas-subjects-tiebreak.js"></script>
+<script src="js/09-siswa.js"></script>
+<script src="js/10-kenaikan-riwayat.js"></script>
+<script src="js/11-siswa-database-keseluruhan.js"></script>
+<script src="js/12-surat-menyurat-ui.js"></script>
+<script src="js/13-absensi.js"></script>
+<script src="js/14-input-nilai.js"></script>
+<script src="js/15-export-xlsx-print.js"></script>
+<script src="js/16-perhitungan-rekap.js"></script>
+<script src="js/17-kartu-raport.js"></script>
+<script src="js/18-ijazah.js"></script>
+<script src="js/19-init.js"></script>
+</body>
+</html>

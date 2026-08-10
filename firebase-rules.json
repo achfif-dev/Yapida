@@ -1,0 +1,47 @@
+{
+  "rules": {
+    "users": {
+      ".read": "auth != null && (root.child('users/'+auth.uid+'/role').val() === 'admin' || root.child('users/'+auth.uid+'/role').val() === 'superadmin')",
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.token.email != null && ((auth.uid === $uid && (!newData.exists() || newData.child('role').val() === data.child('role').val() || newData.child('role').val() === 'viewer' || (newData.child('role').val() === 'superadmin' && auth.token.email.toLowerCase() === 'achfif@gmail.com'))) || root.child('users/'+auth.uid+'/role').val() === 'admin' || root.child('users/'+auth.uid+'/role').val() === 'superadmin') && (!(data.exists() && data.child('email').val() === 'achfif@gmail.com') || (newData.exists() && newData.child('role').val() === 'superadmin'))",
+        ".validate": "!newData.exists() || (newData.hasChildren(['email','role']) && newData.child('email').isString() && newData.child('role').val().matches(/^(superadmin|admin|staf|guru|viewer)$/) && (newData.child('role').val() !== 'superadmin' || newData.child('email').val() === 'achfif@gmail.com'))"
+      }
+    },
+    "presence": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "surat": {
+      ".read": "auth != null && (root.child('users/'+auth.uid+'/role').val() === 'staf' || root.child('users/'+auth.uid+'/role').val() === 'admin' || root.child('users/'+auth.uid+'/role').val() === 'superadmin')",
+      ".write": "auth != null && (root.child('users/'+auth.uid+'/role').val() === 'staf' || root.child('users/'+auth.uid+'/role').val() === 'admin' || root.child('users/'+auth.uid+'/role').val() === 'superadmin')"
+    },
+    "rapor": {
+      ".read": "auth != null && (root.child('users/'+auth.uid+'/role').val() === 'staf' || root.child('users/'+auth.uid+'/role').val() === 'admin' || root.child('users/'+auth.uid+'/role').val() === 'superadmin')",
+      ".write": "auth != null && (root.child('users/'+auth.uid+'/role').val() === 'staf' || root.child('users/'+auth.uid+'/role').val() === 'admin' || root.child('users/'+auth.uid+'/role').val() === 'superadmin')",
+      "kelasList": {
+        ".read": "auth != null && root.child('users/'+auth.uid+'/role').val() != null && root.child('users/'+auth.uid+'/role').val() !== 'viewer'"
+      },
+      "students": {
+        ".read": "auth != null && root.child('users/'+auth.uid+'/role').val() != null && root.child('users/'+auth.uid+'/role').val() !== 'viewer'",
+        "$studentId": {
+          ".write": "auth != null && (root.child('users/'+auth.uid+'/role').val() === 'staf' || root.child('users/'+auth.uid+'/role').val() === 'admin' || root.child('users/'+auth.uid+'/role').val() === 'superadmin' || (root.child('users/'+auth.uid+'/role').val() === 'guru' && ((data.exists() && root.child('users/'+auth.uid+'/assignedKelas/'+data.child('kelasAktifId').val()).exists()) || (newData.exists() && root.child('users/'+auth.uid+'/assignedKelas/'+newData.child('kelasAktifId').val()).exists()))))"
+        }
+      },
+      "konversiRaport": {
+        ".read": "auth != null && root.child('users/'+auth.uid+'/role').val() != null && root.child('users/'+auth.uid+'/role').val() !== 'viewer'"
+      },
+      "ijazahTemplates": {
+        ".read": "auth != null && root.child('users/'+auth.uid+'/role').val() != null && root.child('users/'+auth.uid+'/role').val() !== 'viewer'"
+      },
+      "data": {
+        "$kelasId": {
+          ".read": "auth != null && (root.child('users/'+auth.uid+'/role').val() === 'staf' || root.child('users/'+auth.uid+'/role').val() === 'admin' || root.child('users/'+auth.uid+'/role').val() === 'superadmin' || (root.child('users/'+auth.uid+'/role').val() === 'guru' && root.child('users/'+auth.uid+'/assignedKelas/'+$kelasId).exists()))",
+          ".write": "auth != null && (root.child('users/'+auth.uid+'/role').val() === 'staf' || root.child('users/'+auth.uid+'/role').val() === 'admin' || root.child('users/'+auth.uid+'/role').val() === 'superadmin' || (root.child('users/'+auth.uid+'/role').val() === 'guru' && root.child('users/'+auth.uid+'/assignedKelas/'+$kelasId).exists()))"
+        }
+      }
+    }
+  }
+}
