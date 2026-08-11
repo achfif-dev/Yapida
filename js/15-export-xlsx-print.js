@@ -58,25 +58,35 @@ function resetPrintPagePrefsToDefault(){
 }
 
 /* ===================== Auto-fit ukuran font & lebar kolom tabel saat cetak ===================== */
-/* v1: kolom Nama dijatah lebar tetap, sisanya dibagi RATA ke semua kolom lain. Tapi tabel
-   Nilai Raport punya 6 kolom tambahan yang tidak ada di tabel Nilai Asli/Rata-rata
-   (Kelakuan, Kerajinan, Kebersihan, Sakit, Ijin, Alpa) — kalau dibagi rata, kolom² nilai
-   di tabel Raport jadi lebih sempit daripada di tabel lain, sehingga fontnya ikut lebih
-   kecil walau angkanya sebenarnya sama pendek (2-3 digit).
-   v2: kolom dikenali per JENIS lewat teks headernya. Kolom "No" dan kolom perilaku/absen
-   (Sakit/Ijin/Alpa/Kelakuan/Kerajinan/Kebersihan/CW Terisi) dikasih lebar tetap secukupnya
-   (isinya pendek: kata singkat atau 1-2 digit), supaya SISA lebar kertas yang lebih besar
-   bisa dibagi rata ke kolom nilai (mapel, Jml, Absen, Bersih, Rata², Rank/Peringkat) — jenis
-   kolom yang sama di semua tabel (Asli/Raport/Rata-rata) jadi dapat lebar & font yang setara. */
+/* v1: kolom Nama dijatah lebar tetap, sisanya dibagi RATA ke semua kolom lain. v2: kolom
+   dikenali per jenis (No/Kelakuan/Kerajinan/Kebersihan/Sakit/Ijin/Alpa dikasih lebar tetap
+   kecil, sisanya untuk kolom nilai). Tapi v2 masih menghitung font TIAP TABEL SENDIRI² —
+   karena tabel Nilai Raport tetap punya lebih banyak kolom total daripada Nilai Asli/
+   Rata-rata (6 kolom perilaku/absen ekstra), jatah lebar per kolom nilainya tetap sedikit
+   lebih kecil, jadi hasil cetaknya masih terlihat lebih kecil dari tabel lain.
+   v3: font-size SEKARANG DISAMAKAN untuk semua tabel dalam satu area cetak — dihitung dari
+   tabel yang paling "sempit" (biasanya Nilai Raport), lalu dipakai sama persis untuk semua
+   tabel lain juga (Nilai Asli, Rata-rata). Jadi bukan lagi masing-masing tabel mentok di
+   plafon sendiri-sendiri — semua tabel dijamin ukuran fontnya identik. */
 function classifyPrintCol(th){
   const style = th.getAttribute('style') || '';
   const txt = (th.textContent || '').trim();
-  if(/text-align:\s*left/i.test(style)) return {px:110};      // Nama / Mata Pelajaran
-  if(txt === 'No') return {px:28};
-  if(['Sakit','Ijin','Alpa'].includes(txt)) return {px:34};   // 1-2 digit
-  if(['Kelakuan','Kerajinan','Kebersihan'].includes(txt)) return {px:60}; // kata singkat
-  if(txt === 'CW Terisi') return {px:50};
+  if(/text-align:\s*left/i.test(style)) return {px:95};       // Nama / Mata Pelajaran (boleh wrap 2 baris)
+  if(txt === 'No') return {px:20};
+  if(['Sakit','Ijin','Alpa'].includes(txt)) return {px:22};   // 1-2 digit
+  if(['Kelakuan','Kerajinan','Kebersihan'].includes(txt)) return {px:38}; // kata singkat, boleh 2 baris
+  if(txt === 'CW Terisi') return {px:40};
   return {px:null}; // kolom nilai/angka utama — dapat porsi rata dari sisa lebar (flex)
+}
+/* Ukuran font aman untuk lebar kolom `px` supaya sel angka terpanjang di kolom nilai
+   (mis. "82.35" di kolom Rata², 5 karakter) tetap muat 1 baris tanpa kepotong/overflow —
+   dihitung dari lebar font monospace ('.num' pakai IBM Plex Mono), bukan tebakan/divisor
+   sembarangan seperti sebelumnya. */
+function fontSizeForFlexPx(px){
+  const PAD_PX = 8;         // padding sel (2×3px) + sedikit ruang aman pembulatan
+  const WORST_CHARS = 5.3;  // kasus terpanjang di kolom nilai, mis. "82.35"
+  const CHAR_W = 0.62;      // lebar rata² 1 karakter font monospace relatif thd font-size
+  return Math.max(0, (px - PAD_PX) / (WORST_CHARS * CHAR_W));
 }
 function buildPrintColgroup(table, widths){
   const old = table.querySelector('colgroup[data-autofit]');
@@ -95,18 +105,26 @@ function buildPrintColgroup(table, widths){
 function fitPrintTables(root){
   const { usableWidthPx, fontScale } = applyPrintPagePrefs();
   const container = root || document;
-  container.querySelectorAll('table').forEach(table=>{
+  const infos = Array.from(container.querySelectorAll('table')).map(table=>{
     const headRow = table.querySelector('thead tr:first-child');
     const ths = headRow ? Array.from(headRow.children) : [];
-    if(!ths.length){ table.style.removeProperty('--printFontSize'); table.classList.remove('printFit'); return; }
+    if(!ths.length) return { table, classified: null };
     const classified = ths.map(classifyPrintCol);
     const fixedTotal = classified.reduce((a,c)=> a + (c.px!=null ? c.px : 0), 0);
     const flexCount = Math.max(1, classified.filter(c=> c.px==null).length);
-    const flexPx = Math.max(26, (usableWidthPx - fixedTotal) / flexCount);
+    const flexPx = Math.max(24, (usableWidthPx - fixedTotal) / flexCount);
+    return { table, classified, flexPx };
+  });
+  const flexPxList = infos.filter(i=> i.classified).map(i=> i.flexPx);
+  if(!flexPxList.length) return;
+  // Dipakai tabel paling sempit sebagai acuan, supaya SEMUA tabel dapat font yang sama.
+  const minFlexPx = Math.min(...flexPxList);
+  let fontSize = fontSizeForFlexPx(minFlexPx) * fontScale;
+  fontSize = Math.max(7.5, Math.min(18, fontSize));
+  infos.forEach(({table, classified, flexPx})=>{
+    if(!classified){ table.style.removeProperty('--printFontSize'); table.classList.remove('printFit'); return; }
     buildPrintColgroup(table, classified.map(c=> c.px!=null ? c.px : flexPx));
     table.classList.add('printFit');
-    let fontSize = (flexPx / 4.3) * fontScale;
-    fontSize = Math.max(7.5, Math.min(18, fontSize));
     table.style.setProperty('--printFontSize', fontSize.toFixed(1) + 'px');
   });
 }
