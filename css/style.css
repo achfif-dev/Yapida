@@ -169,9 +169,14 @@
     main{padding:0; max-width:none;}
     .card{box-shadow:none; border:none; padding:0;}
     .tablewrap{overflow-x:visible !important; border-radius:0;}
-    table{font-size:8.5px !important; table-layout:auto; width:100%;}
-    th,td{padding:3px 3px !important;}
+    /* font-size dasar dipakai kalau JS belum sempat menghitung --printFontSize
+       (mis. saat print dipicu lewat Ctrl+P). Saat tombol Cetak dipakai, JS
+       (fitPrintTables) mengisi --printFontSize per tabel sesuai jumlah kolom
+       supaya kolom & angka tetap pas di lebar kertas, tidak kekecilan/kebesaran. */
+    table{font-size:var(--printFontSize, 8.5px) !important; table-layout:auto; width:100%; max-width:100%;}
+    th,td{padding:2px 3px !important; overflow-wrap:break-word; word-break:break-word;}
     td.name{white-space:normal;}
+    td.num{white-space:nowrap;}
   }
 
   /* ---------- Ijazah ---------- */
