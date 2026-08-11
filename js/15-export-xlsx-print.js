@@ -13,7 +13,7 @@ function getPrintPrefs(){
   return {
     paper: localStorage.getItem('yapidaPrintPaper') || 'a4',
     orientation: localStorage.getItem('yapidaPrintOrientation') || 'landscape',
-    fontScale: parseFloat(localStorage.getItem('yapidaPrintFontScale') || '1') || 1,
+    fontScale: parseFloat(localStorage.getItem('yapidaPrintFontScale') || '1.2') || 1.2,
   };
 }
 function savePrintPrefs(patch){
@@ -47,35 +47,56 @@ function applyPrintPagePrefs(){
   const landscape = prefs.orientation !== 'portrait';
   const w = landscape ? Math.max(dim.w, dim.h) : Math.min(dim.w, dim.h);
   const h = landscape ? Math.min(dim.w, dim.h) : Math.max(dim.w, dim.h);
-  ensurePrintPageStyleEl().textContent = `@media print{ @page{ size:${w}mm ${h}mm; margin:8mm; } }`;
-  return { usableWidthPx: mmToPx(w - 16), fontScale: prefs.fontScale };
+  const MARGIN_MM = 6; // dikecilkan dari 8mm supaya lebar cetak yang bisa dipakai lebih lega
+  ensurePrintPageStyleEl().textContent = `@media print{ @page{ size:${w}mm ${h}mm; margin:${MARGIN_MM}mm; } }`;
+  return { usableWidthPx: mmToPx(w - MARGIN_MM*2), fontScale: prefs.fontScale };
 }
 /* Dipanggil setelah selesai cetak supaya cetak lain (Ijazah/Surat, yang tidak lewat
    fitPrintTables) tidak ikut kebawa ukuran kertas F4/Legal yang sempat dipilih. */
 function resetPrintPagePrefsToDefault(){
-  ensurePrintPageStyleEl().textContent = '@media print{ @page{ size:A4 landscape; margin:8mm; } }';
+  ensurePrintPageStyleEl().textContent = '@media print{ @page{ size:A4 landscape; margin:6mm; } }';
 }
 
-/* ===================== Auto-fit ukuran font tabel saat cetak ===================== */
-/* Sebelumnya font tabel dikunci 8.5px lewat CSS untuk semua kasus. Kalau jumlah
-   mapel/kolom banyak, tiap kolom jadi sempit tapi angkanya tetap segitu besar
-   sehingga terlihat "kepotong"/tumpang tindih. Fungsi ini menghitung ukuran font
-   per tabel berdasarkan jumlah kolom & lebar kertas (sesuai preferensi di atas),
-   dikali faktor pembesar dari dropdown "Ukuran Font", lalu menuliskannya ke CSS var
-   --printFontSize yang dibaca oleh aturan @media print. Dipanggil sesaat sebelum
-   window.print() untuk tabel yang akan dicetak. */
+/* ===================== Auto-fit ukuran font & lebar kolom tabel saat cetak ===================== */
+/* v1 (font-size saja, table-layout:auto) masih membuat kolom angka mengecil drastis kalau
+   kolom Nama/Mata Pelajaran ikut diperhitungkan rata dengan kolom lain — padahal isi kolom
+   Nama jauh lebih panjang. Sekarang kolom "rata kiri" (Nama/Mata Pelajaran, dikenali dari
+   style text-align:left di <th>) dijatah lebar tetap secukupnya, SISA lebar kertas baru
+   dibagi rata untuk kolom angka — dipasang lewat <colgroup> + table-layout:fixed supaya
+   lebarnya presisi (tidak tergantung algoritma auto-layout browser), sehingga font angka
+   bisa dibuat lebih besar tanpa kolom jadi kepotong. table-layout:fixed & lebar kolom ini
+   HANYA berlaku saat cetak (diberi lewat CSS var/class yang dibaca di dalam @media print),
+   tidak mengubah tampilan tabel di layar. */
+function buildPrintColgroup(table, wideColPx, narrowColPx){
+  const old = table.querySelector('colgroup[data-autofit]');
+  if(old) old.remove();
+  const headRow = table.querySelector('thead tr:first-child');
+  if(!headRow || !headRow.children.length) return;
+  const colgroup = document.createElement('colgroup');
+  colgroup.setAttribute('data-autofit', '1');
+  Array.from(headRow.children).forEach(th=>{
+    const isWide = /text-align:\s*left/i.test(th.getAttribute('style') || '');
+    const col = document.createElement('col');
+    col.style.setProperty('--colw', (isWide ? wideColPx : narrowColPx) + 'px');
+    colgroup.appendChild(col);
+  });
+  table.insertBefore(colgroup, table.firstChild);
+}
 function fitPrintTables(root){
   const { usableWidthPx, fontScale } = applyPrintPagePrefs();
   const container = root || document;
-  const NAME_COL_MIN_PX = 90; // jatah minimum kolom Nama/Mata Pelajaran supaya tetap terbaca
+  const WIDE_COL_PX = 110; // jatah kolom Nama/Mata Pelajaran (isi teks lebih panjang)
   container.querySelectorAll('table').forEach(table=>{
     const headRow = table.querySelector('thead tr:first-child');
-    const numCols = headRow ? headRow.children.length : (table.rows[0] ? table.rows[0].cells.length : 0);
-    if(!numCols){ table.style.removeProperty('--printFontSize'); return; }
-    const otherCols = Math.max(1, numCols - 1);
-    const perColPx = Math.max(18, (usableWidthPx - NAME_COL_MIN_PX) / otherCols);
-    let fontSize = (perColPx / 5.4) * fontScale;
-    fontSize = Math.max(6, Math.min(15, fontSize));
+    const ths = headRow ? Array.from(headRow.children) : [];
+    if(!ths.length){ table.style.removeProperty('--printFontSize'); table.classList.remove('printFit'); return; }
+    const wideCount = ths.filter(th=> /text-align:\s*left/i.test(th.getAttribute('style') || '')).length;
+    const narrowCount = Math.max(1, ths.length - wideCount);
+    const narrowColPx = Math.max(22, (usableWidthPx - WIDE_COL_PX * wideCount) / narrowCount);
+    buildPrintColgroup(table, WIDE_COL_PX, narrowColPx);
+    table.classList.add('printFit');
+    let fontSize = (narrowColPx / 4.3) * fontScale;
+    fontSize = Math.max(7.5, Math.min(18, fontSize));
     table.style.setProperty('--printFontSize', fontSize.toFixed(1) + 'px');
   });
 }
