@@ -762,6 +762,32 @@
 
     <div class="card noprint">
       <h2>Cetak</h2>
+      <p class="hint">Pengaturan ukuran kertas &amp; font di bawah ini dipakai untuk semua cetak nilai (Rekap, Rekap Gabungan, Kartu Raport, Daftar Ujian). Pilih ukuran kertas yang SAMA dengan kertas fisik/pengaturan printer, supaya kolom ikut melebar penuh dan tidak di-skalakan ulang oleh printer.</p>
+      <div class="row">
+        <div class="field"><label>Ukuran Kertas</label>
+          <select id="printPaperSize">
+            <option value="a4">A4</option>
+            <option value="f4">F4 / Folio</option>
+            <option value="legal">Legal</option>
+            <option value="letter">Letter</option>
+          </select>
+        </div>
+        <div class="field"><label>Orientasi</label>
+          <select id="printOrientation">
+            <option value="landscape">Lanskap (mendatar)</option>
+            <option value="portrait">Potret (berdiri)</option>
+          </select>
+        </div>
+        <div class="field"><label>Ukuran Font</label>
+          <select id="printFontScale">
+            <option value="0.85">Kecil</option>
+            <option value="1" selected>Sedang (default)</option>
+            <option value="1.2">Besar</option>
+            <option value="1.4">Sangat Besar</option>
+            <option value="1.6">Ekstra Besar</option>
+          </select>
+        </div>
+      </div>
       <div class="btnrow">
         <button class="gold" onclick="printRekapOnly()"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/></svg> Cetak Rekap Ini</button>
         <button class="secondary" id="btnExportRekap" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Ekspor Excel (semua tabel)</button>
