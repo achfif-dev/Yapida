@@ -58,26 +58,36 @@ function resetPrintPagePrefsToDefault(){
 }
 
 /* ===================== Auto-fit ukuran font & lebar kolom tabel saat cetak ===================== */
-/* v1 (font-size saja, table-layout:auto) masih membuat kolom angka mengecil drastis kalau
-   kolom Nama/Mata Pelajaran ikut diperhitungkan rata dengan kolom lain — padahal isi kolom
-   Nama jauh lebih panjang. Sekarang kolom "rata kiri" (Nama/Mata Pelajaran, dikenali dari
-   style text-align:left di <th>) dijatah lebar tetap secukupnya, SISA lebar kertas baru
-   dibagi rata untuk kolom angka — dipasang lewat <colgroup> + table-layout:fixed supaya
-   lebarnya presisi (tidak tergantung algoritma auto-layout browser), sehingga font angka
-   bisa dibuat lebih besar tanpa kolom jadi kepotong. table-layout:fixed & lebar kolom ini
-   HANYA berlaku saat cetak (diberi lewat CSS var/class yang dibaca di dalam @media print),
-   tidak mengubah tampilan tabel di layar. */
-function buildPrintColgroup(table, wideColPx, narrowColPx){
+/* v1: kolom Nama dijatah lebar tetap, sisanya dibagi RATA ke semua kolom lain. Tapi tabel
+   Nilai Raport punya 6 kolom tambahan yang tidak ada di tabel Nilai Asli/Rata-rata
+   (Kelakuan, Kerajinan, Kebersihan, Sakit, Ijin, Alpa) — kalau dibagi rata, kolom² nilai
+   di tabel Raport jadi lebih sempit daripada di tabel lain, sehingga fontnya ikut lebih
+   kecil walau angkanya sebenarnya sama pendek (2-3 digit).
+   v2: kolom dikenali per JENIS lewat teks headernya. Kolom "No" dan kolom perilaku/absen
+   (Sakit/Ijin/Alpa/Kelakuan/Kerajinan/Kebersihan/CW Terisi) dikasih lebar tetap secukupnya
+   (isinya pendek: kata singkat atau 1-2 digit), supaya SISA lebar kertas yang lebih besar
+   bisa dibagi rata ke kolom nilai (mapel, Jml, Absen, Bersih, Rata², Rank/Peringkat) — jenis
+   kolom yang sama di semua tabel (Asli/Raport/Rata-rata) jadi dapat lebar & font yang setara. */
+function classifyPrintCol(th){
+  const style = th.getAttribute('style') || '';
+  const txt = (th.textContent || '').trim();
+  if(/text-align:\s*left/i.test(style)) return {px:110};      // Nama / Mata Pelajaran
+  if(txt === 'No') return {px:28};
+  if(['Sakit','Ijin','Alpa'].includes(txt)) return {px:34};   // 1-2 digit
+  if(['Kelakuan','Kerajinan','Kebersihan'].includes(txt)) return {px:60}; // kata singkat
+  if(txt === 'CW Terisi') return {px:50};
+  return {px:null}; // kolom nilai/angka utama — dapat porsi rata dari sisa lebar (flex)
+}
+function buildPrintColgroup(table, widths){
   const old = table.querySelector('colgroup[data-autofit]');
   if(old) old.remove();
   const headRow = table.querySelector('thead tr:first-child');
   if(!headRow || !headRow.children.length) return;
   const colgroup = document.createElement('colgroup');
   colgroup.setAttribute('data-autofit', '1');
-  Array.from(headRow.children).forEach(th=>{
-    const isWide = /text-align:\s*left/i.test(th.getAttribute('style') || '');
+  widths.forEach(px=>{
     const col = document.createElement('col');
-    col.style.setProperty('--colw', (isWide ? wideColPx : narrowColPx) + 'px');
+    col.style.setProperty('--colw', px + 'px');
     colgroup.appendChild(col);
   });
   table.insertBefore(colgroup, table.firstChild);
@@ -85,17 +95,17 @@ function buildPrintColgroup(table, wideColPx, narrowColPx){
 function fitPrintTables(root){
   const { usableWidthPx, fontScale } = applyPrintPagePrefs();
   const container = root || document;
-  const WIDE_COL_PX = 110; // jatah kolom Nama/Mata Pelajaran (isi teks lebih panjang)
   container.querySelectorAll('table').forEach(table=>{
     const headRow = table.querySelector('thead tr:first-child');
     const ths = headRow ? Array.from(headRow.children) : [];
     if(!ths.length){ table.style.removeProperty('--printFontSize'); table.classList.remove('printFit'); return; }
-    const wideCount = ths.filter(th=> /text-align:\s*left/i.test(th.getAttribute('style') || '')).length;
-    const narrowCount = Math.max(1, ths.length - wideCount);
-    const narrowColPx = Math.max(22, (usableWidthPx - WIDE_COL_PX * wideCount) / narrowCount);
-    buildPrintColgroup(table, WIDE_COL_PX, narrowColPx);
+    const classified = ths.map(classifyPrintCol);
+    const fixedTotal = classified.reduce((a,c)=> a + (c.px!=null ? c.px : 0), 0);
+    const flexCount = Math.max(1, classified.filter(c=> c.px==null).length);
+    const flexPx = Math.max(26, (usableWidthPx - fixedTotal) / flexCount);
+    buildPrintColgroup(table, classified.map(c=> c.px!=null ? c.px : flexPx));
     table.classList.add('printFit');
-    let fontSize = (narrowColPx / 4.3) * fontScale;
+    let fontSize = (flexPx / 4.3) * fontScale;
     fontSize = Math.max(7.5, Math.min(18, fontSize));
     table.style.setProperty('--printFontSize', fontSize.toFixed(1) + 'px');
   });
