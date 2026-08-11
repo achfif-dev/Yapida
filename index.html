@@ -762,7 +762,7 @@
 
     <div class="card noprint">
       <h2>Cetak</h2>
-      <p class="hint">Pengaturan ukuran kertas &amp; font di bawah ini dipakai untuk semua cetak nilai (Rekap, Rekap Gabungan, Kartu Raport, Daftar Ujian). Pilih ukuran kertas yang SAMA dengan kertas fisik/pengaturan printer, supaya kolom ikut melebar penuh dan tidak di-skalakan ulang oleh printer.</p>
+      <p class="hint">Pengaturan ukuran kertas &amp; font di bawah ini dipakai untuk semua cetak nilai (Rekap, Rekap Gabungan, Kartu Raport, Daftar Ujian). Pilih ukuran kertas yang SAMA dengan kertas fisik di printer. Penting: di kotak dialog cetak browser, pastikan "Skala/Scale" diset <strong>100% (Default)</strong> — BUKAN "Fit to page/Sesuaikan halaman" — karena kalau di-scale otomatis, margin & ukuran font di kertas F4/Legal bisa jadi tidak pas walau sudah diatur di sini.</p>
       <div class="row">
         <div class="field"><label>Ukuran Kertas</label>
           <select id="printPaperSize">
@@ -781,8 +781,8 @@
         <div class="field"><label>Ukuran Font</label>
           <select id="printFontScale">
             <option value="0.85">Kecil</option>
-            <option value="1" selected>Sedang (default)</option>
-            <option value="1.2">Besar</option>
+            <option value="1">Sedang</option>
+            <option value="1.2" selected>Besar (default)</option>
             <option value="1.4">Sangat Besar</option>
             <option value="1.6">Ekstra Besar</option>
           </select>
