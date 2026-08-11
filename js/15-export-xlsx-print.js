@@ -1,3 +1,85 @@
+/* ===================== Preferensi ukuran kertas & font saat cetak ===================== */
+/* Dipilih pengguna lewat dropdown di card "Cetak" (tab Rekap), disimpan di localStorage
+   (preferensi lokal alat cetak, bukan data sekolah, jadi tidak perlu ke Firebase).
+   Ukuran dalam mm, mode potret (lebar < tinggi) — untuk lanskap tinggal ditukar. */
+const PRINT_PAPER_SIZES_MM = {
+  a4:     {w:210, h:297},
+  f4:     {w:215, h:330}, // F4/Folio, umum dipakai printer Indonesia
+  legal:  {w:216, h:356},
+  letter: {w:216, h:279},
+};
+function mmToPx(mm){ return mm * 96 / 25.4; }
+function getPrintPrefs(){
+  return {
+    paper: localStorage.getItem('yapidaPrintPaper') || 'a4',
+    orientation: localStorage.getItem('yapidaPrintOrientation') || 'landscape',
+    fontScale: parseFloat(localStorage.getItem('yapidaPrintFontScale') || '1') || 1,
+  };
+}
+function savePrintPrefs(patch){
+  const next = {...getPrintPrefs(), ...patch};
+  localStorage.setItem('yapidaPrintPaper', next.paper);
+  localStorage.setItem('yapidaPrintOrientation', next.orientation);
+  localStorage.setItem('yapidaPrintFontScale', String(next.fontScale));
+}
+function initPrintPrefsUI(){
+  const prefs = getPrintPrefs();
+  const selPaper = document.getElementById('printPaperSize');
+  const selOrient = document.getElementById('printOrientation');
+  const selFont = document.getElementById('printFontScale');
+  if(selPaper){ selPaper.value = prefs.paper; selPaper.addEventListener('change', ()=> savePrintPrefs({paper:selPaper.value})); }
+  if(selOrient){ selOrient.value = prefs.orientation; selOrient.addEventListener('change', ()=> savePrintPrefs({orientation:selOrient.value})); }
+  if(selFont){ selFont.value = String(prefs.fontScale); selFont.addEventListener('change', ()=> savePrintPrefs({fontScale:parseFloat(selFont.value)})); }
+}
+document.addEventListener('DOMContentLoaded', initPrintPrefsUI);
+
+function ensurePrintPageStyleEl(){
+  let el = document.getElementById('dynPrintPageStyle');
+  if(!el){ el = document.createElement('style'); el.id = 'dynPrintPageStyle'; document.head.appendChild(el); }
+  return el;
+}
+/* Menulis ulang @page sesuai pilihan pengguna (bukan dikunci A4 lewat CSS statis lagi),
+   supaya saat dialog cetak browser diarahkan ke kertas F4/Legal, tata letak HTML memang
+   dihitung ulang untuk lebar itu — bukan cuma A4 yang di-skala ke kertas lebih besar. */
+function applyPrintPagePrefs(){
+  const prefs = getPrintPrefs();
+  const dim = PRINT_PAPER_SIZES_MM[prefs.paper] || PRINT_PAPER_SIZES_MM.a4;
+  const landscape = prefs.orientation !== 'portrait';
+  const w = landscape ? Math.max(dim.w, dim.h) : Math.min(dim.w, dim.h);
+  const h = landscape ? Math.min(dim.w, dim.h) : Math.max(dim.w, dim.h);
+  ensurePrintPageStyleEl().textContent = `@media print{ @page{ size:${w}mm ${h}mm; margin:8mm; } }`;
+  return { usableWidthPx: mmToPx(w - 16), fontScale: prefs.fontScale };
+}
+/* Dipanggil setelah selesai cetak supaya cetak lain (Ijazah/Surat, yang tidak lewat
+   fitPrintTables) tidak ikut kebawa ukuran kertas F4/Legal yang sempat dipilih. */
+function resetPrintPagePrefsToDefault(){
+  ensurePrintPageStyleEl().textContent = '@media print{ @page{ size:A4 landscape; margin:8mm; } }';
+}
+
+/* ===================== Auto-fit ukuran font tabel saat cetak ===================== */
+/* Sebelumnya font tabel dikunci 8.5px lewat CSS untuk semua kasus. Kalau jumlah
+   mapel/kolom banyak, tiap kolom jadi sempit tapi angkanya tetap segitu besar
+   sehingga terlihat "kepotong"/tumpang tindih. Fungsi ini menghitung ukuran font
+   per tabel berdasarkan jumlah kolom & lebar kertas (sesuai preferensi di atas),
+   dikali faktor pembesar dari dropdown "Ukuran Font", lalu menuliskannya ke CSS var
+   --printFontSize yang dibaca oleh aturan @media print. Dipanggil sesaat sebelum
+   window.print() untuk tabel yang akan dicetak. */
+function fitPrintTables(root){
+  const { usableWidthPx, fontScale } = applyPrintPagePrefs();
+  const container = root || document;
+  const NAME_COL_MIN_PX = 90; // jatah minimum kolom Nama/Mata Pelajaran supaya tetap terbaca
+  container.querySelectorAll('table').forEach(table=>{
+    const headRow = table.querySelector('thead tr:first-child');
+    const numCols = headRow ? headRow.children.length : (table.rows[0] ? table.rows[0].cells.length : 0);
+    if(!numCols){ table.style.removeProperty('--printFontSize'); return; }
+    const otherCols = Math.max(1, numCols - 1);
+    const perColPx = Math.max(18, (usableWidthPx - NAME_COL_MIN_PX) / otherCols);
+    let fontSize = (perColPx / 5.4) * fontScale;
+    fontSize = Math.max(6, Math.min(15, fontSize));
+    table.style.setProperty('--printFontSize', fontSize.toFixed(1) + 'px');
+  });
+}
+
 /* ===================== Ekspor XLSX (helper umum) ===================== */
 function downloadWorkbook(wb, filename){
   XLSX.writeFile(wb, filename);
@@ -289,9 +371,10 @@ document.getElementById('btnTampilkanDaftarUjian').addEventListener('click', ()=
 
 document.getElementById('btnPrintDaftarUjian').addEventListener('click', ()=>{
   if(!document.getElementById('daftarUjianArea').innerHTML.trim()){ toast('Tampilkan daftar ujian dulu'); return; }
+  fitPrintTables(document.getElementById('daftarUjianArea'));
   document.body.classList.add('printingDaftarUjian');
   window.print();
-  setTimeout(()=> document.body.classList.remove('printingDaftarUjian'), 500);
+  setTimeout(()=>{ document.body.classList.remove('printingDaftarUjian'); resetPrintPagePrefsToDefault(); }, 500);
 });
 
 document.getElementById('btnExportDaftarUjian').addEventListener('click', ()=>{

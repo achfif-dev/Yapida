@@ -331,23 +331,26 @@ document.getElementById('btnExportRekapGabungan').addEventListener('click', ()=>
 
 document.getElementById('btnPrintRekapGabungan').addEventListener('click', ()=>{
   if(!rekapGabunganRows || !rekapGabunganRows.length){ toast('Muat rekap gabungan dulu'); return; }
+  fitPrintTables(document.getElementById('rekapGabunganCard'));
   document.body.classList.add('printingRekapGabungan');
   window.print();
-  setTimeout(()=> document.body.classList.remove('printingRekapGabungan'), 500);
+  setTimeout(()=>{ document.body.classList.remove('printingRekapGabungan'); resetPrintPagePrefsToDefault(); }, 500);
 });
 
 /* Cetak Rekap Ini & Cetak Kartu Ini dipisah supaya tidak nyambung jadi satu kertas:
    masing-masing menyembunyikan bagian lain sebelum window.print() dipanggil. */
 function printRekapOnly(){
+  fitPrintTables(document.getElementById('rekapPrintArea'));
   document.body.classList.add('printingRekapOnly');
   window.print();
-  setTimeout(()=> document.body.classList.remove('printingRekapOnly'), 500);
+  setTimeout(()=>{ document.body.classList.remove('printingRekapOnly'); resetPrintPagePrefsToDefault(); }, 500);
 }
 function printKartuSiswa(){
   const area = document.getElementById('cardArea');
   if(!area || !area.innerHTML.trim()){ toast('Tampilkan kartu siswa dulu'); return; }
+  fitPrintTables(area);
   document.body.classList.add('printingKartuSiswa');
   window.print();
-  setTimeout(()=> document.body.classList.remove('printingKartuSiswa'), 500);
+  setTimeout(()=>{ document.body.classList.remove('printingKartuSiswa'); resetPrintPagePrefsToDefault(); }, 500);
 }
 
