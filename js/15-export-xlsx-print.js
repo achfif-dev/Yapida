@@ -79,14 +79,21 @@ function classifyPrintCol(th){
   return {px:null}; // kolom nilai/angka utama — dapat porsi rata dari sisa lebar (flex)
 }
 /* Ukuran font aman untuk lebar kolom `px` supaya sel angka terpanjang di kolom nilai
-   (mis. "82.35" di kolom Rata², 5 karakter) tetap muat 1 baris tanpa kepotong/overflow —
-   dihitung dari lebar font monospace ('.num' pakai IBM Plex Mono), bukan tebakan/divisor
-   sembarangan seperti sebelumnya. */
-function fontSizeForFlexPx(px){
+   tetap muat 1 baris tanpa kepotong/overflow — dihitung dari lebar font monospace
+   ('.num' pakai IBM Plex Mono), bukan tebakan/divisor sembarangan seperti sebelumnya. */
+function fontSizeForFlexPx(px, worstChars){
   const PAD_PX = 8;         // padding sel (2×3px) + sedikit ruang aman pembulatan
-  const WORST_CHARS = 5.3;  // kasus terpanjang di kolom nilai, mis. "82.35"
   const CHAR_W = 0.62;      // lebar rata² 1 karakter font monospace relatif thd font-size
-  return Math.max(0, (px - PAD_PX) / (WORST_CHARS * CHAR_W));
+  return Math.max(0, (px - PAD_PX) / ((worstChars||5.3) * CHAR_W));
+}
+/* Nilai kolom terpanjang beda-beda per tabel: tabel Nilai Asli/Rata-rata (Asli) bisa
+   berisi angka sampai "82.35" (5 karakter), sedangkan tabel Nilai Raport & Rata-rata
+   (Raport) nilainya hasil konversi 4-9 / Rata² dua desimal — paling panjang cuma "8.41"
+   (4 karakter). Dipakai worst-case yang sesuai isi tabel supaya kolom Raport tidak
+   dipaksa memakai jatah lebar karakter yang sama besarnya dengan tabel Asli, yang bikin
+   fontnya kelihatan lebih kecil saat dicetak walau sebenarnya masih muat lebih besar. */
+function worstCharsForTable(table){
+  return (table.id === 'tblRaport' || table.id === 'tblAvgRaport') ? 4.3 : 5.3;
 }
 function buildPrintColgroup(table, widths){
   const old = table.querySelector('colgroup[data-autofit]');
@@ -113,14 +120,20 @@ function fitPrintTables(root){
     const fixedTotal = classified.reduce((a,c)=> a + (c.px!=null ? c.px : 0), 0);
     const flexCount = Math.max(1, classified.filter(c=> c.px==null).length);
     const flexPx = Math.max(24, (usableWidthPx - fixedTotal) / flexCount);
-    return { table, classified, flexPx };
+    const worstChars = worstCharsForTable(table);
+    return { table, classified, flexPx, worstChars, ownFont: fontSizeForFlexPx(flexPx, worstChars) };
   });
-  const flexPxList = infos.filter(i=> i.classified).map(i=> i.flexPx);
-  if(!flexPxList.length) return;
-  // Dipakai tabel paling sempit sebagai acuan, supaya SEMUA tabel dapat font yang sama.
-  const minFlexPx = Math.min(...flexPxList);
-  let fontSize = fontSizeForFlexPx(minFlexPx) * fontScale;
-  fontSize = Math.max(7.5, Math.min(18, fontSize));
+  const flexInfos = infos.filter(i=> i.classified);
+  if(!flexInfos.length) return;
+  // Setiap tabel dihitung dulu font amannya SENDIRI (pakai lebar kolom & worst-case
+  // karakternya masing-masing — lihat worstCharsForTable), baru dipakai yang PALING
+  // KECIL sebagai font seragam untuk semua tabel dalam `root` yang sama. Karena setiap
+  // font_i sudah aman untuk tabelnya sendiri, memakai font <= font_i selalu tetap aman
+  // (tidak overflow) — beda dari sebelumnya yang menyamakan worst-case ke semua tabel
+  // walau isinya beda (nilai Raport 1 digit vs nilai Asli sampai "82.35"), sehingga
+  // tabel Raport dulu dipaksa ikut font sekecil tabel yang butuh ruang paling banyak.
+  let fontSize = Math.min(...flexInfos.map(i=> i.ownFont)) * fontScale;
+  fontSize = Math.max(7.5, Math.min(20, fontSize));
   infos.forEach(({table, classified, flexPx})=>{
     if(!classified){ table.style.removeProperty('--printFontSize'); table.classList.remove('printFit'); return; }
     buildPrintColgroup(table, classified.map(c=> c.px!=null ? c.px : flexPx));
