@@ -120,8 +120,8 @@ document.getElementById('studentFilterKelas').addEventListener('change', (e)=>{
   document.getElementById('kelasSwitcher').value = e.target.value;
   setActiveKelas(e.target.value || null);
 });
-document.getElementById('studentSearch').addEventListener('input', debounce(renderStudentTable, 120));
-document.getElementById('studentFilterJk').addEventListener('change', renderStudentTable);
+document.getElementById('studentSearch').addEventListener('input', debounce(()=>renderStudentTable(), 120));
+document.getElementById('studentFilterJk').addEventListener('change', ()=>renderStudentTable());
 
 function populateCopySubjectsFrom(){
   const sel = document.getElementById('copySubjectsFrom');

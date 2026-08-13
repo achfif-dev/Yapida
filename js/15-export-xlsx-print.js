@@ -392,7 +392,7 @@ function buildDaftarUjianHTML(mapel){
   return `
     <div class="certframe">
       <div class="certHead">
-        <img src="${LOGO_DATA_URI}" class="certLogo" alt="Logo Madrasah">
+        <img src="${getBrandLogo()}" class="certLogo" alt="Logo Madrasah">
         <div class="certHeadText">
           <div class="school" style="font-size:20px; direction:rtl;">${escapeHtml(judulArab)} ${escapeHtml(namaArab)}</div>
           ${tahunArab ? `<div class="addr" style="direction:rtl;">سنة الدراسة : ${escapeHtml(tahunArab)}</div>` : ''}

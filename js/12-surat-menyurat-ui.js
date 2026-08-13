@@ -12,7 +12,7 @@ function resetSuratForm(){
   const btn = document.getElementById('btnSaveSurat'); if(btn) btn.textContent = '+ Simpan Surat';
   const cancel = document.getElementById('btnCancelSuratEdit'); if(cancel) cancel.style.display = 'none';
 }
-resetSuratForm();
+setTimeout(resetSuratForm, 0);
 document.getElementById('btnCancelSuratEdit')?.addEventListener('click', resetSuratForm);
 
 document.getElementById('btnSaveSurat')?.addEventListener('click', ()=>{

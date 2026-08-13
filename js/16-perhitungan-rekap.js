@@ -291,7 +291,7 @@ function renderRekapGabungan(rows, scoresByC){
   area.innerHTML = `
     <div class="certframe">
       <div class="certHead">
-        <img src="${LOGO_DATA_URI}" class="certLogo" alt="Logo Madrasah">
+        <img src="${getBrandLogo()}" class="certLogo" alt="Logo Madrasah">
         <div class="certHeadText">
           <div class="school">${escapeHtml(m.nama||'')}</div>
           <div class="addr">${escapeHtml(m.alamat||'')}</div>
