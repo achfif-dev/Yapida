@@ -19,6 +19,33 @@ function icon(name, extraClass){
   return `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${inner}</svg>`;
 }
 
+/* ===================== Utilitas warna (dipakai White Label untuk menurunkan warna
+   turunan otomatis dari 3 warna aksen utama — supaya semua elemen tetap konsisten
+   tanpa perlu diatur satu-satu) ===================== */
+function hexToRgb(hex){
+  const h = (hex||'').replace('#','').trim();
+  const full = h.length===3 ? h.split('').map(c=>c+c).join('') : h;
+  const n = parseInt(full, 16);
+  if(full.length!==6 || isNaN(n)) return null;
+  return { r:(n>>16)&255, g:(n>>8)&255, b:n&255 };
+}
+function rgbToHex(r,g,b){
+  return '#' + [r,g,b].map(v=> Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
+}
+// mix(hex, hex/rgb putih|hitam, rasio 0-1): rasio 1 = hasil = warna target sepenuhnya.
+function mixHex(hex, targetRgb, ratio){
+  const c = hexToRgb(hex);
+  if(!c) return hex;
+  return rgbToHex(
+    c.r + (targetRgb.r-c.r)*ratio,
+    c.g + (targetRgb.g-c.g)*ratio,
+    c.b + (targetRgb.b-c.b)*ratio
+  );
+}
+function lightenHex(hex, ratio){ return mixHex(hex, {r:255,g:255,b:255}, ratio); }
+function darkenHex(hex, ratio){ return mixHex(hex, {r:0,g:0,b:0}, ratio); }
+
+
 /* ===================== White Label: konfigurasi runtime (bisa diubah lewat Setup Wizard, TANPA edit kode) =====================
    Prioritas nilai: localStorage (diisi lewat wizard) → DEFAULT_APP_CONFIG bawaan (identitas
    & Firebase Yapida) — supaya instance yang sudah berjalan sekarang TIDAK berubah sama
@@ -32,7 +59,8 @@ const DEFAULT_APP_CONFIG = {
     address: 'Ujung Piring, Bangkalan',
     logoDataUrl: '', // kosong = pakai logo bawaan (DEFAULT_LOGO_DATA_URI)
     primaryColor: '#1e4d3a',
-    accentColor: '#b8863a'
+    accentColor: '#b8863a',
+    dangerColor: '#9a3f3f'
   },
   firebase: {
     apiKey: "AIzaSyD1rHF7j3wn7SfhrojtCe6dAaE4m1SKvKw",

@@ -56,10 +56,26 @@ function applyBranding(){
   if(loginSchoolEl) loginSchoolEl.textContent = b.schoolName || DEFAULT_APP_CONFIG.brand.schoolName;
   const loginAddrEl = document.getElementById('loginSchoolAddr');
   if(loginAddrEl) loginAddrEl.textContent = b.address || DEFAULT_APP_CONFIG.brand.address;
-  if(b.primaryColor || b.accentColor){
+  if(b.primaryColor || b.accentColor || b.dangerColor){
     const root = document.documentElement.style;
-    if(b.primaryColor){ root.setProperty('--deep', b.primaryColor); root.setProperty('--deep-2', b.primaryColor); }
-    if(b.accentColor){ root.setProperty('--gold', b.accentColor); }
+    // Warna Utama: --deep dipakai apa adanya, --deep-2 (gradasi header, dst) diturunkan
+    // otomatis dengan menggelapkan sedikit — supaya efek gradasinya tetap kelihatan
+    // walau Admin cuma mengisi satu warna utama.
+    if(b.primaryColor){
+      root.setProperty('--deep', b.primaryColor);
+      root.setProperty('--deep-2', darkenHex(b.primaryColor, 0.18));
+    }
+    // Warna Aksen: --gold dipakai apa adanya, --gold-soft (background badge/pill,
+    // outline fokus input) diturunkan otomatis dengan mencerahkan — dulu selalu warna
+    // gold bawaan walau accentColor sudah diganti, jadi badge/pill tidak konsisten.
+    if(b.accentColor){
+      root.setProperty('--gold', b.accentColor);
+      root.setProperty('--gold-soft', lightenHex(b.accentColor, 0.75));
+    }
+    // Warna Bahaya: dipakai tombol Keluar/Hapus/Pulihkan Database, status Alpa, dan teks nilai merah.
+    if(b.dangerColor){
+      root.setProperty('--danger', b.dangerColor);
+    }
   }
 }
 applyBranding();
@@ -89,8 +105,10 @@ applyBranding();
     document.getElementById('swAddress').value = swBrand.address || '';
     document.getElementById('swPrimaryColor').value = swBrand.primaryColor || '#1e4d3a';
     document.getElementById('swAccentColor').value = swBrand.accentColor || '#b8863a';
+    document.getElementById('swDangerColor').value = swBrand.dangerColor || '#9a3f3f';
     document.getElementById('swPrimaryColorText').value = swBrand.primaryColor || '#1e4d3a';
     document.getElementById('swAccentColorText').value = swBrand.accentColor || '#b8863a';
+    document.getElementById('swDangerColorText').value = swBrand.dangerColor || '#9a3f3f';
     document.getElementById('swLogoPreview').src = swBrand.logoDataUrl || DEFAULT_LOGO_DATA_URI;
   }
   function swFillStep2(){
@@ -128,6 +146,7 @@ applyBranding();
       '<div><b>Nama Yayasan/Sekolah:</b> '+escapeHtml(document.getElementById('swSchoolName').value||'—')+'</div>'
       +'<div><b>Nama Singkat:</b> '+escapeHtml(document.getElementById('swShortName').value||'—')+'</div>'
       +'<div><b>Judul Aplikasi (tab browser):</b> '+escapeHtml(document.getElementById('swAppTitle').value||'—')+'</div>'
+      +'<div><b>Warna:</b> Utama '+escapeHtml(document.getElementById('swPrimaryColor').value)+', Aksen '+escapeHtml(document.getElementById('swAccentColor').value)+', Bahaya '+escapeHtml(document.getElementById('swDangerColor').value)+'</div>'
       +'<div><b>Firebase Project:</b> '+escapeHtml(fbProjectId||'(tidak diganti — tetap pakai yang sekarang)')+'</div>'
       +'<div><b>Super Admin:</b> '+escapeHtml(document.getElementById('swSuperAdminEmail').value||'(tidak diisi)')+'</div>';
   }
@@ -150,8 +169,10 @@ applyBranding();
   });
   document.getElementById('swPrimaryColor').addEventListener('input', function(e){ document.getElementById('swPrimaryColorText').value = e.target.value; });
   document.getElementById('swAccentColor').addEventListener('input', function(e){ document.getElementById('swAccentColorText').value = e.target.value; });
+  document.getElementById('swDangerColor').addEventListener('input', function(e){ document.getElementById('swDangerColorText').value = e.target.value; });
   document.getElementById('swPrimaryColorText').addEventListener('input', function(e){ if(/^#[0-9a-fA-F]{6}$/.test(e.target.value)) document.getElementById('swPrimaryColor').value = e.target.value; });
   document.getElementById('swAccentColorText').addEventListener('input', function(e){ if(/^#[0-9a-fA-F]{6}$/.test(e.target.value)) document.getElementById('swAccentColor').value = e.target.value; });
+  document.getElementById('swDangerColorText').addEventListener('input', function(e){ if(/^#[0-9a-fA-F]{6}$/.test(e.target.value)) document.getElementById('swDangerColor').value = e.target.value; });
 
   function swParseFirebasePaste(text){
     const fields = ['apiKey','authDomain','databaseURL','projectId','storageBucket','messagingSenderId','appId','measurementId'];
@@ -184,6 +205,7 @@ applyBranding();
     swBrand.address = document.getElementById('swAddress').value.trim();
     swBrand.primaryColor = document.getElementById('swPrimaryColor').value;
     swBrand.accentColor = document.getElementById('swAccentColor').value;
+    swBrand.dangerColor = document.getElementById('swDangerColor').value;
   }
   function swReadStep2IntoState(){
     ['apiKey','authDomain','databaseURL','projectId','storageBucket','messagingSenderId','appId','measurementId'].forEach(function(k){
