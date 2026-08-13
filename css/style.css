@@ -253,6 +253,9 @@
        supaya keduanya tidak nyambung jadi satu kertas cetak. */
     body.printingRekapOnly .card:not(#rekapPrintArea){display:none !important;}
     body.printingRekapOnly #cardArea{display:none !important;}
+    /* Nilai Asli & Nilai Raport dicetak sebagai 2 halaman terpisah, masing-masing
+       dengan Rata-rata Kelas per Mata Pelajaran sendiri di bawahnya. */
+    #rekapPageRaport{page-break-before:always; break-before:page;}
     /* Cetak Kartu Ini: hanya kartu raport siswa yang aktif, sembunyikan tabel rekap
        kelas & kartu lain supaya tidak ikut tercetak di kertas yang sama. */
     body.printingKartuSiswa .card{display:none !important;}
